@@ -11,7 +11,9 @@ md toolbox
 cd toolbox
 
 md coders
+md images
 md io
+md projects
 md utils
 md web
 
@@ -19,9 +21,27 @@ cd ..\..\..\..
 
 copy "..\Toolbox-Java\src\com\asofterspace\toolbox\*.java" "src\com\asofterspace\toolbox"
 copy "..\Toolbox-Java\src\com\asofterspace\toolbox\coders\*.*" "src\com\asofterspace\toolbox\coders"
+copy "..\Toolbox-Java\src\com\asofterspace\toolbox\images\*.*" "src\com\asofterspace\toolbox\images"
 copy "..\Toolbox-Java\src\com\asofterspace\toolbox\io\*.*" "src\com\asofterspace\toolbox\io"
+copy "..\Toolbox-Java\src\com\asofterspace\toolbox\projects\*.*" "src\com\asofterspace\toolbox\projects"
 copy "..\Toolbox-Java\src\com\asofterspace\toolbox\utils\*.*" "src\com\asofterspace\toolbox\utils"
 copy "..\Toolbox-Java\src\com\asofterspace\toolbox\web\*.*" "src\com\asofterspace\toolbox\web"
+
+
+cd server
+
+rd /s /q toolbox
+
+md toolbox
+cd toolbox
+
+md utils
+
+cd ..\..
+
+copy "..\Toolbox-JavaScript\toolbox\*.js" "server\toolbox"
+copy "..\Toolbox-JavaScript\toolbox\utils\*.*" "server\toolbox\utils"
+
 
 rd /s /q bin
 

@@ -13,7 +13,9 @@ mkdir toolbox
 cd toolbox
 
 mkdir coders
+mkdir images
 mkdir io
+mkdir projects
 mkdir utils
 mkdir web
 
@@ -21,9 +23,27 @@ cd ../../../..
 
 cp ../Toolbox-Java/src/com/asofterspace/toolbox/*.java src/com/asofterspace/toolbox
 cp ../Toolbox-Java/src/com/asofterspace/toolbox/coders/*.* src/com/asofterspace/toolbox/coders
+cp ../Toolbox-Java/src/com/asofterspace/toolbox/images/*.* src/com/asofterspace/toolbox/images
 cp ../Toolbox-Java/src/com/asofterspace/toolbox/io/*.* src/com/asofterspace/toolbox/io
+cp ../Toolbox-Java/src/com/asofterspace/toolbox/projects/*.* src/com/asofterspace/toolbox/projects
 cp ../Toolbox-Java/src/com/asofterspace/toolbox/utils/*.* src/com/asofterspace/toolbox/utils
 cp ../Toolbox-Java/src/com/asofterspace/toolbox/web/*.* src/com/asofterspace/toolbox/web
+
+
+cd server
+
+rm -rf toolbox
+
+mkdir toolbox
+cd toolbox
+
+mkdir utils
+
+cd ../..
+
+cp ../Toolbox-JavaScript/toolbox/*.js server/toolbox
+cp ../Toolbox-JavaScript/toolbox/utils/*.* server/toolbox/utils
+
 
 rm -rf bin
 

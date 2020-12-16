@@ -1,0 +1,171 @@
+body {
+	font-family: "Calibri";
+	overflow: hidden;
+	background: linear-gradient(179deg, #102, #201, #102, #201, #102, #201, #102, #201, #102);
+	padding-left: 4pt;
+	padding-right: 60pt;
+}
+
+a {
+	color: #88AAFF;
+	text-decoration: none;
+}
+
+body > div, div#mainContent > div {
+	color: #88AAFF;
+	padding-bottom: 10pt;
+}
+
+input, textarea, select {
+	color: #AACCFF;
+	background: rgb(24, 0, 27);
+	border: 1px solid rgb(80, 60, 160);
+	border-radius: 4pt;
+	padding: 0pt 4pt 1pt 4pt;
+	font-family: "Calibri";
+	font-size: 1em;
+}
+
+div#mainContent {
+	overflow-y: scroll;
+	overflow-x: hidden;
+}
+
+div#mainContent, div.scrollable {
+	scrollbar-color: #402 #102;
+	position: relative;
+}
+
+span.button {
+	color: #AACCFF;
+	padding: 0pt 4pt;
+	border-radius: 5pt;
+	background: rgba(150, 200, 250, 0.2);
+	cursor: pointer;
+	text-align: center;
+}
+
+span.button.bigger {
+	font-size: 110%;
+}
+
+span.button.highviz {
+	background: rgba(0, 20, 50, 0.8);
+}
+
+span.button:hover {
+	background: rgba(150, 200, 250, 0.5);
+}
+
+span.button.unchecked {
+	background: none;
+	border: 1px solid rgba(150, 200, 250, 0.5);
+}
+
+span.button.checked {
+	background: rgba(150, 200, 250, 0.6);
+}
+
+div.line:hover {
+	background: rgba(255, 0, 255, 0.19);
+	border-radius: 4pt;
+}
+
+div.line > span {
+	display: inline-block;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	vertical-align: top;
+}
+
+a.sidebar, div.projectbar {
+	position: absolute;
+	right: 10pt;
+	width: 50pt;
+}
+
+a.sidebar {
+	top: 10pt;
+}
+
+a.sidebar > img.avatar {
+	position: relative;
+	width: 100%;
+	border-radius: 5pt;
+	left: 0;
+	top: 0;
+}
+
+div.footer {
+	height: 200pt;
+}
+
+div.projectbar {
+	bottom: 10pt;
+}
+
+div.projectbar > a {
+	border: 3pt solid black;
+	border-radius: 5pt;
+	text-align: center;
+	height: 30pt;
+	display: inline-block;
+	text-decoration: none;
+}
+
+span.sup {
+	font-size: 80%;
+	vertical-align: top;
+}
+
+span.awesome {
+	color: #20CC00;
+}
+
+span.warning {
+	color: #D4B430;
+}
+
+span.error {
+	color: #FF4020;
+}
+
+div.projectbar > a, div.projectbar > a > img {
+	width: 100%;
+}
+
+div.projectbar > a {
+	margin-top: 5pt;
+	background: radial-gradient(rgba(255, 255, 255, 1), rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.0));
+}
+
+div.projectbar > a:hover {
+	background: rgba(255, 255, 255, 1);
+}
+
+div.projectbar > a > img {
+	max-height: 80%;
+	max-width: 80%;
+	vertical-align: middle;
+}
+
+div.company_outer {
+	border-radius: 10pt;
+	background: rgba(255, 255, 255, 0.1);
+	padding: 10pt;
+	margin: 10pt 20pt 15pt 8pt;
+	text-align: center;
+	position: relative;
+}
+
+div.company_outer > img.logo {
+	width: 100pt;
+	position: absolute;
+	top: 44pt;
+	right: -43pt;
+	transform: rotate(90deg);
+	background: radial-gradient(rgba(255, 255, 255, 0.9), rgba(205, 225, 255, 0.8), rgba(255, 255, 255, 0.0), rgba(255, 255, 255, 0.0));
+	border-radius: 10pt;
+	padding: 10pt 20pt;
+}
