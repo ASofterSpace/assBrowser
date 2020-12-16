@@ -4,15 +4,6 @@
  */
 package com.asofterspace.assBrowser;
 
-import com.asofterspace.toolbox.io.File;
-import com.asofterspace.toolbox.io.JSON;
-import com.asofterspace.toolbox.io.JsonFile;
-import com.asofterspace.toolbox.io.JsonParseException;
-import com.asofterspace.toolbox.io.SimpleFile;
-import com.asofterspace.toolbox.io.TextFile;
-import com.asofterspace.toolbox.utils.DateUtils;
-import com.asofterspace.toolbox.utils.Record;
-import com.asofterspace.toolbox.utils.StrUtils;
 import com.asofterspace.toolbox.Utils;
 
 
@@ -41,6 +32,7 @@ public class AssBrowser {
 			}
 		}
 
+
 		System.out.println("Loading database...");
 
 		Database database = new Database();
@@ -48,6 +40,13 @@ public class AssBrowser {
 		System.out.println("Saving database...");
 
 		database.save();
+
+
+		int port = database.getPort();
+
+		System.out.println("Starting server on port " + port + "...");
+
+		// TODO
 
 		System.out.println("Done! Have a nice day! :)");
 	}

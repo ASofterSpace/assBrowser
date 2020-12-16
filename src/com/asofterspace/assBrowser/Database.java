@@ -9,19 +9,16 @@ import com.asofterspace.toolbox.io.JsonFile;
 import com.asofterspace.toolbox.io.JsonParseException;
 import com.asofterspace.toolbox.utils.Record;
 
-import java.util.ArrayList;
-import java.util.List;
-
 
 public class Database {
+
+	private final static String PORT = "port";
 
 	private JsonFile dbFile;
 
 	private JSON root;
 
-	/* here, put something like e.g.:
-	private List<Object> objects;
-	*/
+	private Integer port;
 
 
 	public Database() {
@@ -36,16 +33,7 @@ public class Database {
 			System.exit(1);
 		}
 
-		/* here, put something like e.g.:
-
-		List<Record> objectsRecs = root.getArray("objects");
-
-		this.objects = new ArrayList<>();
-
-		for (Record rec : objectsRecs) {
-			objects.add(new Object(rec));
-		}
-		*/
+		this.port = root.getInteger(PORT);
 	}
 
 	public Record getRoot() {
@@ -56,18 +44,17 @@ public class Database {
 
 		root.makeObject();
 
-		/* here, put something like e.g.:
-
-		List<Record> objectsRecs = new ArrayList<>();
-
-		for (Object obj : objects) {
-			objectsRecs.add(obj.toRecord());
-		}
-
-		root.set("objects", objectsRecs);
-		*/
+		root.set(PORT, port);
 
 		dbFile.setAllContents(root);
 		dbFile.save();
 	}
+
+	public int getPort() {
+		if (port == null) {
+			return 3013;
+		}
+		return port;
+	}
+
 }
