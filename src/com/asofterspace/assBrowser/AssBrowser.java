@@ -72,7 +72,7 @@ public class AssBrowser {
 
 		System.out.println("Starting up system console...");
 
-		ConsoleCtrl consoleCtrl = new ConsoleCtrl();
+		ConsoleCtrl consoleCtrl = new ConsoleCtrl(database);
 
 
 		try {

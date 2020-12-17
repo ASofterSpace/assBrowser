@@ -14,8 +14,12 @@
 	</head>
 
 	<body>
+		<script>
+			window.data = [[DATA]]
+		</script>
+
 		<div id="mainContent" style="overflow: hidden;">
-			<div style="width: 25%; height: 96%; float: left;">
+			<div style="width: 25%; height: 96%; float: left; overflow-y: scroll; overflow-x: auto; margin-right: 1%;">
 				[[FOLDER_CONTENT]]
 			</div>
 
@@ -23,9 +27,35 @@
 				This is the browser, it is for browsing!
 			</div>
 
-			<div style="width: 72%; height: 15%;">
+			<div id="consoleContainer" style="width: 72%; height: 15%; overflow-y: scroll; overflow-x: auto;">
 				[[CONSOLE]]
+				&gt;
+				<input id="consoleInput" type="text" />
 			</div>
+
+			<script>
+				var startupFunc = function() {
+					var el = document.getElementById("consoleInput");
+					if (el) {
+						el.addEventListener("keyup", function(e) {
+							e.preventDefault();
+							if (e.keyCode === 13) {
+								window.location.href = "/?path=" + window.data.path + "&console=" +
+									document.getElementById("consoleInput").value;
+							}
+						});
+					}
+
+					el = document.getElementById("consoleContainer");
+					if (el) {
+						el.scrollTop = el.scrollHeight;
+					}
+				};
+				startupFunc();
+				window.setTimeout(startupFunc, 250);
+				window.setTimeout(startupFunc, 500);
+				window.setTimeout(startupFunc, 1000);
+			</script>
 		</div>
 
 		@include(inc_common_end.htm)

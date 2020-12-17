@@ -6,6 +6,7 @@ package com.asofterspace.assBrowser.web;
 
 import com.asofterspace.assBrowser.console.ConsoleCtrl;
 import com.asofterspace.assBrowser.Database;
+import com.asofterspace.assBrowser.paths.PathCtrl;
 import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.io.File;
 import com.asofterspace.toolbox.io.JSON;
@@ -25,8 +26,6 @@ import java.util.Map;
 
 
 public class ServerRequestHandler extends WebServerRequestHandler {
-
-	private final static String DESKTOP = "\\Desktop\\";
 
 	private Database database;
 
@@ -127,10 +126,25 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			String indexContent = indexBaseFile.getContent();
 
 			String path = arguments.get("path");
-			if (path == null) {
-				path = DESKTOP;
+
+			path = PathCtrl.ensurePathIsSafe(path);
+
+			// interpret console commands - in case we do a cd, the path has to be changed here - not earlier,
+			// not later
+			if (arguments.get("console") != null) {
+				path = consoleCtrl.interpretCommand(arguments.get("console"), path);
 			}
-			path = removeTrailingSlash(path);
+
+			path = PathCtrl.ensurePathIsSafe(path);
+
+			// if path starts with the local path of the Desktop, replace it with /Desktop/
+			String pathCompare = path + "/";
+			String desktopLocation = database.getDesktopLocation();
+			desktopLocation = PathCtrl.ensurePathIsSafe(desktopLocation) + "/";
+			if (pathCompare.startsWith(desktopLocation)) {
+				pathCompare = PathCtrl.DESKTOP + "/" + pathCompare.substring(desktopLocation.length());
+				path = PathCtrl.ensurePathIsSafe(pathCompare);
+			}
 
 			consoleCtrl.addPath(path);
 
@@ -161,6 +175,9 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			indexContent = StrUtils.replaceAll(indexContent, "[[FOLDER_CONTENT]]", folderContent.toString());
 
 			indexContent = StrUtils.replaceAll(indexContent, "[[CONSOLE]]", consoleCtrl.getHtmlStr());
+
+			indexContent = StrUtils.replaceAll(indexContent, "[[DATA]]", "{\"path\": \"" +
+				JSON.escapeJSONstr(path) + "\"}");
 
 			return new WebServerAnswerInHtml(indexContent);
 		}
@@ -210,27 +227,14 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 	private String resolvePath(String path) {
 
-		String traillessDesktop = removeTrailingSlash(DESKTOP);
-
-		if (path.equals(traillessDesktop) ||
-			path.startsWith(traillessDesktop + "/") ||
-			path.startsWith(traillessDesktop + "\\")) {
-
+		if (PathCtrl.startsWithDesktopPath(path)) {
 			String desktopLocation = database.getDesktopLocation();
-			desktopLocation = removeTrailingSlash(desktopLocation);
-			return desktopLocation + "/" + path.substring(traillessDesktop.length());
+			desktopLocation = PathCtrl.oneUp(desktopLocation);
+			return StrUtils.replaceAll(
+				StrUtils.replaceAll(desktopLocation + "/" + path, "\\", "/"),
+				"//", "/");
 		}
 
-		return path;
-	}
-
-	private String removeTrailingSlash(String path) {
-		while (path.endsWith("/")) {
-			path = path.substring(0, path.length() - 1);
-		}
-		while (path.endsWith("\\")) {
-			path = path.substring(0, path.length() - 1);
-		}
 		return path;
 	}
 
