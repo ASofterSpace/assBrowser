@@ -4,6 +4,7 @@
  */
 package com.asofterspace.assBrowser.web;
 
+import com.asofterspace.assBrowser.console.ConsoleCtrl;
 import com.asofterspace.assBrowser.Database;
 import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.web.WebServer;
@@ -18,19 +19,23 @@ public class Server extends WebServer {
 
 	private Directory serverDir;
 
+	private ConsoleCtrl consoleCtrl;
 
-	public Server(Directory webRoot, Directory serverDir, Database db) {
+
+	public Server(Directory webRoot, Directory serverDir, Database db, ConsoleCtrl consoleCtrl) {
 
 		super(webRoot, db.getPort());
 
 		this.db = db;
 
 		this.serverDir = serverDir;
+
+		this.consoleCtrl = consoleCtrl;
 	}
 
 	@Override
 	protected WebServerRequestHandler getHandler(Socket request) {
-		return new ServerRequestHandler(this, request, webRoot, serverDir, db);
+		return new ServerRequestHandler(this, request, webRoot, serverDir, db, consoleCtrl);
 	}
 
 }

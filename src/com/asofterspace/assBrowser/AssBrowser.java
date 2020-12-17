@@ -4,6 +4,7 @@
  */
 package com.asofterspace.assBrowser;
 
+import com.asofterspace.assBrowser.console.ConsoleCtrl;
 import com.asofterspace.assBrowser.web.Server;
 import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.io.JSON;
@@ -51,6 +52,9 @@ public class AssBrowser {
 		}
 
 
+		System.out.println(Utils.getFullProgramIdentifierWithDate());
+
+
 		System.out.println("Loading database...");
 
 		Database database = new Database();
@@ -64,6 +68,11 @@ public class AssBrowser {
 
 		Directory serverDir = new Directory(SERVER_DIR);
 		Directory webRoot = new Directory(WEB_ROOT_DIR);
+
+
+		System.out.println("Starting up system console...");
+
+		ConsoleCtrl consoleCtrl = new ConsoleCtrl();
 
 
 		try {
@@ -106,7 +115,7 @@ public class AssBrowser {
 
 			System.out.println("Starting the server on port " + database.getPort() + "...");
 
-			Server server = new Server(webRoot, serverDir, database);
+			Server server = new Server(webRoot, serverDir, database, consoleCtrl);
 
 			server.setWhitelist(whitelist);
 

@@ -4,37 +4,47 @@
  */
 package com.asofterspace.assBrowser.web;
 
+import com.asofterspace.assBrowser.console.ConsoleCtrl;
 import com.asofterspace.assBrowser.Database;
 import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.io.File;
 import com.asofterspace.toolbox.io.JSON;
 import com.asofterspace.toolbox.io.JsonParseException;
 import com.asofterspace.toolbox.io.TextFile;
+import com.asofterspace.toolbox.utils.StrUtils;
 import com.asofterspace.toolbox.web.WebServer;
 import com.asofterspace.toolbox.web.WebServerAnswer;
+import com.asofterspace.toolbox.web.WebServerAnswerInHtml;
 import com.asofterspace.toolbox.web.WebServerAnswerInJson;
 import com.asofterspace.toolbox.web.WebServerRequestHandler;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.List;
 import java.util.Map;
 
 
 public class ServerRequestHandler extends WebServerRequestHandler {
 
-	private Database db;
+	private final static String DESKTOP = "\\Desktop\\";
+
+	private Database database;
 
 	private Directory serverDir;
 
+	private ConsoleCtrl consoleCtrl;
+
 
 	public ServerRequestHandler(WebServer server, Socket request, Directory webRoot, Directory serverDir,
-		Database db) {
+		Database database, ConsoleCtrl consoleCtrl) {
 
 		super(server, request, webRoot);
 
-		this.db = db;
+		this.database = database;
 
 		this.serverDir = serverDir;
+
+		this.consoleCtrl = consoleCtrl;
 	}
 
 	@Override
@@ -90,6 +100,11 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 	@Override
 	protected WebServerAnswer answerGet(String location, Map<String, String> arguments) {
+
+		if (!location.startsWith("/")) {
+			location = "/" + location;
+		}
+
 /*
 		if ("/task".equals(location)) {
 			String id = arguments.get("id");
@@ -104,6 +119,51 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			}
 		}
 */
+
+		if (location.startsWith("/index.htm") || location.startsWith("/index") ||
+			location.equals("/") || location.startsWith("/?")) {
+
+			TextFile indexBaseFile = new TextFile(webRoot, "index.htm");
+			String indexContent = indexBaseFile.getContent();
+
+			String path = arguments.get("path");
+			if (path == null) {
+				path = DESKTOP;
+			}
+			path = removeTrailingSlash(path);
+
+			consoleCtrl.addPath(path);
+
+			String localPath = resolvePath(path);
+
+			StringBuilder folderContent = new StringBuilder();
+
+			Directory folder = new Directory(localPath);
+
+			boolean recursively = false;
+
+			List<Directory> childFolders = folder.getAllDirectories(recursively);
+
+			for (Directory childFolder : childFolders) {
+				folderContent.append("<a href='/?path=" + path + "/" + childFolder.getLocalDirname() + "'>");
+				folderContent.append(childFolder.getLocalDirname());
+				folderContent.append("</a>");
+				folderContent.append("<br>");
+			}
+
+			List<File> childFiles = folder.getAllFiles(recursively);
+
+			for (File childFile : childFiles) {
+				folderContent.append(childFile.getLocalFilename());
+				folderContent.append("<br>");
+			}
+
+			indexContent = StrUtils.replaceAll(indexContent, "[[FOLDER_CONTENT]]", folderContent.toString());
+
+			indexContent = StrUtils.replaceAll(indexContent, "[[CONSOLE]]", consoleCtrl.getHtmlStr());
+
+			return new WebServerAnswerInHtml(indexContent);
+		}
 
 		return null;
 	}
@@ -139,24 +199,6 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				}
 			}
 
-
-			// answering a request for general information
-			if (locEquiv.equals("index.htm")) {
-
-				System.out.println("Answering index request...");
-
-				TextFile indexBaseFile = new TextFile(webRoot, locEquiv);
-				String indexContent = indexBaseFile.getContent();
-
-/*
-				indexContent = StrUtils.replaceAll(indexContent, "[[PROJECTS]]", AssSecretary.getProjHtmlStr());
-*/
-
-				locEquiv = "_" + locEquiv;
-				TextFile indexFile = new TextFile(webRoot, locEquiv);
-				indexFile.saveContent(indexContent);
-			}
-
 			// actually get the file
 			return webRoot.getFile(locEquiv);
 		}
@@ -164,6 +206,32 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		// if the file was not found on the whitelist, do not return it
 		// - even if it exists on the server!
 		return null;
+	}
+
+	private String resolvePath(String path) {
+
+		String traillessDesktop = removeTrailingSlash(DESKTOP);
+
+		if (path.equals(traillessDesktop) ||
+			path.startsWith(traillessDesktop + "/") ||
+			path.startsWith(traillessDesktop + "\\")) {
+
+			String desktopLocation = database.getDesktopLocation();
+			desktopLocation = removeTrailingSlash(desktopLocation);
+			return desktopLocation + "/" + path.substring(traillessDesktop.length());
+		}
+
+		return path;
+	}
+
+	private String removeTrailingSlash(String path) {
+		while (path.endsWith("/")) {
+			path = path.substring(0, path.length() - 1);
+		}
+		while (path.endsWith("\\")) {
+			path = path.substring(0, path.length() - 1);
+		}
+		return path;
 	}
 
 }

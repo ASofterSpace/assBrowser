@@ -12,6 +12,8 @@ import com.asofterspace.toolbox.utils.Record;
 
 public class Database {
 
+	private final static String DESKTOP_LOCATION = "desktopLocation";
+
 	private final static String PORT = "port";
 
 	private JsonFile dbFile;
@@ -19,6 +21,8 @@ public class Database {
 	private JSON root;
 
 	private Integer port;
+
+	private String desktopLocation;
 
 
 	public Database() {
@@ -34,6 +38,8 @@ public class Database {
 		}
 
 		this.port = root.getInteger(PORT);
+
+		this.desktopLocation = root.getString(DESKTOP_LOCATION);
 	}
 
 	public Record getRoot() {
@@ -46,6 +52,8 @@ public class Database {
 
 		root.set(PORT, port);
 
+		root.set(DESKTOP_LOCATION, desktopLocation);
+
 		dbFile.setAllContents(root);
 		dbFile.save();
 	}
@@ -55,6 +63,10 @@ public class Database {
 			return 3013;
 		}
 		return port;
+	}
+
+	public String getDesktopLocation() {
+		return desktopLocation;
 	}
 
 }
