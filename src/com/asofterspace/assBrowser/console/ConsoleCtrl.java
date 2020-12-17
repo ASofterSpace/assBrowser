@@ -23,6 +23,11 @@ public class ConsoleCtrl {
 	}
 
 	public void addPath(String path) {
+		if (history.size() > 0) {
+			if (path.equals(history.get(history.size() - 1))) {
+				return;
+			}
+		}
 		history.add(path);
 	}
 
