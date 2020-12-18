@@ -13,6 +13,8 @@ import com.asofterspace.toolbox.io.JSON;
 import com.asofterspace.toolbox.io.JsonParseException;
 import com.asofterspace.toolbox.io.TextFile;
 import com.asofterspace.toolbox.utils.StrUtils;
+import com.asofterspace.toolbox.virtualEmployees.SideBarCtrl;
+import com.asofterspace.toolbox.virtualEmployees.SideBarEntry;
 import com.asofterspace.toolbox.web.WebServer;
 import com.asofterspace.toolbox.web.WebServerAnswer;
 import com.asofterspace.toolbox.web.WebServerAnswerInHtml;
@@ -125,6 +127,9 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			TextFile indexBaseFile = new TextFile(webRoot, "index.htm");
 			String indexContent = indexBaseFile.getContent();
 
+			indexContent = StrUtils.replaceAll(indexContent, "[[SIDEBAR]]",
+				SideBarCtrl.getSidebarHtmlStr(SideBarEntry.BROWSER));
+
 			String path = arguments.get("path");
 
 			path = PathCtrl.ensurePathIsSafe(path);
@@ -160,16 +165,24 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 			for (Directory childFolder : childFolders) {
 				folderContent.append("<a href='/?path=" + path + "/" + childFolder.getLocalDirname() + "'>");
+				folderContent.append("<div class='line'>");
 				folderContent.append(childFolder.getLocalDirname());
+				folderContent.append("</div>");
 				folderContent.append("</a>");
-				folderContent.append("<br>");
+			}
+
+			if (childFolders.size() > 0) {
+				folderContent.append("<div>");
+				folderContent.append("&nbsp;");
+				folderContent.append("</div>");
 			}
 
 			List<File> childFiles = folder.getAllFiles(recursively);
 
 			for (File childFile : childFiles) {
+				folderContent.append("<div class='line'>");
 				folderContent.append(childFile.getLocalFilename());
-				folderContent.append("<br>");
+				folderContent.append("</div>");
 			}
 
 			indexContent = StrUtils.replaceAll(indexContent, "[[FOLDER_CONTENT]]", folderContent.toString());
@@ -188,14 +201,9 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 	@Override
 	protected File getFileFromLocation(String location, String[] arguments) {
 
-		// get project logo files from assWorkbench
-		if (location.startsWith("/projectlogos/") && location.endsWith(".png") && !location.contains("..")) {
-			location = location.substring("/projectlogos/".length());
-			location = System.getProperty("java.class.path") + "/../../assWorkbench/server/projects/" + location;
-			File result = new File(location);
-			if (result.exists()) {
-				return result;
-			}
+		File sideBarImageFile = SideBarCtrl.getSideBarImageFile(location);
+		if (sideBarImageFile != null) {
+			return sideBarImageFile;
 		}
 
 		String locEquiv = getWhitelistedLocationEquivalent(location);
