@@ -58,6 +58,12 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			return;
 		}
 
+		WebServerAnswer sideBarAnswer = SideBarCtrl.handlePost(fileLocation, jsonData);
+		if (sideBarAnswer != null) {
+			respond(200, sideBarAnswer);
+			return;
+		}
+
 		JSON json;
 		try {
 			json = new JSON(jsonData);
