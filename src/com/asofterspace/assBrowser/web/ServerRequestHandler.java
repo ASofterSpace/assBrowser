@@ -9,10 +9,13 @@ import com.asofterspace.assBrowser.Database;
 import com.asofterspace.assBrowser.paths.PathCtrl;
 import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.io.File;
+import com.asofterspace.toolbox.io.HTML;
 import com.asofterspace.toolbox.io.JSON;
 import com.asofterspace.toolbox.io.JsonParseException;
+import com.asofterspace.toolbox.io.SimpleFile;
 import com.asofterspace.toolbox.io.TextFile;
 import com.asofterspace.toolbox.utils.StrUtils;
+import com.asofterspace.toolbox.utils.TextEncoding;
 import com.asofterspace.toolbox.virtualEmployees.SideBarCtrl;
 import com.asofterspace.toolbox.virtualEmployees.SideBarEntry;
 import com.asofterspace.toolbox.web.WebServer;
@@ -23,6 +26,7 @@ import com.asofterspace.toolbox.web.WebServerRequestHandler;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -168,27 +172,48 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			boolean recursively = false;
 
 			List<Directory> childFolders = folder.getAllDirectories(recursively);
-
-			for (Directory childFolder : childFolders) {
-				folderContent.append("<a href='/?path=" + path + "/" + childFolder.getLocalDirname() + "'>");
-				folderContent.append("<div class='line'>");
-				folderContent.append(childFolder.getLocalDirname());
-				folderContent.append("</div>");
-				folderContent.append("</a>");
-			}
-
-			if (childFolders.size() > 0) {
-				folderContent.append("<div>");
-				folderContent.append("&nbsp;");
-				folderContent.append("</div>");
-			}
-
 			List<File> childFiles = folder.getAllFiles(recursively);
 
-			for (File childFile : childFiles) {
-				folderContent.append("<div class='line'>");
-				folderContent.append(childFile.getLocalFilename());
-				folderContent.append("</div>");
+			SimpleFile vstpuFile = new SimpleFile(folder, "VSTPU.stpu");
+			if (vstpuFile.exists()) {
+				vstpuFile.setEncoding(TextEncoding.ISO_LATIN_1);
+				List<String> entries = vstpuFile.getContents();
+
+				Map<String, Directory> directories = new HashMap<>();
+				for (Directory childFolder : childFolders) {
+					directories.put(childFolder.getLocalDirname(), childFolder);
+				}
+
+				Map<String, File> files = new HashMap<>();
+				for (File file : childFiles) {
+					files.put(file.getLocalFilename(), file);
+				}
+
+				for (String entry : entries) {
+					Directory curDir = directories.get(entry);
+					if (curDir != null) {
+						addFolderToHtml(folderContent, curDir, path);
+					} else {
+						File curFile = files.get(entry);
+						if (curFile != null) {
+							addFileToHtml(folderContent, curFile);
+						} else {
+							addTextToHtml(folderContent, entry);
+						}
+					}
+				}
+			} else {
+				for (Directory childFolder : childFolders) {
+					addFolderToHtml(folderContent, childFolder, path);
+				}
+
+				if (childFolders.size() > 0) {
+					addTextToHtml(folderContent, "");
+				}
+
+				for (File childFile : childFiles) {
+					addFileToHtml(folderContent, childFile);
+				}
 			}
 
 			indexContent = StrUtils.replaceAll(indexContent, "[[FOLDER_CONTENT]]", folderContent.toString());
@@ -202,6 +227,30 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		}
 
 		return null;
+	}
+
+	private void addFolderToHtml(StringBuilder folderContent, Directory childFolder, String path) {
+		folderContent.append("<a href='/?path=" + path + "/" + childFolder.getLocalDirname() + "'>");
+		folderContent.append("<div class='line'>");
+		folderContent.append(HTML.escapeHTMLstr(childFolder.getLocalDirname()));
+		folderContent.append("</div>");
+		folderContent.append("</a>");
+	}
+
+	private void addFileToHtml(StringBuilder folderContent, File childFile) {
+		folderContent.append("<div class='line'>");
+		folderContent.append(HTML.escapeHTMLstr(childFile.getLocalFilename()));
+		folderContent.append("</div>");
+	}
+
+	private void addTextToHtml(StringBuilder folderContent, String text) {
+		folderContent.append("<div>");
+		if ("".equals(text)) {
+			folderContent.append("&nbsp;");
+		} else {
+			folderContent.append(HTML.escapeHTMLstr(text));
+		}
+		folderContent.append("</div>");
 	}
 
 	@Override
