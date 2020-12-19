@@ -25,8 +25,6 @@ public class AssBrowser {
 	public final static String VERSION_NUMBER = "0.0.0.2(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
 	public final static String VERSION_DATE = "16. December 2020 - 18. December 2020";
 
-	private static String projHtmlStr;
-
 
 	public static void main(String[] args) {
 
