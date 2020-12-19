@@ -1,7 +1,7 @@
 body {
 	font-family: "Calibri";
 	overflow: hidden;
-	background: linear-gradient(179deg, #102, #201, #102, #201, #102, #201, #102, #201, #102);
+	background: linear-gradient(-26deg, #160022, #220022, #11001A, #220022, #220022, #220011, #220022, #110022, #110011, #11001A, #220022, #220022, #220011, #220022, #110022, #110011, #11001A, #220022);
 	padding-left: 4pt;
 	padding-right: 60pt;
 }
