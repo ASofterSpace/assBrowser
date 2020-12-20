@@ -21,6 +21,7 @@ import com.asofterspace.toolbox.virtualEmployees.SideBarCtrl;
 import com.asofterspace.toolbox.virtualEmployees.SideBarEntry;
 import com.asofterspace.toolbox.web.WebServer;
 import com.asofterspace.toolbox.web.WebServerAnswer;
+import com.asofterspace.toolbox.web.WebServerAnswerBasedOnFile;
 import com.asofterspace.toolbox.web.WebServerAnswerInHtml;
 import com.asofterspace.toolbox.web.WebServerAnswerInJson;
 import com.asofterspace.toolbox.web.WebServerRequestHandler;
@@ -172,9 +173,13 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 			String localPath = resolvePath(path);
 
-			StringBuilder folderContent = new StringBuilder();
-
 			Directory folder = new Directory(localPath);
+
+			if ("download".equals(arguments.get("action"))) {
+				return new WebServerAnswerBasedOnFile(new File(folder, fileName));
+			}
+
+			StringBuilder folderContent = new StringBuilder();
 
 			boolean recursively = false;
 
@@ -232,6 +237,22 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			jsonData.set("file", fileName);
 			indexContent = StrUtils.replaceAll(indexContent, "[[DATA]]", jsonData.toString());
 
+			StringBuilder buttonHtml = new StringBuilder();
+			buttonHtml.append("<a href=\"/?path=" + path);
+			if (fileName != null) {
+				buttonHtml.append("&file=" + fileName);
+			}
+			buttonHtml.append("&console=cd ..\" class='button'>");
+			buttonHtml.append("One Folder Up");
+			buttonHtml.append("</a>");
+			if (fileName != null) {
+				buttonHtml.append(getDownloadButtonHtml(path, fileName, ""));
+			}
+			buttonHtml.append("<span class='button' onclick='browser.expandConsole()' id='expandConsoleBtn'>");
+			buttonHtml.append("Expand Console");
+			buttonHtml.append("</span>");
+			indexContent = StrUtils.replaceAll(indexContent, "[[BUTTONS]]", buttonHtml.toString());
+
 			String fileHtmlStr = "";
 
 			if (fileName != null) {
@@ -255,7 +276,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 						fileHtmlStr = StrUtils.replaceAll(fileHtmlStr, "&#10;", "<br>");
 						fileHtmlStr = StrUtils.replaceAll(fileHtmlStr, " ", "&nbsp;");
 					} else {
-						fileHtmlStr = "No preview for '" + fileName + "' available.";
+						fileHtmlStr = "No preview for '" + fileName + "' available.<br><br>" +
+									  getDownloadButtonHtml(path, fileName, "padding: 4pt 9pt;");
 					}
 				}
 			}
@@ -342,6 +364,16 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		}
 
 		return path;
+	}
+
+	private String getDownloadButtonHtml(String path, String fileName, String style) {
+		return "<a href=\"/?path=" + path +
+			   "&file=" + fileName +
+			   "&action=download\" target='_blank' " +
+			   "class='button'" +
+			   "style='" + style + "'>" +
+			   "Download Current File" +
+			   "</a>";
 	}
 
 }

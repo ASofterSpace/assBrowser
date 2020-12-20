@@ -36,7 +36,7 @@ div#mainContent, div.scrollable {
 	position: relative;
 }
 
-span.button {
+span.button, a.button {
 	color: #AACCFF;
 	padding: 0pt 4pt;
 	border-radius: 5pt;
@@ -53,7 +53,13 @@ span.button.highviz {
 	background: rgba(0, 20, 50, 0.8);
 }
 
-span.button:hover {
+div.buttonBar > span.button, div.buttonBar > a.button {
+	padding: 2pt 10pt;
+	border-radius: 5pt;
+	margin: 0pt 10pt;
+}
+
+span.button:hover, a.button: hover {
 	background: rgba(150, 200, 250, 0.5);
 }
 

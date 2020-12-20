@@ -26,6 +26,18 @@ window.browser = {
 		}
 	},
 
+	expandConsole: function() {
+		if (document.getElementById("expandConsoleBtn").innerHTML == "Collapse Console") {
+			document.getElementById("fileContentContainer").style.height = "90%";
+			document.getElementById("consoleContainer").style.height = "1.5%";
+			document.getElementById("expandConsoleBtn").innerHTML = "Expand Console";
+		} else {
+			document.getElementById("fileContentContainer").style.height = "15%";
+			document.getElementById("consoleContainer").style.height = "76.5%";
+			document.getElementById("expandConsoleBtn").innerHTML = "Collapse Console";
+		}
+	},
+
 }
 
 
