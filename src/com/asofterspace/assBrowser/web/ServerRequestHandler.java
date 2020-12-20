@@ -14,6 +14,7 @@ import com.asofterspace.toolbox.io.JSON;
 import com.asofterspace.toolbox.io.JsonParseException;
 import com.asofterspace.toolbox.io.SimpleFile;
 import com.asofterspace.toolbox.io.TextFile;
+import com.asofterspace.toolbox.utils.Record;
 import com.asofterspace.toolbox.utils.StrUtils;
 import com.asofterspace.toolbox.utils.TextEncoding;
 import com.asofterspace.toolbox.virtualEmployees.SideBarCtrl;
@@ -141,16 +142,22 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				SideBarCtrl.getSidebarHtmlStr(SideBarEntry.BROWSER));
 
 			String path = arguments.get("path");
+			String fileName = arguments.get("file");
 
 			path = PathCtrl.ensurePathIsSafe(path);
 
 			// interpret console commands - in case we do a cd, the path has to be changed here - not earlier,
 			// not later
 			if (arguments.get("console") != null) {
-				path = consoleCtrl.interpretCommand(arguments.get("console"), path);
-			}
+				String newPath = consoleCtrl.interpretCommand(arguments.get("console"), path);
 
-			path = PathCtrl.ensurePathIsSafe(path);
+				newPath = PathCtrl.ensurePathIsSafe(newPath);
+
+				if (!newPath.equals(path)) {
+					fileName = null;
+					path = newPath;
+				}
+			}
 
 			// if path starts with the local path of the Desktop, replace it with /Desktop/
 			String pathCompare = path + "/";
@@ -181,22 +188,22 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 				Map<String, Directory> directories = new HashMap<>();
 				for (Directory childFolder : childFolders) {
-					directories.put(childFolder.getLocalDirname(), childFolder);
+					directories.put(childFolder.getLocalDirname().toLowerCase(), childFolder);
 				}
 
 				Map<String, File> files = new HashMap<>();
 				for (File file : childFiles) {
-					files.put(file.getLocalFilename(), file);
+					files.put(file.getLocalFilename().toLowerCase(), file);
 				}
 
 				for (String entry : entries) {
-					Directory curDir = directories.get(entry);
+					Directory curDir = directories.get(entry.toLowerCase());
 					if (curDir != null) {
 						addFolderToHtml(folderContent, curDir, path);
 					} else {
-						File curFile = files.get(entry);
+						File curFile = files.get(entry.toLowerCase() + ".stpu");
 						if (curFile != null) {
-							addFileToHtml(folderContent, curFile);
+							addFileToHtml(folderContent, entry, curFile, path);
 						} else {
 							addTextToHtml(folderContent, entry);
 						}
@@ -212,7 +219,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				}
 
 				for (File childFile : childFiles) {
-					addFileToHtml(folderContent, childFile);
+					addFileToHtml(folderContent, childFile.getLocalFilename(), childFile, path);
 				}
 			}
 
@@ -220,8 +227,40 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 			indexContent = StrUtils.replaceAll(indexContent, "[[CONSOLE]]", consoleCtrl.getHtmlStr());
 
-			indexContent = StrUtils.replaceAll(indexContent, "[[DATA]]", "{\"path\": \"" +
-				JSON.escapeJSONstr(path) + "\"}");
+			JSON jsonData = new JSON(Record.emptyObject());
+			jsonData.set("path", path);
+			jsonData.set("file", fileName);
+			indexContent = StrUtils.replaceAll(indexContent, "[[DATA]]", jsonData.toString());
+
+			String fileHtmlStr = "";
+
+			if (fileName != null) {
+				File genericFile = new File(folder, fileName);
+				if (!genericFile.exists()) {
+					fileHtmlStr = "The file '" + fileName + "' does not exist!";
+				} else {
+					String lowCaseFileName = fileName.toLowerCase();
+					if (lowCaseFileName.endsWith(".stpu") || lowCaseFileName.endsWith(".txt") ||
+						lowCaseFileName.endsWith(".ini")) {
+						TextFile file = new TextFile(folder, fileName);
+						file.setEncoding(TextEncoding.ISO_LATIN_1);
+						fileHtmlStr = file.getContent();
+						fileHtmlStr = HTML.escapeHTMLstr(fileHtmlStr);
+						fileHtmlStr = StrUtils.replaceAll(fileHtmlStr, "&#10;", "<br>");
+						fileHtmlStr = StrUtils.replaceAll(fileHtmlStr, " ", "&nbsp;");
+					} else if (lowCaseFileName.endsWith(".json")) {
+						TextFile file = new TextFile(folder, fileName);
+						fileHtmlStr = file.getContent();
+						fileHtmlStr = HTML.escapeHTMLstr(fileHtmlStr);
+						fileHtmlStr = StrUtils.replaceAll(fileHtmlStr, "&#10;", "<br>");
+						fileHtmlStr = StrUtils.replaceAll(fileHtmlStr, " ", "&nbsp;");
+					} else {
+						fileHtmlStr = "No preview for '" + fileName + "' available.";
+					}
+				}
+			}
+
+			indexContent = StrUtils.replaceAll(indexContent, "[[FILE_CONTENT]]", fileHtmlStr);
 
 			return new WebServerAnswerInHtml(indexContent);
 		}
@@ -230,17 +269,21 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 	}
 
 	private void addFolderToHtml(StringBuilder folderContent, Directory childFolder, String path) {
-		folderContent.append("<a href='/?path=" + path + "/" + childFolder.getLocalDirname() + "'>");
+		folderContent.append("<a href=\"/?path=" + path + "/");
+		folderContent.append(childFolder.getLocalDirname() + "\">");
 		folderContent.append("<div class='line'>");
 		folderContent.append(HTML.escapeHTMLstr(childFolder.getLocalDirname()));
 		folderContent.append("</div>");
 		folderContent.append("</a>");
 	}
 
-	private void addFileToHtml(StringBuilder folderContent, File childFile) {
+	private void addFileToHtml(StringBuilder folderContent, String filename, File childFile, String path) {
+		folderContent.append("<a href=\"/?path=" + path);
+		folderContent.append("&file=" + childFile.getLocalFilename() + "\">");
 		folderContent.append("<div class='line'>");
-		folderContent.append(HTML.escapeHTMLstr(childFile.getLocalFilename()));
+		folderContent.append(HTML.escapeHTMLstr(filename));
 		folderContent.append("</div>");
+		folderContent.append("</a>");
 	}
 
 	private void addTextToHtml(StringBuilder folderContent, String text) {
