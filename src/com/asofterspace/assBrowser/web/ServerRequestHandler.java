@@ -275,6 +275,11 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 						fileHtmlStr = HTML.escapeHTMLstr(fileHtmlStr);
 						fileHtmlStr = StrUtils.replaceAll(fileHtmlStr, "&#10;", "<br>");
 						fileHtmlStr = StrUtils.replaceAll(fileHtmlStr, " ", "&nbsp;");
+					} else if (lowCaseFileName.endsWith(".jpg") || lowCaseFileName.endsWith(".jpeg") ||
+						lowCaseFileName.endsWith(".png")) {
+						fileHtmlStr = "<img src=\"/?path=" + path +
+							"&file=" + fileName +
+							"&action=download\" style='max-width:99%; max-height:99%;' />";
 					} else {
 						fileHtmlStr = "No preview for '" + fileName + "' available.<br><br>" +
 									  getDownloadButtonHtml(path, fileName, "padding: 4pt 9pt;");
