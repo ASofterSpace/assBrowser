@@ -7,6 +7,7 @@ package com.asofterspace.assBrowser.web;
 import com.asofterspace.assBrowser.console.ConsoleCtrl;
 import com.asofterspace.assBrowser.Database;
 import com.asofterspace.assBrowser.paths.PathCtrl;
+import com.asofterspace.toolbox.gui.GuiUtils;
 import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.io.File;
 import com.asofterspace.toolbox.io.HTML;
@@ -80,32 +81,19 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		WebServerAnswer answer = new WebServerAnswerInJson("{\"success\": true}");
 
-		try {
+		switch (fileLocation) {
 
-			switch (fileLocation) {
+			case "/openFolderInOS":
+				if (json.getString("path") == null) {
+					respond(403);
+				}
+				String localPath = resolvePath(json.getString("path"));
+				GuiUtils.openFolder(localPath);
+				break;
 
-				case "/todo":
-					answer = new WebServerAnswerInJson(new JSON("{\"success\": maybe}"));
-					break;
-/*
-				case "/addSingleTask":
-
-					Task addedOrEditedTask = addOrEditSingleTask(json);
-					if (addedOrEditedTask == null) {
-						return;
-					}
-					answer = new WebServerAnswerInJson(new JSON("{\"success\": true}"));
-					break;
-*/
-
-				default:
-					respond(404);
-					return;
-			}
-
-		} catch (JsonParseException e) {
-			respond(403);
-			return;
+			default:
+				respond(404);
+				return;
 		}
 
 		respond(200, answer);
@@ -237,7 +225,10 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			jsonData.set("file", fileName);
 			indexContent = StrUtils.replaceAll(indexContent, "[[DATA]]", jsonData.toString());
 
+
+			// buttonBar
 			StringBuilder buttonHtml = new StringBuilder();
+
 			buttonHtml.append("<a href=\"/?path=" + path);
 			if (fileName != null) {
 				buttonHtml.append("&file=" + fileName);
@@ -245,13 +236,21 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			buttonHtml.append("&console=cd ..\" class='button'>");
 			buttonHtml.append("One Folder Up");
 			buttonHtml.append("</a>");
+
 			if (fileName != null) {
 				buttonHtml.append(getDownloadButtonHtml(path, fileName, ""));
 			}
+
+			buttonHtml.append("<span class='button' onclick='browser.openFolderInOS()'>");
+			buttonHtml.append("Open Folder in OS");
+			buttonHtml.append("</span>");
+
 			buttonHtml.append("<span class='button' onclick='browser.expandConsole()' id='expandConsoleBtn'>");
 			buttonHtml.append("Expand Console");
 			buttonHtml.append("</span>");
+
 			indexContent = StrUtils.replaceAll(indexContent, "[[BUTTONS]]", buttonHtml.toString());
+
 
 			String fileHtmlStr = "";
 

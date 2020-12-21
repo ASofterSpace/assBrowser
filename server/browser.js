@@ -38,6 +38,19 @@ window.browser = {
 		}
 	},
 
+	openFolderInOS: function() {
+
+		var request = new XMLHttpRequest();
+		request.open("POST", "openFolderInOS", true);
+		request.setRequestHeader("Content-Type", "application/json");
+
+		var data = {
+			path: window.data.path,
+		};
+
+		request.send(JSON.stringify(data));
+	},
+
 }
 
 
