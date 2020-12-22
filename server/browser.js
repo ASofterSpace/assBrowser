@@ -51,6 +51,16 @@ window.browser = {
 		request.send(JSON.stringify(data));
 	},
 
+	openUploadModal: function() {
+		document.getElementById("modalBackground").style.display = "block";
+		document.getElementById("uploadFileModal").style.display = "block";
+	},
+
+	closeUploadModal: function() {
+		document.getElementById("modalBackground").style.display = "none";
+		document.getElementById("uploadFileModal").style.display = "none";
+	},
+
 }
 
 

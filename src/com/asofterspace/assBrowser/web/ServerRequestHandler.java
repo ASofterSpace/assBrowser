@@ -20,6 +20,8 @@ import com.asofterspace.toolbox.utils.StrUtils;
 import com.asofterspace.toolbox.utils.TextEncoding;
 import com.asofterspace.toolbox.virtualEmployees.SideBarCtrl;
 import com.asofterspace.toolbox.virtualEmployees.SideBarEntry;
+import com.asofterspace.toolbox.web.WebRequestFormData;
+import com.asofterspace.toolbox.web.WebRequestFormDataBlock;
 import com.asofterspace.toolbox.web.WebServer;
 import com.asofterspace.toolbox.web.WebServerAnswer;
 import com.asofterspace.toolbox.web.WebServerAnswerBasedOnFile;
@@ -29,6 +31,7 @@ import com.asofterspace.toolbox.web.WebServerRequestHandler;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,6 +61,30 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 	@Override
 	protected void handlePost(String fileLocation) throws IOException {
 
+		WebServerAnswer answer = new WebServerAnswerInJson("{\"success\": true}");
+
+		if (fileLocation.equals("/uploadFile")) {
+			WebRequestFormData formData = receiveFormDataContent(StandardCharsets.ISO_8859_1);
+			WebRequestFormDataBlock fileBlock = formData.getByName("file");
+			String fileContent = fileBlock.getContent();
+			WebRequestFormDataBlock fileNameBlock = formData.getByName("filename");
+			String fileNameContent = fileNameBlock.getContent().trim();
+			WebRequestFormDataBlock pathBlock = formData.getByName("path");
+			String pathContent = pathBlock.getContent().trim();
+			String path = PathCtrl.ensurePathIsSafe(pathContent);
+			path = resolvePath(path);
+			Directory parentDir = new Directory(path);
+			TextFile uploadedFile = new TextFile(parentDir, fileNameContent);
+			uploadedFile.setEncoding(TextEncoding.ISO_LATIN_1);
+			uploadedFile.saveContent(fileContent);
+			System.out.println("b0: " + (int) fileContent.charAt(0) + " b1: " + (int) fileContent.charAt(1));
+			Map<String, String> arguments = new HashMap<>();
+			arguments.put("path", pathContent);
+			answer = generateAnswerToMainGetRequest(arguments, "The file has been uploaded!");
+			respond(200, answer);
+			return;
+		}
+
 		String jsonData = receiveJsonContent();
 
 		if (jsonData == null) {
@@ -78,8 +105,6 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			respond(400);
 			return;
 		}
-
-		WebServerAnswer answer = new WebServerAnswerInJson("{\"success\": true}");
 
 		switch (fileLocation) {
 
@@ -124,174 +149,194 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		if (location.startsWith("/index.htm") || location.startsWith("/index") ||
 			location.equals("/") || location.startsWith("/?")) {
 
-			TextFile indexBaseFile = new TextFile(webRoot, "index.htm");
-			String indexContent = indexBaseFile.getContent();
-
-			indexContent = StrUtils.replaceAll(indexContent, "[[SIDEBAR]]",
-				SideBarCtrl.getSidebarHtmlStr(SideBarEntry.BROWSER));
-
-			String path = arguments.get("path");
-			String fileName = arguments.get("file");
-
-			path = PathCtrl.ensurePathIsSafe(path);
-
-			// interpret console commands - in case we do a cd, the path has to be changed here - not earlier,
-			// not later
-			if (arguments.get("console") != null) {
-				String newPath = consoleCtrl.interpretCommand(arguments.get("console"), path);
-
-				newPath = PathCtrl.ensurePathIsSafe(newPath);
-
-				if (!newPath.equals(path)) {
-					fileName = null;
-					path = newPath;
-				}
-			}
-
-			// if path starts with the local path of the Desktop, replace it with /Desktop/
-			String pathCompare = path + "/";
-			String desktopLocation = database.getDesktopLocation();
-			desktopLocation = PathCtrl.ensurePathIsSafe(desktopLocation) + "/";
-			if (pathCompare.startsWith(desktopLocation)) {
-				pathCompare = PathCtrl.DESKTOP + "/" + pathCompare.substring(desktopLocation.length());
-				path = PathCtrl.ensurePathIsSafe(pathCompare);
-			}
-
-			consoleCtrl.addPath(path);
-
-			String localPath = resolvePath(path);
-
-			Directory folder = new Directory(localPath);
-
-			if ("download".equals(arguments.get("action"))) {
-				return new WebServerAnswerBasedOnFile(new File(folder, fileName));
-			}
-
-			StringBuilder folderContent = new StringBuilder();
-
-			boolean recursively = false;
-
-			List<Directory> childFolders = folder.getAllDirectories(recursively);
-			List<File> childFiles = folder.getAllFiles(recursively);
-
-			SimpleFile vstpuFile = new SimpleFile(folder, "VSTPU.stpu");
-			if (vstpuFile.exists()) {
-				vstpuFile.setEncoding(TextEncoding.ISO_LATIN_1);
-				List<String> entries = vstpuFile.getContents();
-
-				Map<String, Directory> directories = new HashMap<>();
-				for (Directory childFolder : childFolders) {
-					directories.put(childFolder.getLocalDirname().toLowerCase(), childFolder);
-				}
-
-				Map<String, File> files = new HashMap<>();
-				for (File file : childFiles) {
-					files.put(file.getLocalFilename().toLowerCase(), file);
-				}
-
-				for (String entry : entries) {
-					Directory curDir = directories.get(entry.toLowerCase());
-					if (curDir != null) {
-						addFolderToHtml(folderContent, curDir, path);
-					} else {
-						File curFile = files.get(entry.toLowerCase() + ".stpu");
-						if (curFile != null) {
-							addFileToHtml(folderContent, entry, curFile, path);
-						} else {
-							addTextToHtml(folderContent, entry);
-						}
-					}
-				}
-			} else {
-				for (Directory childFolder : childFolders) {
-					addFolderToHtml(folderContent, childFolder, path);
-				}
-
-				if (childFolders.size() > 0) {
-					addTextToHtml(folderContent, "");
-				}
-
-				for (File childFile : childFiles) {
-					addFileToHtml(folderContent, childFile.getLocalFilename(), childFile, path);
-				}
-			}
-
-			indexContent = StrUtils.replaceAll(indexContent, "[[FOLDER_CONTENT]]", folderContent.toString());
-
-			indexContent = StrUtils.replaceAll(indexContent, "[[CONSOLE]]", consoleCtrl.getHtmlStr());
-
-			JSON jsonData = new JSON(Record.emptyObject());
-			jsonData.set("path", path);
-			jsonData.set("file", fileName);
-			indexContent = StrUtils.replaceAll(indexContent, "[[DATA]]", jsonData.toString());
-
-
-			// buttonBar
-			StringBuilder buttonHtml = new StringBuilder();
-
-			buttonHtml.append("<a href=\"/?path=" + path);
-			if (fileName != null) {
-				buttonHtml.append("&file=" + fileName);
-			}
-			buttonHtml.append("&console=cd ..\" class='button'>");
-			buttonHtml.append("One Folder Up");
-			buttonHtml.append("</a>");
-
-			if (fileName != null) {
-				buttonHtml.append(getDownloadButtonHtml(path, fileName, ""));
-			}
-
-			buttonHtml.append("<span class='button' onclick='browser.openFolderInOS()'>");
-			buttonHtml.append("Open Folder in OS");
-			buttonHtml.append("</span>");
-
-			buttonHtml.append("<span class='button' onclick='browser.expandConsole()' id='expandConsoleBtn'>");
-			buttonHtml.append("Expand Console");
-			buttonHtml.append("</span>");
-
-			indexContent = StrUtils.replaceAll(indexContent, "[[BUTTONS]]", buttonHtml.toString());
-
-
-			String fileHtmlStr = "";
-
-			if (fileName != null) {
-				File genericFile = new File(folder, fileName);
-				if (!genericFile.exists()) {
-					fileHtmlStr = "The file '" + fileName + "' does not exist!";
-				} else {
-					String lowCaseFileName = fileName.toLowerCase();
-					if (lowCaseFileName.endsWith(".stpu") || lowCaseFileName.endsWith(".txt") ||
-						lowCaseFileName.endsWith(".ini")) {
-						TextFile file = new TextFile(folder, fileName);
-						file.setEncoding(TextEncoding.ISO_LATIN_1);
-						fileHtmlStr = file.getContent();
-						fileHtmlStr = HTML.escapeHTMLstr(fileHtmlStr);
-						fileHtmlStr = StrUtils.replaceAll(fileHtmlStr, "&#10;", "<br>");
-						fileHtmlStr = StrUtils.replaceAll(fileHtmlStr, " ", "&nbsp;");
-					} else if (lowCaseFileName.endsWith(".json")) {
-						TextFile file = new TextFile(folder, fileName);
-						fileHtmlStr = file.getContent();
-						fileHtmlStr = HTML.escapeHTMLstr(fileHtmlStr);
-						fileHtmlStr = StrUtils.replaceAll(fileHtmlStr, "&#10;", "<br>");
-						fileHtmlStr = StrUtils.replaceAll(fileHtmlStr, " ", "&nbsp;");
-					} else if (lowCaseFileName.endsWith(".jpg") || lowCaseFileName.endsWith(".jpeg") ||
-						lowCaseFileName.endsWith(".png")) {
-						fileHtmlStr = "<img src=\"/?path=" + path +
-							"&file=" + fileName +
-							"&action=download\" style='max-width:99%; max-height:99%;' />";
-					} else {
-						fileHtmlStr = "No preview for '" + fileName + "' available.<br><br>" +
-									  getDownloadButtonHtml(path, fileName, "padding: 4pt 9pt;");
-					}
-				}
-			}
-
-			indexContent = StrUtils.replaceAll(indexContent, "[[FILE_CONTENT]]", fileHtmlStr);
-
-			return new WebServerAnswerInHtml(indexContent);
+			return generateAnswerToMainGetRequest(arguments, null);
 		}
 
 		return null;
+	}
+
+	private WebServerAnswer generateAnswerToMainGetRequest(Map<String, String> arguments, String message) {
+
+		TextFile indexBaseFile = new TextFile(webRoot, "index.htm");
+		String indexContent = indexBaseFile.getContent();
+
+		indexContent = StrUtils.replaceAll(indexContent, "[[SIDEBAR]]",
+			SideBarCtrl.getSidebarHtmlStr(SideBarEntry.BROWSER));
+
+		String path = arguments.get("path");
+		String fileName = arguments.get("file");
+
+		path = PathCtrl.ensurePathIsSafe(path);
+
+		// interpret console commands - in case we do a cd, the path has to be changed here - not earlier,
+		// not later
+		if (arguments.get("console") != null) {
+			String newPath = consoleCtrl.interpretCommand(arguments.get("console"), path);
+
+			newPath = PathCtrl.ensurePathIsSafe(newPath);
+
+			if (!newPath.equals(path)) {
+				fileName = null;
+				path = newPath;
+			}
+		}
+
+		// if path starts with the local path of the Desktop, replace it with /Desktop/
+		String pathCompare = path + "/";
+		String desktopLocation = database.getDesktopLocation();
+		desktopLocation = PathCtrl.ensurePathIsSafe(desktopLocation) + "/";
+		if (pathCompare.startsWith(desktopLocation)) {
+			pathCompare = PathCtrl.DESKTOP + "/" + pathCompare.substring(desktopLocation.length());
+			path = PathCtrl.ensurePathIsSafe(pathCompare);
+		}
+
+		consoleCtrl.addPath(path);
+
+		String localPath = resolvePath(path);
+
+		Directory folder = new Directory(localPath);
+
+		if ("download".equals(arguments.get("action"))) {
+			return new WebServerAnswerBasedOnFile(new File(folder, fileName));
+		}
+
+		StringBuilder folderContent = new StringBuilder();
+
+		boolean recursively = false;
+
+		List<Directory> childFolders = folder.getAllDirectories(recursively);
+		List<File> childFiles = folder.getAllFiles(recursively);
+
+		SimpleFile vstpuFile = new SimpleFile(folder, "VSTPU.stpu");
+		if (vstpuFile.exists()) {
+			vstpuFile.setEncoding(TextEncoding.ISO_LATIN_1);
+			List<String> entries = vstpuFile.getContents();
+
+			Map<String, Directory> directories = new HashMap<>();
+			for (Directory childFolder : childFolders) {
+				directories.put(childFolder.getLocalDirname().toLowerCase(), childFolder);
+			}
+
+			Map<String, File> files = new HashMap<>();
+			for (File file : childFiles) {
+				files.put(file.getLocalFilename().toLowerCase(), file);
+			}
+
+			for (String entry : entries) {
+				Directory curDir = directories.get(entry.toLowerCase());
+				if (curDir != null) {
+					addFolderToHtml(folderContent, curDir, path);
+				} else {
+					File curFile = files.get(entry.toLowerCase() + ".stpu");
+					if (curFile != null) {
+						addFileToHtml(folderContent, entry, curFile, path);
+					} else {
+						addTextToHtml(folderContent, entry);
+					}
+				}
+			}
+		} else {
+			for (Directory childFolder : childFolders) {
+				addFolderToHtml(folderContent, childFolder, path);
+			}
+
+			if (childFolders.size() > 0) {
+				addTextToHtml(folderContent, "");
+			}
+
+			for (File childFile : childFiles) {
+				addFileToHtml(folderContent, childFile.getLocalFilename(), childFile, path);
+			}
+		}
+
+		indexContent = StrUtils.replaceAll(indexContent, "[[FOLDER_CONTENT]]", folderContent.toString());
+
+		indexContent = StrUtils.replaceAll(indexContent, "[[CONSOLE]]", consoleCtrl.getHtmlStr());
+
+		JSON jsonData = new JSON(Record.emptyObject());
+		jsonData.set("path", path);
+		jsonData.set("file", fileName);
+		indexContent = StrUtils.replaceAll(indexContent, "[[DATA]]", jsonData.toString());
+
+		indexContent = StrUtils.replaceAll(indexContent, "[[PATH]]", path);
+
+
+		// buttonBar
+		StringBuilder buttonHtml = new StringBuilder();
+
+		buttonHtml.append("<a href=\"/?path=" + path);
+		if (fileName != null) {
+			buttonHtml.append("&file=" + fileName);
+		}
+		buttonHtml.append("&console=cd ..\" class='button'>");
+		buttonHtml.append("One Folder Up");
+		buttonHtml.append("</a>");
+
+		if (fileName != null) {
+			buttonHtml.append(getDownloadButtonHtml(path, fileName, ""));
+		}
+
+		buttonHtml.append("<span class='button' onclick='browser.openUploadModal()'>");
+		buttonHtml.append("Upload a File");
+		buttonHtml.append("</span>");
+
+		buttonHtml.append("<span class='button' onclick='browser.openFolderInOS()'>");
+		buttonHtml.append("Open Folder in OS");
+		buttonHtml.append("</span>");
+
+		buttonHtml.append("<span class='button' onclick='browser.expandConsole()' id='expandConsoleBtn'>");
+		buttonHtml.append("Expand Console");
+		buttonHtml.append("</span>");
+
+		indexContent = StrUtils.replaceAll(indexContent, "[[BUTTONS]]", buttonHtml.toString());
+
+
+		if (message == null) {
+			message = "";
+		}
+		if (!message.equals("")) {
+			message = "alert(\"" + message + "\")";
+		}
+		indexContent = StrUtils.replaceAll(indexContent, "[[EXTRA_MESSAGE]]", message);
+
+
+		String fileHtmlStr = "";
+
+		if (fileName != null) {
+			File genericFile = new File(folder, fileName);
+			if (!genericFile.exists()) {
+				fileHtmlStr = "The file '" + fileName + "' does not exist!";
+			} else {
+				String lowCaseFileName = fileName.toLowerCase();
+				if (lowCaseFileName.endsWith(".stpu") || lowCaseFileName.endsWith(".txt") ||
+					lowCaseFileName.endsWith(".ini")) {
+					TextFile file = new TextFile(folder, fileName);
+					file.setEncoding(TextEncoding.ISO_LATIN_1);
+					fileHtmlStr = file.getContent();
+					fileHtmlStr = HTML.escapeHTMLstr(fileHtmlStr);
+					fileHtmlStr = StrUtils.replaceAll(fileHtmlStr, "&#10;", "<br>");
+					fileHtmlStr = StrUtils.replaceAll(fileHtmlStr, " ", "&nbsp;");
+				} else if (lowCaseFileName.endsWith(".json")) {
+					TextFile file = new TextFile(folder, fileName);
+					fileHtmlStr = file.getContent();
+					fileHtmlStr = HTML.escapeHTMLstr(fileHtmlStr);
+					fileHtmlStr = StrUtils.replaceAll(fileHtmlStr, "&#10;", "<br>");
+					fileHtmlStr = StrUtils.replaceAll(fileHtmlStr, " ", "&nbsp;");
+				} else if (lowCaseFileName.endsWith(".jpg") || lowCaseFileName.endsWith(".jpeg") ||
+					lowCaseFileName.endsWith(".png")) {
+					fileHtmlStr = "<img src=\"/?path=" + path +
+						"&file=" + fileName +
+						"&action=download\" style='max-width:99%; max-height:99%;' />";
+				} else {
+					fileHtmlStr = "No preview for '" + fileName + "' available.<br><br>" +
+								  getDownloadButtonHtml(path, fileName, "padding: 4pt 9pt;");
+				}
+			}
+		}
+
+		indexContent = StrUtils.replaceAll(indexContent, "[[FILE_CONTENT]]", fileHtmlStr);
+
+		return new WebServerAnswerInHtml(indexContent);
 	}
 
 	private void addFolderToHtml(StringBuilder folderContent, Directory childFolder, String path) {

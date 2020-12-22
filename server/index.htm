@@ -37,7 +37,34 @@
 				<input id="consoleInput" type="text" />
 			</div>
 
+			<div id="modalBackground" style="position: fixed; display: none; z-index: 500;top: 0;right: 0;left: 0;bottom: 0;background: black;opacity: 0.65;"
+				onclick="browser.closeUploadModal()">
+				&nbsp;
+			</div>
+
+			<div id="uploadFileModal" style="display: none; position: fixed; top: 35%; left: 35%; z-index: 1000;">
+				<form action="/uploadFile" enctype="multipart/form-data" method="POST">
+					<input type="file" id="uploadFile_file" name="file">
+					<input type="hidden" id="uploadFile_filename" name="filename">
+					<input type="hidden" name="path" value="[[PATH]]">
+					<input type="submit">
+				</form>
+			</div>
+
 			<script>
+				document.getElementById('uploadFile_file').onchange = function() {
+					var filename = document.getElementById('uploadFile_file').value;
+					var pos = filename.lastIndexOf("\\");
+					if (!(pos < 0)) {
+						filename = filename.substring(pos + 1);
+					}
+					pos = filename.lastIndexOf("/");
+					if (!(pos < 0)) {
+						filename = filename.substring(pos + 1);
+					}
+					document.getElementById('uploadFile_filename').value = filename;
+				}
+
 				var startupFunc = function() {
 					var el = document.getElementById("consoleInput");
 					if (el) {
@@ -60,6 +87,8 @@
 				window.setTimeout(startupFunc, 250);
 				window.setTimeout(startupFunc, 500);
 				window.setTimeout(startupFunc, 1000);
+
+				[[EXTRA_MESSAGE]]
 			</script>
 		</div>
 
