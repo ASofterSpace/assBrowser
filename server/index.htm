@@ -34,7 +34,7 @@
 			<div id="consoleContainer" style="height: 1.5%; margin-top: 1%; overflow-y: scroll; overflow-x: auto;">
 				[[CONSOLE]]
 				&gt;
-				<input id="consoleInput" type="text" />
+				<input id="consoleInput" type="text" value="[[CONSOLE_VALUE]]" />
 			</div>
 
 			<div id="modalBackground" style="position: fixed; display: none; z-index: 500;top: 0;right: 0;left: 0;bottom: 0;background: black;opacity: 0.65;"
@@ -71,9 +71,12 @@
 						el.addEventListener("keyup", function(e) {
 							e.preventDefault();
 							if (e.keyCode === 13) {
-								window.location.href = "/?path=" + window.data.path +
-									"&file=" + window.data.file +
-									"&console=" + document.getElementById("consoleInput").value;
+								var newUrl = "/?path=" + encodeURIComponent(window.data.path);
+								if (window.data.file) {
+									newUrl += "&file=" + encodeURIComponent(window.data.file);
+								}
+								newUrl += "&console=" + encodeURIComponent(document.getElementById("consoleInput").value);
+								window.location.href = newUrl;
 							}
 						});
 					}

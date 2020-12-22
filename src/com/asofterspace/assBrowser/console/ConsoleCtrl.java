@@ -18,6 +18,8 @@ public class ConsoleCtrl {
 
 	private Database database;
 
+	private String prevMathOrgResult = "0";
+
 
 	public ConsoleCtrl(Database database) {
 		this.database = database;
@@ -50,17 +52,24 @@ public class ConsoleCtrl {
 	/**
 	 * Return the state of the path after executing the command
 	 */
-	public String interpretCommand(String command, String previousPath) {
+	public ConsoleResult interpretCommand(String command, String previousPath) {
 
+		ConsoleResult result = new ConsoleResult("", previousPath);
+
+		String origHistoryLine = "";
 		if (history.size() > 0) {
-			history.set(history.size() - 1, history.get(history.size() - 1) + " > " + command);
+			origHistoryLine = history.get(history.size() - 1);
+			history.set(history.size() - 1, origHistoryLine + " > " + command);
 		}
 
 		command = command.trim();
-		if (command.equals("cd")) {
-			return PathCtrl.DESKTOP;
+		String commandLow = command.toLowerCase();
+
+		if (commandLow.equals("cd")) {
+			result.setPath(PathCtrl.DESKTOP);
+			return result;
 		}
-		if (command.startsWith("cd ")) {
+		if (commandLow.startsWith("cd ")) {
 			command = command.substring(3).trim() + "/";
 			command = StrUtils.replaceAll(command, "\\", "/");
 
@@ -99,11 +108,190 @@ public class ConsoleCtrl {
 					}
 				}
 			}
-			return previousPath + "/" + command;
+			result.setPath(previousPath + "/" + command);
+			return result;
+		}
+
+		if (commandLow.startsWith("mo:")) {
+			result.setCommand("mo: " + computeMathOrg(command.substring(3)));
+			if (history.size() > 0) {
+				history.set(history.size() - 1, origHistoryLine + " > " + result.getCommand());
+			}
+			return result;
 		}
 
 		history.add("ERROR: Command '" + command + "' not understood!");
-		return previousPath;
+		return result;
+	}
+
+	/**
+	 * Enter stuff like 4 + 5 or 6 * 6 = 2
+	 * Returns stuff like 4 + 5 = 9 or 6 * 6 = 36
+	 */
+	private String computeMathOrg(String command) {
+
+		if (command.contains("=")) {
+			command = command.substring(0, command.indexOf("="));
+		}
+
+		String cur = command.toLowerCase();
+
+		cur = StrUtils.replaceAll(cur, "ans", "(" + prevMathOrgResult + ")");
+
+		cur = StrUtils.replaceAll(cur, "pi", "(3,141592653589793238)");
+
+		cur = StrUtils.replaceAll(cur, ".", ",");
+		cur = StrUtils.replaceAll(cur, "•", "*");
+		cur = StrUtils.replaceAll(cur, "·", "*");
+		cur = StrUtils.replaceAll(cur, "x", "*");
+		cur = StrUtils.replaceAll(cur, "×", "*");
+		cur = StrUtils.replaceAll(cur, "-/", "\\");
+		cur = StrUtils.replaceAll(cur, "/", ":");
+
+		String result = computeMathOrgCalculate(cur);
+		result = StrUtils.replaceAll(result, ",", ".");
+
+		prevMathOrgResult = result;
+
+		return command.trim() + " = " + result;
+	}
+
+	/**
+	 * Actually perform the mathorg calculation by first checking if there are brackets present, and if so,
+	 * recursively removing them by calculating inner parts, and if not, by splitting the input on math ops
+	 * and applying one after the other
+	 * (the input is called vars as this was directly translated from datacomx source code)
+	 */
+	private String computeMathOrgCalculate(String vars) {
+
+		if (vars.contains("(")) {
+
+			int lastStartPos = -1;
+			for (int i = 0; i < vars.length(); i++) {
+				char c = vars.charAt(i);
+				switch (c) {
+					case '(':
+						lastStartPos = i;
+						break;
+					case ')':
+						if (lastStartPos >= 0) {
+							return computeMathOrgCalculate(
+								vars.substring(0, lastStartPos) +
+								computeMathOrgCalculate(vars.substring(lastStartPos + 1, i)) +
+								vars.substring(i + 1)
+							);
+						}
+						return "ERROR: Encountered unmatched ')'!";
+				}
+			}
+			return "ERROR: Encountered unmatched '('!";
+		}
+
+		if (vars.contains(")")) {
+			return "ERROR: Encountered unmatched ')'!";
+		}
+
+		vars = StrUtils.replaceAll(vars, " ", "");
+		vars = StrUtils.replaceAll(vars, "\t", "");
+		vars = StrUtils.replaceAll(vars, "/", ":");
+		vars = StrUtils.replaceAll(vars, "-", "+-");
+		vars = StrUtils.replaceAll(vars, "*+-", "*-");
+		vars = StrUtils.replaceAll(vars, ":+-", ":-");
+		while (vars.contains("++")) {
+			vars = StrUtils.replaceAll(vars, "++", "+");
+		}
+		while (vars.startsWith("+")) {
+			if (vars.length() > 1) {
+				vars = vars.substring(2);
+			} else {
+				return "ERROR: No input!";
+			}
+		}
+
+		// ensure the first term starts with a plus
+		vars = "+" + vars;
+
+		// we split the string that is operated on into terms, with each term starting with a math operation
+		// followed by a number (where the number itself may contain the char '\' to indicate root, so e.g.
+		// a term can be +1 (add one) or :4 (divide by four) or -3/9 (minus the third root of nine))
+		List<String> terms = new ArrayList<>();
+		String currentTerm = "";
+		for (int i = 0; i < vars.length(); i++) {
+			char c = vars.charAt(i);
+			switch (c) {
+				case '*':
+				case ':':
+				case '+':
+				case '^':
+					terms.add(currentTerm);
+					currentTerm = "" + c;
+					break;
+				default:
+					currentTerm += c;
+					break;
+			}
+		}
+		terms.add(currentTerm);
+
+		// iterate over all terms and resolve potentially existing roots
+		for (int i = 0; i < terms.size(); i++) {
+			String curTerm = terms.get(i);
+			int pos = curTerm.indexOf("\\");
+			// \ cannot be the first letter, as that is the math op
+			if (pos > 0) {
+				// if it is the second letter, we have a square root
+				Double whichRoot = 2.0;
+				if (pos > 1) {
+					// if it is the third letter or later, we have a special root
+					String whichRootStr = curTerm.substring(2, pos);
+					whichRoot = StrUtils.strToDouble(whichRootStr);
+					if (whichRoot == null) {
+						return "ERROR: '" + whichRootStr + "'-th root cannot be parsed!";
+					}
+				}
+				String underRootStr = curTerm.substring(pos + 1);
+				Double underRoot = StrUtils.strToDouble(underRootStr);
+				if (underRoot == null) {
+					return "ERROR: Term under root '" + underRootStr + "' cannot be parsed!";
+				}
+				terms.set(i, "" + curTerm.charAt(0) + Math.pow(underRoot, 1 / whichRoot));
+			}
+		}
+
+		// perform the actual computation of the terms
+		double result = 0.0;
+
+		for (String term : terms) {
+
+			// a term that is just an op without a number does not do anything
+			if (term.length() < 2) {
+				continue;
+			}
+
+			char ops = term.charAt(0);
+
+			Double termNum = StrUtils.strToDouble(term.substring(1));
+			if (termNum == null) {
+				return "ERROR: The term '" + term.substring(1) + "' could not be parsed!";
+			}
+
+			switch (ops) {
+				case '+':
+					result += termNum;
+					break;
+				case '*':
+					result *= termNum;
+					break;
+				case ':':
+					result /= termNum;
+					break;
+				case '^':
+					result = Math.pow(result, termNum);
+					break;
+			}
+		}
+
+		return StrUtils.doubleToStr(result);
 	}
 
 }

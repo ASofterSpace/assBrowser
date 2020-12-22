@@ -5,6 +5,7 @@
 package com.asofterspace.assBrowser.web;
 
 import com.asofterspace.assBrowser.console.ConsoleCtrl;
+import com.asofterspace.assBrowser.console.ConsoleResult;
 import com.asofterspace.assBrowser.Database;
 import com.asofterspace.assBrowser.paths.PathCtrl;
 import com.asofterspace.toolbox.gui.GuiUtils;
@@ -165,13 +166,16 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		String path = arguments.get("path");
 		String fileName = arguments.get("file");
+		String consoleValue = "";
 
 		path = PathCtrl.ensurePathIsSafe(path);
 
 		// interpret console commands - in case we do a cd, the path has to be changed here - not earlier,
 		// not later
 		if (arguments.get("console") != null) {
-			String newPath = consoleCtrl.interpretCommand(arguments.get("console"), path);
+			ConsoleResult consoleResult = consoleCtrl.interpretCommand(arguments.get("console"), path);
+			String newPath = consoleResult.getPath();
+			consoleValue = consoleResult.getCommand();
 
 			newPath = PathCtrl.ensurePathIsSafe(newPath);
 
@@ -180,6 +184,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				path = newPath;
 			}
 		}
+
+		indexContent = StrUtils.replaceAll(indexContent, "[[CONSOLE_VALUE]]", consoleValue);
 
 		// if path starts with the local path of the Desktop, replace it with /Desktop/
 		String pathCompare = path + "/";
