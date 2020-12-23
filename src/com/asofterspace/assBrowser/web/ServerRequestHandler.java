@@ -166,6 +166,25 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		String path = arguments.get("path");
 		String fileName = arguments.get("file");
+
+		// if a link argument exists, it overrides path and file - it may contain just a path, or a path followed
+		// by a filename without the .stpu (so link=/foo/bar may link to the folder bar inside the folder foo,
+		// or may link to the file bar.stpu inside the folder foo)
+		String link = arguments.get("link");
+		if (link != null) {
+			String localLink = resolvePath(link);
+			File localLinkFile = new File(localLink + ".stpu");
+			if (localLinkFile.exists()) {
+				link = StrUtils.replaceAll(link, "\\", "/");
+				int pos = link.lastIndexOf("/");
+				path = link.substring(0, pos);
+				fileName = link.substring(pos + 1) + ".stpu";
+			} else {
+				path = link;
+				fileName = null;
+			}
+		}
+
 		String consoleValue = "";
 
 		path = PathCtrl.ensurePathIsSafe(path);
@@ -324,15 +343,31 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					TextFile file = new TextFile(folder, fileName);
 					file.setEncoding(TextEncoding.ISO_LATIN_1);
 					fileHtmlStr = file.getContent();
-					fileHtmlStr = HTML.escapeHTMLstr(fileHtmlStr);
-					fileHtmlStr = StrUtils.replaceAll(fileHtmlStr, "&#10;", "<br>");
-					fileHtmlStr = StrUtils.replaceAll(fileHtmlStr, " ", "&nbsp;");
+					fileHtmlStr = prepareStrForDisplayInHtml(fileHtmlStr);
+					// replace %[...] with internal links
+					StringBuilder newFileHtml = new StringBuilder();
+					int pos = fileHtmlStr.indexOf("%[");
+					int start = 0;
+					while (pos >= 0) {
+						int end = fileHtmlStr.indexOf("]", pos);
+						if (end >= 0) {
+							newFileHtml.append(fileHtmlStr.substring(start, pos));
+							String linkStr = fileHtmlStr.substring(pos + 2, end);
+							newFileHtml.append("<a href=\"/?link=" + linkStr + "\">%[");
+							newFileHtml.append(linkStr);
+							newFileHtml.append("]</a>");
+							start = end + 1;
+							pos = fileHtmlStr.indexOf("%[", end);
+						} else {
+							break;
+						}
+					}
+					newFileHtml.append(fileHtmlStr.substring(start));
+					fileHtmlStr = newFileHtml.toString();
 				} else if (lowCaseFileName.endsWith(".json")) {
 					TextFile file = new TextFile(folder, fileName);
 					fileHtmlStr = file.getContent();
-					fileHtmlStr = HTML.escapeHTMLstr(fileHtmlStr);
-					fileHtmlStr = StrUtils.replaceAll(fileHtmlStr, "&#10;", "<br>");
-					fileHtmlStr = StrUtils.replaceAll(fileHtmlStr, " ", "&nbsp;");
+					fileHtmlStr = prepareStrForDisplayInHtml(fileHtmlStr);
 				} else if (lowCaseFileName.endsWith(".jpg") || lowCaseFileName.endsWith(".jpeg") ||
 					lowCaseFileName.endsWith(".png")) {
 					fileHtmlStr = "<img src=\"/?path=" + path +
@@ -348,6 +383,15 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		indexContent = StrUtils.replaceAll(indexContent, "[[FILE_CONTENT]]", fileHtmlStr);
 
 		return new WebServerAnswerInHtml(indexContent);
+	}
+
+	private String prepareStrForDisplayInHtml(String fileHtmlStr) {
+		fileHtmlStr = HTML.escapeHTMLstr(fileHtmlStr);
+		fileHtmlStr = StrUtils.replaceAll(fileHtmlStr, "&#10;", "<br>");
+		fileHtmlStr = StrUtils.replaceAll(fileHtmlStr, "<br> ", "<br>&nbsp;");
+		fileHtmlStr = StrUtils.replaceAll(fileHtmlStr, "  ", "&nbsp;&nbsp;");
+		fileHtmlStr = StrUtils.replaceAll(fileHtmlStr, "&nbsp; ", "&nbsp;&nbsp;");
+		return fileHtmlStr;
 	}
 
 	private void addFolderToHtml(StringBuilder folderContent, Directory childFolder, String path) {
