@@ -33,6 +33,7 @@ import com.asofterspace.toolbox.web.WebServerRequestHandler;
 import java.io.IOException;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -331,6 +332,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 
 		String fileHtmlStr = "";
+		String imagesStr = "";
 
 		if (fileName != null) {
 			File genericFile = new File(folder, fileName);
@@ -343,6 +345,15 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					TextFile file = new TextFile(folder, fileName);
 					file.setEncoding(TextEncoding.ISO_LATIN_1);
 					fileHtmlStr = file.getContent();
+
+					// follow link automatically
+					if (fileHtmlStr.startsWith("%[") && fileHtmlStr.contains("]")) {
+						String newLink = fileHtmlStr.substring(2, fileHtmlStr.indexOf("]"));
+						Map<String, String> newArgs = new HashMap<>();
+						newArgs.put("link", newLink);
+						return generateAnswerToMainGetRequest(newArgs, message);
+					}
+
 					fileHtmlStr = prepareStrForDisplayInHtml(fileHtmlStr);
 					// replace %[...] with internal links
 					StringBuilder newFileHtml = new StringBuilder();
@@ -364,15 +375,47 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					}
 					newFileHtml.append(fileHtmlStr.substring(start));
 					fileHtmlStr = newFileHtml.toString();
+
+					StringBuilder imagesStrBuilder = new StringBuilder();
+					String baseName = fileName.substring(0, fileName.lastIndexOf("."));
+					int imgNum = 1;
+					List<String> imgExtensions = new ArrayList<>();
+					imgExtensions.add("jpg");
+					imgExtensions.add("png");
+					imgExtensions.add("gif");
+					imgExtensions.add("bmp");
+					while (true) {
+						String imgExtFound = null;
+						for (String curImgExt : imgExtensions) {
+							File imgFile = new File(folder, baseName + "_" + imgNum + "." + curImgExt);
+							if (imgFile.exists()) {
+								imgExtFound = curImgExt;
+							}
+						}
+						if (imgExtFound == null) {
+							break;
+						}
+						String imgUrl = "/?path=" + path + "&file=" + baseName + "_" +
+							imgNum + "." + imgExtFound + "&action=download";
+						imagesStrBuilder.append("<a target=\"_blank\" href=\"" + imgUrl + "\">");
+						imagesStrBuilder.append("<img src=\"" + imgUrl + "\">");
+						imagesStrBuilder.append("</a>");
+						imgNum++;
+					}
+					if (imgNum > 1) {
+						imagesStr = "<div class='imageStrip'>" + imagesStrBuilder.toString() + "</div>";
+					}
+
 				} else if (lowCaseFileName.endsWith(".json")) {
 					TextFile file = new TextFile(folder, fileName);
 					fileHtmlStr = file.getContent();
 					fileHtmlStr = prepareStrForDisplayInHtml(fileHtmlStr);
 				} else if (lowCaseFileName.endsWith(".jpg") || lowCaseFileName.endsWith(".jpeg") ||
 					lowCaseFileName.endsWith(".png")) {
-					fileHtmlStr = "<img src=\"/?path=" + path +
-						"&file=" + fileName +
-						"&action=download\" style='max-width:99%; max-height:99%;' />";
+					String imgUrl = "/?path=" + path + "&file=" + fileName + "&action=download";
+					fileHtmlStr = "<a target=\"_blank\" href=\"" + imgUrl + "\" style='max-width:99%; max-height:99%;' />";
+					fileHtmlStr += "<img src=\"" + imgUrl + "\" style='max-width:100%; max-height:100%;' />";
+					fileHtmlStr += "</a>";
 				} else {
 					fileHtmlStr = "No preview for '" + fileName + "' available.<br><br>" +
 								  getDownloadButtonHtml(path, fileName, "padding: 4pt 9pt;");
@@ -381,6 +424,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		}
 
 		indexContent = StrUtils.replaceAll(indexContent, "[[FILE_CONTENT]]", fileHtmlStr);
+
+		indexContent = StrUtils.replaceAll(indexContent, "[[IMAGES]]", imagesStr);
 
 		return new WebServerAnswerInHtml(indexContent);
 	}

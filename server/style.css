@@ -85,6 +85,24 @@ div.line > span {
 	vertical-align: top;
 }
 
+div#fileContentContainer, div.imageStrip {
+	overflow-y: auto;
+	height: 90%;
+}
+
+div.imageStrip {
+	width: 15%;
+	float: right;
+}
+
+div.imageStrip > a {
+	width: 99%;
+}
+
+div.imageStrip > a > img {
+	width: 100%;
+}
+
 a.sidebar, div.sidebar, div.projectbar {
 	position: absolute;
 	right: 10pt;
