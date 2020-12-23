@@ -233,7 +233,12 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				if (curDir != null) {
 					addFolderToHtml(folderContent, curDir, path);
 				} else {
-					File curFile = files.get(entry.toLowerCase() + ".stpu");
+					File curFile = null;
+					if (entry.toLowerCase().endsWith(".sll")) {
+						curFile = files.get(entry.toLowerCase());
+					} else {
+						curFile = files.get(entry.toLowerCase() + ".stpu");
+					}
 					if (curFile != null) {
 						addFileToHtml(folderContent, entry, curFile, path);
 					} else {
@@ -314,8 +319,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				fileHtmlStr = "The file '" + fileName + "' does not exist!";
 			} else {
 				String lowCaseFileName = fileName.toLowerCase();
-				if (lowCaseFileName.endsWith(".stpu") || lowCaseFileName.endsWith(".txt") ||
-					lowCaseFileName.endsWith(".ini")) {
+				if (lowCaseFileName.endsWith(".stpu") || lowCaseFileName.endsWith(".sll") ||
+					lowCaseFileName.endsWith(".txt") || lowCaseFileName.endsWith(".ini")) {
 					TextFile file = new TextFile(folder, fileName);
 					file.setEncoding(TextEncoding.ISO_LATIN_1);
 					fileHtmlStr = file.getContent();
