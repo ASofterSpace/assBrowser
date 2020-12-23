@@ -6,6 +6,10 @@ package com.asofterspace.assBrowser.console;
 
 import com.asofterspace.assBrowser.Database;
 import com.asofterspace.assBrowser.paths.PathCtrl;
+import com.asofterspace.toolbox.io.Directory;
+import com.asofterspace.toolbox.io.File;
+import com.asofterspace.toolbox.io.IoUtils;
+import com.asofterspace.toolbox.io.SimpleFile;
 import com.asofterspace.toolbox.utils.StrUtils;
 
 import java.util.ArrayList;
@@ -63,21 +67,38 @@ public class ConsoleCtrl {
 		}
 
 		command = command.trim();
+		while (command.endsWith(";")) {
+			command = command.substring(0, command.length() - 1).trim();
+		}
 		String commandLow = command.toLowerCase();
 
+
+		// POSIX: cd (change directory)
+		if (commandLow.startsWith(PathCtrl.DESKTOP.toLowerCase())) {
+			command = "cd " + command;
+			commandLow = "cd " + commandLow;
+		}
 		if (commandLow.equals("cd")) {
 			result.setPath(PathCtrl.DESKTOP);
 			return result;
 		}
 		if (commandLow.startsWith("cd ")) {
 			command = command.substring(3).trim() + "/";
+			commandLow = commandLow.substring(3).trim() + "/";
 			command = StrUtils.replaceAll(command, "\\", "/");
+			commandLow = StrUtils.replaceAll(commandLow, "\\", "/");
 
 			// if we have ~/blubb...
 			if (command.startsWith("~")) {
 				// then we have /Desktop/blubb
 				previousPath = PathCtrl.DESKTOP;
 				command = command.substring(2);
+			}
+			// if we have \Desktop\blubb...
+			if (commandLow.startsWith(StrUtils.replaceAll(PathCtrl.DESKTOP, "\\", "/").toLowerCase())) {
+				// then we have /Desktop/blubb
+				previousPath = PathCtrl.DESKTOP;
+				command = command.substring(PathCtrl.DESKTOP.length());
 			}
 			command = StrUtils.replaceAll(command, "\\", "/");
 			command = StrUtils.replaceAll(command, "//", "/");
@@ -112,12 +133,43 @@ public class ConsoleCtrl {
 			return result;
 		}
 
+
+		// math org
+
 		if (commandLow.startsWith("mo:")) {
 			result.setCommand("mo: " + computeMathOrg(command.substring(3)));
 			if (history.size() > 0) {
 				history.set(history.size() - 1, origHistoryLine + " > " + result.getCommand());
 			}
 			return result;
+		}
+
+
+		// shell execute
+
+		if (commandLow.startsWith("se:")) {
+			IoUtils.execute(command.substring(3).trim());
+			return result;
+		}
+
+
+		// sll files
+
+		String desktopLocation = database.getDesktopLocation();
+		Directory desktopDir = new Directory(desktopLocation);
+		Directory systemDir = new Directory(desktopDir, "system");
+		boolean recursively = false;
+		List<File> sllFiles = systemDir.getAllFilesEndingWith(".sll", recursively);
+		String matchWith = commandLow;
+		while (matchWith.length() < 3) {
+			matchWith += '_';
+		}
+		matchWith += ".sll";
+		for (File file : sllFiles) {
+			if (matchWith.equals(file.getLocalFilename().toLowerCase())) {
+				result = runSllFile(file, result);
+				return result;
+			}
 		}
 
 		history.add("ERROR: Command '" + command + "' not understood!");
@@ -292,6 +344,23 @@ public class ConsoleCtrl {
 		}
 
 		return StrUtils.doubleToStr(result);
+	}
+
+	private ConsoleResult runSllFile(File sllFile, ConsoleResult result) {
+
+		SimpleFile sllSimpleFile = new SimpleFile(sllFile);
+
+		List<String> lines = sllSimpleFile.getContents();
+
+		for (String line : lines) {
+			if (line.trim().equals("")) {
+				continue;
+			}
+
+			result = interpretCommand(line, result.getPath());
+		}
+
+		return result;
 	}
 
 }
