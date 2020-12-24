@@ -47,6 +47,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 	private ConsoleCtrl consoleCtrl;
 
+	private List<String> IMAGE_EXTENSIONS;
+
 
 	public ServerRequestHandler(WebServer server, Socket request, Directory webRoot, Directory serverDir,
 		Database database, ConsoleCtrl consoleCtrl) {
@@ -58,6 +60,12 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		this.serverDir = serverDir;
 
 		this.consoleCtrl = consoleCtrl;
+
+		IMAGE_EXTENSIONS = new ArrayList<>();
+		IMAGE_EXTENSIONS.add("jpg");
+		IMAGE_EXTENSIONS.add("png");
+		IMAGE_EXTENSIONS.add("gif");
+		IMAGE_EXTENSIONS.add("bmp");
 	}
 
 	@Override
@@ -174,15 +182,15 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		String link = arguments.get("link");
 		if (link != null) {
 			String localLink = resolvePath(link);
-			File localLinkFile = new File(localLink + ".stpu");
-			if (localLinkFile.exists()) {
+			Directory localLinkDir = new Directory(localLink);
+			if (localLinkDir.exists()) {
+				path = link;
+				fileName = null;
+			} else {
 				link = StrUtils.replaceAll(link, "\\", "/");
 				int pos = link.lastIndexOf("/");
 				path = link.substring(0, pos);
 				fileName = link.substring(pos + 1) + ".stpu";
-			} else {
-				path = link;
-				fileName = null;
 			}
 		}
 
@@ -262,7 +270,19 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					if (curFile != null) {
 						addFileToHtml(folderContent, entry, curFile, path);
 					} else {
-						addTextToHtml(folderContent, entry);
+						boolean foundImage = false;
+						for (String imageExt : IMAGE_EXTENSIONS) {
+							File imageFile = new File(folder, entry + "_1." + imageExt);
+							if (imageFile.exists()) {
+								foundImage = true;
+								break;
+							}
+						}
+						if (foundImage) {
+							addFileToHtml(folderContent, entry, new File(folder, entry + ".stpu"), path);
+						} else {
+							addTextToHtml(folderContent, entry);
+						}
 					}
 				}
 			}
@@ -336,90 +356,91 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		if (fileName != null) {
 			File genericFile = new File(folder, fileName);
-			if (!genericFile.exists()) {
-				fileHtmlStr = "The file '" + fileName + "' does not exist!";
-			} else {
-				String lowCaseFileName = fileName.toLowerCase();
-				if (lowCaseFileName.endsWith(".stpu") || lowCaseFileName.endsWith(".sll") ||
-					lowCaseFileName.endsWith(".txt") || lowCaseFileName.endsWith(".ini")) {
+			String lowCaseFileName = fileName.toLowerCase();
+			if (lowCaseFileName.endsWith(".stpu") || lowCaseFileName.endsWith(".sll") ||
+				lowCaseFileName.endsWith(".txt") || lowCaseFileName.endsWith(".ini")) {
+
+				if (genericFile.exists()) {
 					TextFile file = new TextFile(folder, fileName);
 					file.setEncoding(TextEncoding.ISO_LATIN_1);
 					fileHtmlStr = file.getContent();
-
-					// follow link automatically
-					if (fileHtmlStr.startsWith("%[") && fileHtmlStr.contains("]")) {
-						String newLink = fileHtmlStr.substring(2, fileHtmlStr.indexOf("]"));
-						Map<String, String> newArgs = new HashMap<>();
-						newArgs.put("link", newLink);
-						return generateAnswerToMainGetRequest(newArgs, message);
-					}
-
-					fileHtmlStr = prepareStrForDisplayInHtml(fileHtmlStr);
-					// replace %[...] with internal links
-					StringBuilder newFileHtml = new StringBuilder();
-					int pos = fileHtmlStr.indexOf("%[");
-					int start = 0;
-					while (pos >= 0) {
-						int end = fileHtmlStr.indexOf("]", pos);
-						if (end >= 0) {
-							newFileHtml.append(fileHtmlStr.substring(start, pos));
-							String linkStr = fileHtmlStr.substring(pos + 2, end);
-							newFileHtml.append("<a href=\"/?link=" + linkStr + "\">%[");
-							newFileHtml.append(linkStr);
-							newFileHtml.append("]</a>");
-							start = end + 1;
-							pos = fileHtmlStr.indexOf("%[", end);
-						} else {
-							break;
-						}
-					}
-					newFileHtml.append(fileHtmlStr.substring(start));
-					fileHtmlStr = newFileHtml.toString();
-
-					StringBuilder imagesStrBuilder = new StringBuilder();
-					String baseName = fileName.substring(0, fileName.lastIndexOf("."));
-					int imgNum = 1;
-					List<String> imgExtensions = new ArrayList<>();
-					imgExtensions.add("jpg");
-					imgExtensions.add("png");
-					imgExtensions.add("gif");
-					imgExtensions.add("bmp");
-					while (true) {
-						String imgExtFound = null;
-						for (String curImgExt : imgExtensions) {
-							File imgFile = new File(folder, baseName + "_" + imgNum + "." + curImgExt);
-							if (imgFile.exists()) {
-								imgExtFound = curImgExt;
-							}
-						}
-						if (imgExtFound == null) {
-							break;
-						}
-						String imgUrl = "/?path=" + path + "&file=" + baseName + "_" +
-							imgNum + "." + imgExtFound + "&action=download";
-						imagesStrBuilder.append("<a target=\"_blank\" href=\"" + imgUrl + "\">");
-						imagesStrBuilder.append("<img src=\"" + imgUrl + "\">");
-						imagesStrBuilder.append("</a>");
-						imgNum++;
-					}
-					if (imgNum > 1) {
-						imagesStr = "<div class='imageStrip'>" + imagesStrBuilder.toString() + "</div>";
-					}
-
-				} else if (lowCaseFileName.endsWith(".json")) {
-					TextFile file = new TextFile(folder, fileName);
-					fileHtmlStr = file.getContent();
-					fileHtmlStr = prepareStrForDisplayInHtml(fileHtmlStr);
-				} else if (lowCaseFileName.endsWith(".jpg") || lowCaseFileName.endsWith(".jpeg") ||
-					lowCaseFileName.endsWith(".png")) {
-					String imgUrl = "/?path=" + path + "&file=" + fileName + "&action=download";
-					fileHtmlStr = "<a target=\"_blank\" href=\"" + imgUrl + "\" style='max-width:99%; max-height:99%;' />";
-					fileHtmlStr += "<img src=\"" + imgUrl + "\" style='max-width:100%; max-height:100%;' />";
-					fileHtmlStr += "</a>";
 				} else {
-					fileHtmlStr = "No preview for '" + fileName + "' available.<br><br>" +
-								  getDownloadButtonHtml(path, fileName, "padding: 4pt 9pt;");
+					fileHtmlStr = genericFile.getLocalFilenameWithoutType() + "\n\n";
 				}
+
+				// follow link automatically
+				if (fileHtmlStr.startsWith("%[") && fileHtmlStr.contains("]")) {
+					String newLink = fileHtmlStr.substring(2, fileHtmlStr.indexOf("]"));
+					Map<String, String> newArgs = new HashMap<>();
+					newArgs.put("link", newLink);
+					return generateAnswerToMainGetRequest(newArgs, message);
+				}
+
+				fileHtmlStr = prepareStrForDisplayInHtml(fileHtmlStr);
+				// replace %[...] with internal links
+				StringBuilder newFileHtml = new StringBuilder();
+				int pos = fileHtmlStr.indexOf("%[");
+				int start = 0;
+				while (pos >= 0) {
+					int end = fileHtmlStr.indexOf("]", pos);
+					if (end >= 0) {
+						newFileHtml.append(fileHtmlStr.substring(start, pos));
+						String linkStr = fileHtmlStr.substring(pos + 2, end);
+						newFileHtml.append("<a href=\"/?link=" + linkStr + "\">%[");
+						newFileHtml.append(linkStr);
+						newFileHtml.append("]</a>");
+						start = end + 1;
+						pos = fileHtmlStr.indexOf("%[", end);
+					} else {
+						break;
+					}
+				}
+				newFileHtml.append(fileHtmlStr.substring(start));
+				fileHtmlStr = newFileHtml.toString();
+
+				StringBuilder imagesStrBuilder = new StringBuilder();
+				String baseName = fileName.substring(0, fileName.lastIndexOf("."));
+				int imgNum = 1;
+				while (true) {
+					String imgExtFound = null;
+					for (String curImgExt : IMAGE_EXTENSIONS) {
+						File imgFile = new File(folder, baseName + "_" + imgNum + "." + curImgExt);
+						if (imgFile.exists()) {
+							imgExtFound = curImgExt;
+						}
+					}
+					if (imgExtFound == null) {
+						break;
+					}
+					String imgUrl = "/?path=" + path + "&file=" + baseName + "_" +
+						imgNum + "." + imgExtFound + "&action=download";
+					imagesStrBuilder.append("<a target=\"_blank\" href=\"" + imgUrl + "\">");
+					imagesStrBuilder.append("<img src=\"" + imgUrl + "\">");
+					imagesStrBuilder.append("</a>");
+					imgNum++;
+				}
+				if (imgNum > 1) {
+					imagesStr = "<div class='imageStrip'>" + imagesStrBuilder.toString() + "</div>";
+				}
+
+			// only now check if the file even exists - as we allow for STPU files which do not exist,
+			// e.g. if they only have pictures but no contents
+			} else if (!genericFile.exists()) {
+				fileHtmlStr = "The file '" + fileName + "' does not exist!";
+
+			} else if (lowCaseFileName.endsWith(".json")) {
+				TextFile file = new TextFile(folder, fileName);
+				fileHtmlStr = file.getContent();
+				fileHtmlStr = prepareStrForDisplayInHtml(fileHtmlStr);
+			} else if (lowCaseFileName.endsWith(".jpg") || lowCaseFileName.endsWith(".jpeg") ||
+				lowCaseFileName.endsWith(".png")) {
+				String imgUrl = "/?path=" + path + "&file=" + fileName + "&action=download";
+				fileHtmlStr = "<a target=\"_blank\" href=\"" + imgUrl + "\" style='max-width:99%; max-height:99%;' />";
+				fileHtmlStr += "<img src=\"" + imgUrl + "\" style='max-width:100%; max-height:100%;' />";
+				fileHtmlStr += "</a>";
+			} else {
+				fileHtmlStr = "No preview for '" + fileName + "' available.<br><br>" +
+							  getDownloadButtonHtml(path, fileName, "padding: 4pt 9pt;");
 			}
 		}
 
