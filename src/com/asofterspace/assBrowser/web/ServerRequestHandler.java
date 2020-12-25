@@ -21,6 +21,7 @@ import com.asofterspace.toolbox.utils.StrUtils;
 import com.asofterspace.toolbox.utils.TextEncoding;
 import com.asofterspace.toolbox.virtualEmployees.SideBarCtrl;
 import com.asofterspace.toolbox.virtualEmployees.SideBarEntry;
+import com.asofterspace.toolbox.virtualEmployees.SideBarEntryForTool;
 import com.asofterspace.toolbox.web.WebRequestFormData;
 import com.asofterspace.toolbox.web.WebRequestFormDataBlock;
 import com.asofterspace.toolbox.web.WebServer;
@@ -171,7 +172,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		String indexContent = indexBaseFile.getContent();
 
 		indexContent = StrUtils.replaceAll(indexContent, "[[SIDEBAR]]",
-			SideBarCtrl.getSidebarHtmlStr(SideBarEntry.BROWSER));
+			SideBarCtrl.getSidebarHtmlStr(SideBarEntryForTool.BROWSER));
 
 		String path = arguments.get("path");
 		String fileName = arguments.get("file");
