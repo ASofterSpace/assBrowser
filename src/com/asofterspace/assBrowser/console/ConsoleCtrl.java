@@ -153,6 +153,24 @@ public class ConsoleCtrl {
 		}
 
 
+		// shutdown or reboot
+
+		if (commandLow.equals("shutdown")) {
+			// for Windows
+			IoUtils.execute("shutdown -s -t 1");
+			// for Linux
+			IoUtils.execute("sudo poweroff");
+			return result;
+		}
+		if (commandLow.equals("reboot")) {
+			// for Windows
+			IoUtils.execute("shutdown -r -t 1");
+			// for Linux
+			IoUtils.execute("sudo reboot");
+			return result;
+		}
+
+
 		// sll files
 
 		String desktopLocation = database.getDesktopLocation();
