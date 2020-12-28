@@ -5,6 +5,7 @@
 package com.asofterspace.assBrowser;
 
 import com.asofterspace.assBrowser.console.ConsoleCtrl;
+import com.asofterspace.assBrowser.gui.GUI;
 import com.asofterspace.assBrowser.web.Server;
 import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.io.JSON;
@@ -15,6 +16,8 @@ import com.asofterspace.toolbox.web.WebTemplateEngine;
 
 import java.util.List;
 
+import javax.swing.SwingUtilities;
+
 
 public class AssBrowser {
 
@@ -22,8 +25,8 @@ public class AssBrowser {
 	public final static String WEB_ROOT_DIR = "deployed";
 
 	public final static String PROGRAM_TITLE = "assBrowser";
-	public final static String VERSION_NUMBER = "0.0.0.4(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
-	public final static String VERSION_DATE = "16. December 2020 - 23. December 2020";
+	public final static String VERSION_NUMBER = "0.0.0.5(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
+	public final static String VERSION_DATE = "16. December 2020 - 28. December 2020";
 
 
 	public static void main(String[] args) {
@@ -67,6 +70,11 @@ public class AssBrowser {
 		System.out.println("Starting up system console...");
 
 		ConsoleCtrl consoleCtrl = new ConsoleCtrl(database);
+
+
+		System.out.println("Starting up console line GUI...");
+
+		SwingUtilities.invokeLater(new GUI(database, consoleCtrl));
 
 
 		try {
