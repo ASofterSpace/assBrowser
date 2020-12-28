@@ -4,6 +4,7 @@
  */
 package com.asofterspace.assBrowser;
 
+import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.io.JSON;
 import com.asofterspace.toolbox.io.JsonFile;
 import com.asofterspace.toolbox.io.JsonParseException;
@@ -16,6 +17,8 @@ public class Database {
 
 	private final static String PORT = "port";
 
+	private final static String BROWSER_PATH = "browserPath";
+
 	private JsonFile dbFile;
 
 	private JSON root;
@@ -23,6 +26,8 @@ public class Database {
 	private Integer port;
 
 	private String desktopLocation;
+
+	private String browserPath;
 
 
 	public Database() {
@@ -37,9 +42,11 @@ public class Database {
 			System.exit(1);
 		}
 
+		this.desktopLocation = root.getString(DESKTOP_LOCATION);
+
 		this.port = root.getInteger(PORT);
 
-		this.desktopLocation = root.getString(DESKTOP_LOCATION);
+		this.browserPath = root.getString(BROWSER_PATH);
 	}
 
 	public Record getRoot() {
@@ -53,6 +60,8 @@ public class Database {
 		root.set(PORT, port);
 
 		root.set(DESKTOP_LOCATION, desktopLocation);
+
+		root.set(BROWSER_PATH, browserPath);
 
 		dbFile.setAllContents(root);
 		dbFile.save();
@@ -69,4 +78,7 @@ public class Database {
 		return desktopLocation;
 	}
 
+	public String getBrowserPath() {
+		return browserPath;
+	}
 }

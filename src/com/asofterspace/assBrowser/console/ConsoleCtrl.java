@@ -148,7 +148,7 @@ public class ConsoleCtrl {
 		// shell execute
 
 		if (commandLow.startsWith("se:")) {
-			IoUtils.execute(command.substring(3).trim());
+			IoUtils.executeAsync(command.substring(3).trim());
 			return result;
 		}
 
@@ -157,16 +157,16 @@ public class ConsoleCtrl {
 
 		if (commandLow.equals("shutdown")) {
 			// for Windows
-			IoUtils.execute("shutdown -s -t 1");
+			IoUtils.executeAsync("shutdown -s -t 1");
 			// for Linux
-			IoUtils.execute("sudo poweroff");
+			IoUtils.executeAsync("sudo poweroff");
 			return result;
 		}
 		if (commandLow.equals("reboot")) {
 			// for Windows
-			IoUtils.execute("shutdown -r -t 1");
+			IoUtils.executeAsync("shutdown -r -t 1");
 			// for Linux
-			IoUtils.execute("sudo reboot");
+			IoUtils.executeAsync("sudo reboot");
 			return result;
 		}
 
