@@ -171,6 +171,14 @@ public class ConsoleCtrl {
 		}
 
 
+		// close
+
+		if (commandLow.equals("close")) {
+			System.exit(0);
+			return result;
+		}
+
+
 		// sll files
 
 		String desktopLocation = database.getDesktopLocation();
