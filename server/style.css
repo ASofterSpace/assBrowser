@@ -59,7 +59,7 @@ div.buttonBar > span.button, div.buttonBar > a.button {
 	margin: 0pt 10pt;
 }
 
-span.button:hover, a.button: hover {
+span.button:hover, a.button:hover {
 	background: rgba(150, 200, 250, 0.5);
 }
 
