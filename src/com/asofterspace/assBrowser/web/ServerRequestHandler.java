@@ -433,12 +433,15 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			} else if (!genericFile.exists()) {
 				fileHtmlStr = "The file '" + fileName + "' does not exist!";
 
-			} else if (lowCaseFileName.endsWith(".json")) {
+			} else if (lowCaseFileName.endsWith(".json") || lowCaseFileName.endsWith(".java") ||
+				lowCaseFileName.endsWith(".bat") || lowCaseFileName.endsWith(".sh") ||
+				lowCaseFileName.endsWith(".md")) {
 				TextFile file = new TextFile(folder, fileName);
 				fileHtmlStr = file.getContent();
 				fileHtmlStr = prepareStrForDisplayInHtml(fileHtmlStr);
 			} else if (lowCaseFileName.endsWith(".jpg") || lowCaseFileName.endsWith(".jpeg") ||
-				lowCaseFileName.endsWith(".png")) {
+				lowCaseFileName.endsWith(".png") || lowCaseFileName.endsWith(".gif") ||
+				lowCaseFileName.endsWith(".bmp")) {
 				String imgUrl = "/?path=" + path + "&file=" + fileName + "&action=download";
 				fileHtmlStr = "<a target=\"_blank\" href=\"" + imgUrl + "\" style='max-width:99%; max-height:99%;' />";
 				fileHtmlStr += "<img src=\"" + imgUrl + "\" style='max-width:100%; max-height:100%;' />";
