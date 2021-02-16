@@ -478,7 +478,16 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		html = StrUtils.replaceAll(html, "[[SIDEBAR]]",
 			SideBarCtrl.getSidebarHtmlStr(SideBarEntryForTool.FUNTUBE));
 
-		// TODO
+		String videoPath = arguments.get("path");
+		String title = videoPath;
+		if (title.contains(".")) {
+			title = title.substring(0, title.lastIndexOf("."));
+		}
+		title = StrUtils.replaceAll(title, "/", " - ");
+
+		html = StrUtils.replaceAll(html, "[[TITLE]]", title);
+
+		html = StrUtils.replaceAll(html, "[[VIDEO]]", videoPath);
 
 		return new WebServerAnswerInHtml(html);
 	}
