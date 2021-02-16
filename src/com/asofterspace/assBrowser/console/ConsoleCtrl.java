@@ -173,7 +173,7 @@ public class ConsoleCtrl {
 
 		// close
 
-		if (commandLow.equals("close")) {
+		if (commandLow.equals("close") || commandLow.equals("exit") || commandLow.equals("quit")) {
 			System.exit(0);
 			return result;
 		}

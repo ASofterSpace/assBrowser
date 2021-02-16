@@ -167,6 +167,17 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			return generateAnswerToMainGetRequest(arguments, null);
 		}
 
+		if (location.startsWith("/funtubeVideo")) {
+			// TODO :: make configurable
+			Directory viddir = new Directory("E:\\videos (actual)");
+			File vidfile = new File(viddir, arguments.get("path"));
+			return new WebServerAnswerBasedOnFile(vidfile);
+		}
+
+		if (location.startsWith("/funtube")) {
+			return generateAnswerToFunTubeRequest(arguments);
+		}
+
 		return null;
 	}
 
@@ -457,6 +468,19 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		indexContent = StrUtils.replaceAll(indexContent, "[[IMAGES]]", imagesStr);
 
 		return new WebServerAnswerInHtml(indexContent);
+	}
+
+	private WebServerAnswer generateAnswerToFunTubeRequest(Map<String, String> arguments) {
+
+		TextFile indexBaseFile = new TextFile(webRoot, "funtube.htm");
+		String html = indexBaseFile.getContent();
+
+		html = StrUtils.replaceAll(html, "[[SIDEBAR]]",
+			SideBarCtrl.getSidebarHtmlStr(SideBarEntryForTool.FUNTUBE));
+
+		// TODO
+
+		return new WebServerAnswerInHtml(html);
 	}
 
 	private String prepareStrForDisplayInHtml(String fileHtmlStr) {
