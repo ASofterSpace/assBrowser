@@ -196,3 +196,31 @@ div.company_outer > img.logo {
 	border-radius: 10pt;
 	padding: 10pt 20pt;
 }
+
+div.funtubeOtherVideosContainer {
+	color: #111;
+	top: 9pt;
+	right: 79pt;
+	width: 30%;
+	position: absolute;
+	font-size: 12pt;
+	height: 100%;
+	overflow-y: scroll;
+}
+
+div.funtubeOtherVideosContainer > a {
+	color: #111;
+	display: block;
+}
+
+div.funtubeOtherVideosContainer > a > video {
+	width: 35%;
+}
+
+div.funtubeOtherVideosContainer > a > div {
+	width: 62%;
+	display: inline-block;
+	vertical-align: top;
+	padding-left: 5pt;
+	padding-top: 9pt;
+}

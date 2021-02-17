@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 
 public class ServerRequestHandler extends WebServerRequestHandler {
@@ -49,6 +50,11 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 	private ConsoleCtrl consoleCtrl;
 
 	private List<String> IMAGE_EXTENSIONS;
+
+	// TODO :: make configurable - but ensure it contains forward slashes and ends with a slash!
+	private String videoDirPathStr = "E:/videos (actual)/";
+
+	private Random rand = new Random();
 
 
 	public ServerRequestHandler(WebServer server, Socket request, Directory webRoot, Directory serverDir,
@@ -168,8 +174,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		}
 
 		if (location.startsWith("/funtubeVideo")) {
-			// TODO :: make configurable
-			Directory viddir = new Directory("E:\\videos (actual)");
+			Directory viddir = new Directory(videoDirPathStr);
 			File vidfile = new File(viddir, arguments.get("path"));
 			return new WebServerAnswerBasedOnFile(vidfile);
 		}
@@ -479,17 +484,78 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			SideBarCtrl.getSidebarHtmlStr(SideBarEntryForTool.FUNTUBE));
 
 		String videoPath = arguments.get("path");
+		String title = videoPathToTitle(videoPath);
+
+		html = StrUtils.replaceAll(html, "[[TITLE]]", title);
+
+		html = StrUtils.replaceAll(html, "[[VIDEO_PATH]]", videoPath);
+
+		html = StrUtils.replaceAll(html, "[[VIDEO_TYPE]]", "video/" + videoPath.substring(videoPath.indexOf(".") + 1));
+
+		StringBuilder otherVideos = new StringBuilder();
+
+		Directory viddir = new Directory(videoDirPathStr);
+		boolean recursively = true;
+
+		int proposalAmount = 20;
+
+		if (videoPath.contains("/")) {
+			String otherVideosBySameCreatorPath = videoPath.substring(0, videoPath.indexOf("/"));
+			Directory otherVideosBySameCreatorDir = new Directory(viddir, otherVideosBySameCreatorPath);
+			List<File> otherVideoFiles = otherVideosBySameCreatorDir.getAllFiles(recursively);
+			for (int i = 0; i < 9; i++) {
+				if (otherVideoFiles.size() < 1) {
+					break;
+				}
+				otherVideos.append(getFunTubeVidLink(otherVideoFiles));
+				proposalAmount--;
+			}
+		}
+
+		List<File> otherVideoFiles = viddir.getAllFiles(recursively);
+		for (int i = 0; i < proposalAmount; i++) {
+			if (otherVideoFiles.size() < 1) {
+				break;
+			}
+			otherVideos.append(getFunTubeVidLink(otherVideoFiles));
+		}
+
+		html = StrUtils.replaceAll(html, "[[OTHER_VIDEOS]]", otherVideos.toString());
+
+		return new WebServerAnswerInHtml(html);
+	}
+
+	private String videoPathToTitle(String videoPath) {
 		String title = videoPath;
 		if (title.contains(".")) {
 			title = title.substring(0, title.lastIndexOf("."));
 		}
 		title = StrUtils.replaceAll(title, "/", " - ");
+		return title;
+	}
 
-		html = StrUtils.replaceAll(html, "[[TITLE]]", title);
+	private String getFunTubeVidLink(List<File> videoFiles) {
+		int index = rand.nextInt(videoFiles.size());
+		File videoFile = videoFiles.get(index);
 
-		html = StrUtils.replaceAll(html, "[[VIDEO]]", videoPath);
+		// do not display the same video twice in the recommendations
+		videoFiles.remove(index);
 
-		return new WebServerAnswerInHtml(html);
+		String videoPath = videoFile.getCanonicalFilename();
+		videoPath = StrUtils.replaceAll(videoPath, "\\", "/");
+		if (videoPath.startsWith(videoDirPathStr)) {
+			videoPath = videoPath.substring(videoDirPathStr.length());
+		}
+
+		return "<a href=\"funtube?path=" + videoPath + "\">" +
+				"<video preload='metadata'>" +
+				"<source src=\"funtubeVideo?path=" + videoPath + "\" " +
+				"type='video/" + videoPath.substring(videoPath.indexOf(".") + 1) + "'>" +
+				"</video>" +
+				"<div>" +
+				videoPathToTitle(videoPath) +
+				"</div>" +
+				"</a>";
 	}
 
 	private String prepareStrForDisplayInHtml(String fileHtmlStr) {
