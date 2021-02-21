@@ -12,6 +12,7 @@ import com.asofterspace.toolbox.gui.GuiUtils;
 import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.io.File;
 import com.asofterspace.toolbox.io.HTML;
+import com.asofterspace.toolbox.io.IoUtils;
 import com.asofterspace.toolbox.io.JSON;
 import com.asofterspace.toolbox.io.JsonParseException;
 import com.asofterspace.toolbox.io.SimpleFile;
@@ -177,6 +178,25 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			Directory viddir = new Directory(videoDirPathStr);
 			File vidfile = new File(viddir, arguments.get("path"));
 			return new WebServerAnswerBasedOnFile(vidfile);
+		}
+
+		if (location.startsWith("/funtubePreview")) {
+			Directory viddir = new Directory(videoDirPathStr);
+			File prevfile = new File(viddir, arguments.get("path") + ".jpg");
+			if (!prevfile.exists()) {
+				// generate the preview file
+				File vidfile = new File(viddir, arguments.get("path"));
+
+				String ffmpegPath = database.getFfmpegPath();
+				String ffmpegInvocation = ffmpegPath;
+				ffmpegInvocation += " -ss 1 -i \"";
+				ffmpegInvocation += vidfile.getAbsoluteFilename();
+				ffmpegInvocation += "\" -vframes 1 -f image2 \"";
+				ffmpegInvocation += prevfile.getAbsoluteFilename();
+				ffmpegInvocation += "\"";
+				IoUtils.execute(ffmpegInvocation);
+			}
+			return new WebServerAnswerBasedOnFile(prevfile);
 		}
 
 		if (location.startsWith("/funtube")) {
@@ -558,10 +578,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		}
 
 		return "<a href=\"funtube?path=" + videoPath + "\">" +
-				"<video preload='metadata'>" +
-				"<source src=\"funtubeVideo?path=" + videoPath + "\" " +
-				"type='video/" + videoPath.substring(videoPath.indexOf(".") + 1) + "'>" +
-				"</video>" +
+				"<img src=\"funtubePreview?path=" + videoPath + "\" />" +
 				"<div>" +
 				videoPathToTitle(videoPath) +
 				"</div>" +

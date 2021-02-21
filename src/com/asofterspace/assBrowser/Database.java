@@ -19,6 +19,8 @@ public class Database {
 
 	private final static String BROWSER_PATH = "browserPath";
 
+	private final static String FFMPEG_PATH = "ffmpegPath";
+
 	private JsonFile dbFile;
 
 	private JSON root;
@@ -28,6 +30,8 @@ public class Database {
 	private String desktopLocation;
 
 	private String browserPath;
+
+	private String ffmpegPath;
 
 
 	public Database() {
@@ -47,6 +51,8 @@ public class Database {
 		this.port = root.getInteger(PORT);
 
 		this.browserPath = root.getString(BROWSER_PATH);
+
+		this.ffmpegPath = root.getString(FFMPEG_PATH);
 	}
 
 	public Record getRoot() {
@@ -62,6 +68,8 @@ public class Database {
 		root.set(DESKTOP_LOCATION, desktopLocation);
 
 		root.set(BROWSER_PATH, browserPath);
+
+		root.set(FFMPEG_PATH, ffmpegPath);
 
 		dbFile.setAllContents(root);
 		dbFile.save();
@@ -81,4 +89,9 @@ public class Database {
 	public String getBrowserPath() {
 		return browserPath;
 	}
+
+	public String getFfmpegPath() {
+		return ffmpegPath;
+	}
+
 }

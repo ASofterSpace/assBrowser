@@ -214,7 +214,7 @@ div.funtubeOtherVideosContainer > a {
 	display: block;
 }
 
-div.funtubeOtherVideosContainer > a > video {
+div.funtubeOtherVideosContainer > a > img {
 	width: 35%;
 }
 
