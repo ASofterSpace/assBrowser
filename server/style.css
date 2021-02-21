@@ -200,12 +200,13 @@ div.company_outer > img.logo {
 div.funtubeOtherVideosContainer {
 	color: #111;
 	top: 9pt;
-	right: 79pt;
+	right: 68pt;
 	width: 30%;
 	position: absolute;
 	font-size: 12pt;
 	height: 100%;
 	overflow-y: scroll;
+	padding-right: 19pt;
 }
 
 div.funtubeOtherVideosContainer > a {

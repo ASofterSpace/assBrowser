@@ -490,7 +490,12 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		html = StrUtils.replaceAll(html, "[[VIDEO_PATH]]", videoPath);
 
-		html = StrUtils.replaceAll(html, "[[VIDEO_TYPE]]", "video/" + videoPath.substring(videoPath.indexOf(".") + 1));
+		if (videoPath != null) {
+			html = StrUtils.replaceAll(html, "[[VIDEO_TYPE]]", "video/" + videoPath.substring(videoPath.indexOf(".") + 1));
+			html = StrUtils.replaceAll(html, "[[VIDEO_STYLE]]", "");
+		} else {
+			html = StrUtils.replaceAll(html, "[[VIDEO_STYLE]]", "display: none;");
+		}
 
 		StringBuilder otherVideos = new StringBuilder();
 
@@ -499,16 +504,18 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		int proposalAmount = 20;
 
-		if (videoPath.contains("/")) {
-			String otherVideosBySameCreatorPath = videoPath.substring(0, videoPath.indexOf("/"));
-			Directory otherVideosBySameCreatorDir = new Directory(viddir, otherVideosBySameCreatorPath);
-			List<File> otherVideoFiles = otherVideosBySameCreatorDir.getAllFiles(recursively);
-			for (int i = 0; i < 9; i++) {
-				if (otherVideoFiles.size() < 1) {
-					break;
+		if (videoPath != null) {
+			if (videoPath.contains("/")) {
+				String otherVideosBySameCreatorPath = videoPath.substring(0, videoPath.indexOf("/"));
+				Directory otherVideosBySameCreatorDir = new Directory(viddir, otherVideosBySameCreatorPath);
+				List<File> otherVideoFiles = otherVideosBySameCreatorDir.getAllFiles(recursively);
+				for (int i = 0; i < 9; i++) {
+					if (otherVideoFiles.size() < 1) {
+						break;
+					}
+					otherVideos.append(getFunTubeVidLink(otherVideoFiles));
+					proposalAmount--;
 				}
-				otherVideos.append(getFunTubeVidLink(otherVideoFiles));
-				proposalAmount--;
 			}
 		}
 
@@ -526,6 +533,9 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 	}
 
 	private String videoPathToTitle(String videoPath) {
+		if (videoPath == null) {
+			return "";
+		}
 		String title = videoPath;
 		if (title.contains(".")) {
 			title = title.substring(0, title.lastIndexOf("."));
