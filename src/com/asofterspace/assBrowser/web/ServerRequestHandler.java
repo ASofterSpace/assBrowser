@@ -8,6 +8,8 @@ import com.asofterspace.assBrowser.console.ConsoleCtrl;
 import com.asofterspace.assBrowser.console.ConsoleResult;
 import com.asofterspace.assBrowser.Database;
 import com.asofterspace.assBrowser.paths.PathCtrl;
+import com.asofterspace.toolbox.coders.UrlDecoder;
+import com.asofterspace.toolbox.coders.UrlEncoder;
 import com.asofterspace.toolbox.gui.GuiUtils;
 import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.io.File;
@@ -20,6 +22,7 @@ import com.asofterspace.toolbox.io.TextFile;
 import com.asofterspace.toolbox.utils.Record;
 import com.asofterspace.toolbox.utils.StrUtils;
 import com.asofterspace.toolbox.utils.TextEncoding;
+import com.asofterspace.toolbox.Utils;
 import com.asofterspace.toolbox.virtualEmployees.SideBarCtrl;
 import com.asofterspace.toolbox.virtualEmployees.SideBarEntry;
 import com.asofterspace.toolbox.virtualEmployees.SideBarEntryForTool;
@@ -176,16 +179,16 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		if (location.startsWith("/funtubeVideo")) {
 			Directory viddir = new Directory(videoDirPathStr);
-			File vidfile = new File(viddir, arguments.get("path"));
+			File vidfile = new File(viddir, UrlDecoder.decode(arguments.get("path")));
 			return new WebServerAnswerBasedOnFile(vidfile);
 		}
 
 		if (location.startsWith("/funtubePreview")) {
 			Directory viddir = new Directory(videoDirPathStr);
-			File prevfile = new File(viddir, arguments.get("path") + ".jpg");
+			File prevfile = new File(viddir, UrlDecoder.decode(arguments.get("path")) + ".jpg");
 			if (!prevfile.exists()) {
 				// generate the preview file
-				File vidfile = new File(viddir, arguments.get("path"));
+				File vidfile = new File(viddir, UrlDecoder.decode(arguments.get("path")));
 
 				String ffmpegPath = database.getFfmpegPath();
 				String ffmpegInvocation = ffmpegPath;
@@ -503,12 +506,12 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		html = StrUtils.replaceAll(html, "[[SIDEBAR]]",
 			SideBarCtrl.getSidebarHtmlStr(SideBarEntryForTool.FUNTUBE));
 
-		String videoPath = arguments.get("path");
+		String videoPath = UrlDecoder.decode(arguments.get("path"));
 		String title = videoPathToTitle(videoPath);
 
 		html = StrUtils.replaceAll(html, "[[TITLE]]", title);
 
-		html = StrUtils.replaceAll(html, "[[VIDEO_PATH]]", videoPath);
+		html = StrUtils.replaceAll(html, "[[VIDEO_PATH]]", UrlEncoder.encode(videoPath));
 
 		if (videoPath != null) {
 			html = StrUtils.replaceAll(html, "[[VIDEO_TYPE]]", "video/" + videoPath.substring(videoPath.indexOf(".") + 1));
@@ -523,6 +526,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		boolean recursively = true;
 
 		int proposalAmount = 20;
+		int id = 1;
 
 		if (videoPath != null) {
 			if (videoPath.contains("/")) {
@@ -533,7 +537,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					if (otherVideoFiles.size() < 1) {
 						break;
 					}
-					otherVideos.append(getFunTubeVidLink(otherVideoFiles));
+					otherVideos.append(getFunTubeVidLink(otherVideoFiles, id++));
 					proposalAmount--;
 				}
 			}
@@ -544,7 +548,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			if (otherVideoFiles.size() < 1) {
 				break;
 			}
-			otherVideos.append(getFunTubeVidLink(otherVideoFiles));
+			otherVideos.append(getFunTubeVidLink(otherVideoFiles, id++));
 		}
 
 		html = StrUtils.replaceAll(html, "[[OTHER_VIDEOS]]", otherVideos.toString());
@@ -561,15 +565,30 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			title = title.substring(0, title.lastIndexOf("."));
 		}
 		title = StrUtils.replaceAll(title, "/", " - ");
+		title = StrUtils.replaceAll(title, "&", "&amp;");
 		return title;
 	}
 
-	private String getFunTubeVidLink(List<File> videoFiles) {
-		int index = rand.nextInt(videoFiles.size());
-		File videoFile = videoFiles.get(index);
+	private String getFunTubeVidLink(List<File> videoFiles, int id) {
 
-		// do not display the same video twice in the recommendations
-		videoFiles.remove(index);
+		File videoFile = null;
+
+		while (videoFiles.size() > 0) {
+			int index = rand.nextInt(videoFiles.size());
+			File curVideoFile = videoFiles.get(index);
+
+			// do not display the same video twice in the recommendations
+			videoFiles.remove(index);
+
+			// do not display preview images as videos
+			if (!curVideoFile.getFilename().endsWith(".jpg")) {
+				videoFile = curVideoFile;
+				break;
+			}
+		}
+		if (videoFile == null) {
+			return "";
+		}
 
 		String videoPath = videoFile.getCanonicalFilename();
 		videoPath = StrUtils.replaceAll(videoPath, "\\", "/");
@@ -577,8 +596,13 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			videoPath = videoPath.substring(videoDirPathStr.length());
 		}
 
-		return "<a href=\"funtube?path=" + videoPath + "\">" +
-				"<img src=\"funtubePreview?path=" + videoPath + "\" />" +
+		return "<a href=\"funtube?path=" + UrlEncoder.encode(videoPath) + "\">" +
+				"<img id='funtube_img_" + id + "' />" +
+				"<script>" +
+				"window.setTimeout(function() {" +
+				"  document.getElementById('funtube_img_" + id + "').src = \"funtubePreview?path=" + UrlEncoder.encode(videoPath) + "\";" +
+				"}, " + id*500 + ");" +
+				"</script>" +
 				"<div>" +
 				videoPathToTitle(videoPath) +
 				"</div>" +
