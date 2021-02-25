@@ -580,8 +580,10 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			// do not display the same video twice in the recommendations
 			videoFiles.remove(index);
 
-			// do not display preview images as videos
-			if (!curVideoFile.getFilename().endsWith(".jpg")) {
+			// only display actual videos
+			if (curVideoFile.getFilename().endsWith(".mp4") || curVideoFile.getFilename().endsWith(".mpg") ||
+				curVideoFile.getFilename().endsWith(".wmv") || curVideoFile.getFilename().endsWith(".avi") ||
+				curVideoFile.getFilename().endsWith(".mov") || curVideoFile.getFilename().endsWith(".flv")) {
 				videoFile = curVideoFile;
 				break;
 			}
