@@ -587,9 +587,10 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			videoFiles.remove(index);
 
 			// only display actual videos
-			if (curVideoFile.getFilename().endsWith(".mp4") || curVideoFile.getFilename().endsWith(".mpg") ||
-				curVideoFile.getFilename().endsWith(".wmv") || curVideoFile.getFilename().endsWith(".avi") ||
-				curVideoFile.getFilename().endsWith(".mov") || curVideoFile.getFilename().endsWith(".flv")) {
+			String lowName = curVideoFile.getFilename().toLowerCase();
+			if (lowName.endsWith(".mp4") || lowName.endsWith(".mpg") ||
+				lowName.endsWith(".wmv") || lowName.endsWith(".avi") ||
+				lowName.endsWith(".mov") || lowName.endsWith(".flv")) {
 				videoFile = curVideoFile;
 				break;
 			}
