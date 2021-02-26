@@ -190,14 +190,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				// generate the preview file
 				File vidfile = new File(viddir, UrlDecoder.decode(arguments.get("path")));
 
-				String ffmpegPath = database.getFfmpegPath();
-				String ffmpegInvocation = ffmpegPath;
-				ffmpegInvocation += " -ss 1 -i \"";
-				ffmpegInvocation += vidfile.getAbsoluteFilename();
-				ffmpegInvocation += "\" -vframes 1 -f image2 \"";
-				ffmpegInvocation += prevfile.getAbsoluteFilename();
-				ffmpegInvocation += "\"";
-				IoUtils.execute(ffmpegInvocation);
+				generatePreviewFile(vidfile, prevfile);
 			}
 			return new WebServerAnswerBasedOnFile(prevfile);
 		}
@@ -207,6 +200,19 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		}
 
 		return null;
+	}
+
+	// synchronized, such that ffmpeg is not called twice at the same time, which actually does lead to it getting
+	// stuck and then it can no longer be called at all
+	private synchronized void generatePreviewFile(File vidfile, File prevfile) {
+		String ffmpegPath = database.getFfmpegPath();
+		String ffmpegInvocation = ffmpegPath;
+		ffmpegInvocation += " -ss 1 -i \"";
+		ffmpegInvocation += vidfile.getAbsoluteFilename();
+		ffmpegInvocation += "\" -vframes 1 -f image2 \"";
+		ffmpegInvocation += prevfile.getAbsoluteFilename();
+		ffmpegInvocation += "\"";
+		IoUtils.execute(ffmpegInvocation);
 	}
 
 	private WebServerAnswer generateAnswerToMainGetRequest(Map<String, String> arguments, String message) {
@@ -603,7 +609,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				"<script>" +
 				"window.setTimeout(function() {" +
 				"  document.getElementById('funtube_img_" + id + "').src = \"funtubePreview?path=" + UrlEncoder.encode(videoPath) + "\";" +
-				"}, " + id*500 + ");" +
+				"}, " + id*100 + ");" +
 				"</script>" +
 				"<div>" +
 				videoPathToTitle(videoPath) +
