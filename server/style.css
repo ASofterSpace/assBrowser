@@ -225,3 +225,23 @@ div.funtubeOtherVideosContainer > a > div {
 	padding-left: 5pt;
 	padding-top: 9pt;
 }
+
+div.category_title {
+	color: #000;
+	font-weight: bold;
+	padding-bottom: 4pt;
+	padding-top: 9pt;
+}
+
+div.category {
+	padding-left: 9pt;
+}
+
+div.category > a {
+	color: #000;
+}
+
+div.category > a:hover {
+	color: #8000A0;
+	background: #EEDDFF;
+}

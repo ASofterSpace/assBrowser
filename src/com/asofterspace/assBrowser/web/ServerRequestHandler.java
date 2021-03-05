@@ -515,21 +515,46 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		String videoPath = UrlDecoder.decode(arguments.get("path"));
 		String title = videoPathToTitle(videoPath);
 
-		html = StrUtils.replaceAll(html, "[[TITLE]]", title);
-
-		html = StrUtils.replaceAll(html, "[[VIDEO_PATH]]", UrlEncoder.encode(videoPath));
+		Directory viddir = new Directory(videoDirPathStr);
+		boolean recursively = true;
 
 		if (videoPath != null) {
 			html = StrUtils.replaceAll(html, "[[VIDEO_TYPE]]", "video/" + videoPath.substring(videoPath.indexOf(".") + 1));
 			html = StrUtils.replaceAll(html, "[[VIDEO_STYLE]]", "");
+			html = StrUtils.replaceAll(html, "[[VIDEO_CATEGORIES]]", "");
 		} else {
 			html = StrUtils.replaceAll(html, "[[VIDEO_STYLE]]", "display: none;");
+			title = "Categories";
+
+			List<Record> categories = database.getFuntubeCategories();
+			StringBuilder catStr = new StringBuilder();
+			catStr.append("<div style='position: fixed; top: 35pt; left: 15pt; bottom: 15pt; overflow-y: scroll; width: 55%;'>");
+			for (Record category : categories) {
+				catStr.append("<div class='category_title'>" + category.getString("name") + "</div>");
+				List<String> folders = category.getArrayAsStringList("folders");
+
+				for (String folder : folders) {
+
+					Directory categoryDir = new Directory(viddir, folder);
+					List<File> videoFilesInCategory = categoryDir.getAllFiles(recursively);
+
+					String aVideoPath = getFunTubeVidPath(videoFilesInCategory);
+
+					catStr.append("<div class='category'>" +
+						"<a href=\"funtube?path=" + UrlEncoder.encode(aVideoPath) + "\">" + folder + "</a>" +
+						"</div>");
+				}
+			}
+			catStr.append("</div>");
+
+			html = StrUtils.replaceAll(html, "[[VIDEO_CATEGORIES]]", catStr.toString());
 		}
 
-		StringBuilder otherVideos = new StringBuilder();
+		html = StrUtils.replaceAll(html, "[[TITLE]]", title);
 
-		Directory viddir = new Directory(videoDirPathStr);
-		boolean recursively = true;
+		html = StrUtils.replaceAll(html, "[[VIDEO_PATH]]", UrlEncoder.encode(videoPath));
+
+		StringBuilder otherVideos = new StringBuilder();
 
 		int proposalAmount = 20;
 		int id = 1;
@@ -575,7 +600,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		return title;
 	}
 
-	private String getFunTubeVidLink(List<File> videoFiles, int id) {
+	private String getFunTubeVidPath(List<File> videoFiles) {
 
 		File videoFile = null;
 
@@ -604,6 +629,13 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		if (videoPath.startsWith(videoDirPathStr)) {
 			videoPath = videoPath.substring(videoDirPathStr.length());
 		}
+
+		return videoPath;
+	}
+
+	private String getFunTubeVidLink(List<File> videoFiles, int id) {
+
+		String videoPath = getFunTubeVidPath(videoFiles);
 
 		return "<a href=\"funtube?path=" + UrlEncoder.encode(videoPath) + "\">" +
 				"<img id='funtube_img_" + id + "' />" +

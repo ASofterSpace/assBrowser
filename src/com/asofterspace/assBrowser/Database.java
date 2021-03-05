@@ -10,6 +10,8 @@ import com.asofterspace.toolbox.io.JsonFile;
 import com.asofterspace.toolbox.io.JsonParseException;
 import com.asofterspace.toolbox.utils.Record;
 
+import java.util.List;
+
 
 public class Database {
 
@@ -20,6 +22,8 @@ public class Database {
 	private final static String BROWSER_PATH = "browserPath";
 
 	private final static String FFMPEG_PATH = "ffmpegPath";
+
+	private final static String FUNTUBE_CATEGORIES = "funtubeCategories";
 
 	private JsonFile dbFile;
 
@@ -32,6 +36,8 @@ public class Database {
 	private String browserPath;
 
 	private String ffmpegPath;
+
+	private List<Record> funtubeCategories;
 
 
 	public Database() {
@@ -53,6 +59,8 @@ public class Database {
 		this.browserPath = root.getString(BROWSER_PATH);
 
 		this.ffmpegPath = root.getString(FFMPEG_PATH);
+
+		this.funtubeCategories = root.getArray(FUNTUBE_CATEGORIES);
 	}
 
 	public Record getRoot() {
@@ -70,6 +78,8 @@ public class Database {
 		root.set(BROWSER_PATH, browserPath);
 
 		root.set(FFMPEG_PATH, ffmpegPath);
+
+		root.set(FUNTUBE_CATEGORIES, funtubeCategories);
 
 		dbFile.setAllContents(root);
 		dbFile.save();
@@ -92,6 +102,10 @@ public class Database {
 
 	public String getFfmpegPath() {
 		return ffmpegPath;
+	}
+
+	public List<Record> getFuntubeCategories() {
+		return funtubeCategories;
 	}
 
 }
