@@ -212,18 +212,14 @@ div.funtubeOtherVideosContainer {
 div.funtubeOtherVideosContainer > a {
 	color: #111;
 	display: block;
-}
-
-div.funtubeOtherVideosContainer > a > img {
-	width: 35%;
+	margin-bottom: 5pt;
 }
 
 div.funtubeOtherVideosContainer > a > div {
 	width: 62%;
 	display: inline-block;
-	vertical-align: top;
+	vertical-align: middle;
 	padding-left: 5pt;
-	padding-top: 9pt;
 }
 
 div.category_title {

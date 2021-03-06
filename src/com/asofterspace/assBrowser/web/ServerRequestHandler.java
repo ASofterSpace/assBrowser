@@ -650,7 +650,9 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		}
 
 		return "<a href=\"funtube?path=" + UrlEncoder.encode(videoPath) + "\">" +
+				"<div style='height: 63pt; width: 35%; padding: 0; background: #000; vertical-align: middle; overflow: hidden;'>" +
 				"<img id='funtube_img_" + id + "' />" +
+				"</div>" +
 				"<script>" +
 				"window.setTimeout(function() {" +
 				"  document.getElementById('funtube_img_" + id + "').src = \"funtubePreview?path=" + UrlEncoder.encode(videoPath) + "\";" +
