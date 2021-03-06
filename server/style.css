@@ -222,6 +222,10 @@ div.funtubeOtherVideosContainer > a > div {
 	padding-left: 5pt;
 }
 
+div.funtubeOtherVideosContainer > a > div > img {
+	width: 100%;
+}
+
 div.category_title {
 	color: #000;
 	font-weight: bold;
