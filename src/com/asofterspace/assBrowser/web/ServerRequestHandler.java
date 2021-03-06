@@ -60,6 +60,9 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 	private Random rand = new Random();
 
+	// the link to the video that is played next (the first entry on the list of other videos)
+	private String nextVidLink = null;
+
 
 	public ServerRequestHandler(WebServer server, Socket request, Directory webRoot, Directory serverDir,
 		Database database, ConsoleCtrl consoleCtrl) {
@@ -559,6 +562,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		int proposalAmount = 20;
 		int id = 1;
 
+		nextVidLink = null;
+
 		if (videoPath != null) {
 			if (videoPath.contains("/")) {
 				String otherVideosBySameCreatorPath = videoPath.substring(0, videoPath.indexOf("/"));
@@ -583,6 +588,9 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		}
 
 		html = StrUtils.replaceAll(html, "[[OTHER_VIDEOS]]", otherVideos.toString());
+
+		nextVidLink = "funtube?path=" + UrlEncoder.encode(nextVidLink);
+		html = StrUtils.replaceAll(html, "[[NEXT_VID_LINK]]", nextVidLink);
 
 		return new WebServerAnswerInHtml(html);
 	}
@@ -636,6 +644,10 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 	private String getFunTubeVidLink(List<File> videoFiles, int id) {
 
 		String videoPath = getFunTubeVidPath(videoFiles);
+
+		if (nextVidLink == null) {
+			nextVidLink = videoPath;
+		}
 
 		return "<a href=\"funtube?path=" + UrlEncoder.encode(videoPath) + "\">" +
 				"<img id='funtube_img_" + id + "' />" +

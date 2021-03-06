@@ -18,15 +18,42 @@
 		<div style="position: fixed; left: 0; top: 0; bottom: 0; right: 70pt; background: linear-gradient(90deg, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, #FFF, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0), rgba(255, 255, 255, 0), rgba(255, 255, 255, 0));">
 		</div>
 
+		<script>
+			window.onVidEnded = function() {
+				if (document.getElementById("playNextVidCheckbox").checked) {
+					window.location = "[[NEXT_VID_LINK]]";
+				}
+			};
+		</script>
+
 		<div id="mainContent" style="overflow: hidden; height: 100%;">
 
 			<div style="color: #111; top: 9pt; left: 9pt; position: absolute; font-size: 15pt;">
 				[[TITLE]]
 			</div>
 
-			<video style="position: absolute; top: 37pt; left: 9pt; width: 60%; [[VIDEO_STYLE]]" controls>
-				<source src="funtubeVideo?path=[[VIDEO_PATH]]" type="[[VIDEO_TYPE]]">
-			</video>
+			<div style="position: absolute; top: 37pt; left: 9pt; width: 60%; color: #000; [[VIDEO_STYLE]]">
+				<video id="mainVideo" style="width: 100%"
+					onended="onVidEnded()" playsinline autoplay="autoplay" controls="controls" >
+					<source src="funtubeVideo?path=[[VIDEO_PATH]]" type="[[VIDEO_TYPE]]">
+				</video>
+
+				<script>
+					window.setTimeout(function() {
+						document.getElementById("mainVideo").play();
+					}, 1000);
+				</script>
+
+				<div>
+					<input type="checkbox" id="playNextVidCheckbox" name="playNextVidCheckbox" checked />
+					<label for="playNextVidCheckbox"> Play next video once this one is over</label>
+				</div>
+
+				<div>
+					(In case autoplay does not work, and you are in firefox, go to about:preferences#privacy
+					and allow audio and video to do autoplay in the autoplay or Automatische Wiedergabe section.)
+				</div>
+			</div>
 
 			[[VIDEO_CATEGORIES]]
 
