@@ -216,14 +216,35 @@ div.funtubeOtherVideosContainer > a {
 }
 
 div.funtubeOtherVideosContainer > a > div {
-	width: 62%;
 	display: inline-block;
 	vertical-align: middle;
+}
+
+div.funtube_vid_title {
+	width: 62%;
 	padding-left: 5pt;
 }
 
-div.funtubeOtherVideosContainer > a > div > img {
-	width: 100%;
+div.funtube_img_container {
+	height: 63pt;
+	width: 35%;
+	padding: 0;
+	background: #000;
+	vertical-align: middle;
+	text-align: center;
+	overflow: hidden;
+}
+
+span.vertical_center_helper {
+	display: inline-block;
+	height: 100%;
+	vertical-align: middle;
+}
+
+div.funtube_img_container > img {
+	vertical-align: middle;
+	max-height: 63pt;
+	max-width: 100%;
 }
 
 div.category_title {
