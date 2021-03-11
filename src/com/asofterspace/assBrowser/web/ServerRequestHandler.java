@@ -522,7 +522,13 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		boolean recursively = true;
 
 		if (videoPath != null) {
-			html = StrUtils.replaceAll(html, "[[VIDEO_TYPE]]", "video/" + videoPath.substring(videoPath.indexOf(".") + 1));
+			if (isAudio(videoPath)) {
+				html = StrUtils.replaceAll(html, "[[VIDEO_TYPE]]", "audio/" + getLowEnding(videoPath));
+				html = StrUtils.replaceAll(html, "[[VIDEO_TAG]]", "audio");
+			} else {
+				html = StrUtils.replaceAll(html, "[[VIDEO_TYPE]]", "video/" + getLowEnding(videoPath));
+				html = StrUtils.replaceAll(html, "[[VIDEO_TAG]]", "video");
+			}
 			html = StrUtils.replaceAll(html, "[[VIDEO_STYLE]]", "");
 			html = StrUtils.replaceAll(html, "[[VIDEO_CATEGORIES]]", "");
 		} else {
@@ -619,11 +625,12 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			// do not display the same video twice in the recommendations
 			videoFiles.remove(index);
 
-			// only display actual videos
+			// only display actual videos or audio files
 			String lowName = curVideoFile.getFilename().toLowerCase();
 			if (lowName.endsWith(".mp4") || lowName.endsWith(".mpg") ||
 				lowName.endsWith(".wmv") || lowName.endsWith(".avi") ||
-				lowName.endsWith(".mov") || lowName.endsWith(".flv")) {
+				lowName.endsWith(".mov") || lowName.endsWith(".flv") ||
+				lowName.endsWith(".mp3")) {
 				videoFile = curVideoFile;
 				break;
 			}
@@ -758,6 +765,18 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			   "style='" + style + "'>" +
 			   "Download Current File" +
 			   "</a>";
+	}
+
+	private boolean isAudio(String path) {
+		String ending = getLowEnding(path);
+		return ending.equals("mp3");
+	}
+
+	private String getLowEnding(String path) {
+		if (path.contains(".")) {
+			path = path.substring(path.indexOf(".") + 1);
+		}
+		return path.toLowerCase();
 	}
 
 }
