@@ -118,6 +118,10 @@ a.sidebar > img.avatar, div.sidebar > img.avatar {
 	top: 0;
 }
 
+img.avatar:hover {
+	filter: brightness(135%);
+}
+
 span.vertAligner {
 	display: inline-block;
 	height: 100%;
