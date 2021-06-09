@@ -630,7 +630,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			if (lowName.endsWith(".mp4") || lowName.endsWith(".mpg") ||
 				lowName.endsWith(".wmv") || lowName.endsWith(".avi") ||
 				lowName.endsWith(".mov") || lowName.endsWith(".flv") ||
-				lowName.endsWith(".mp3")) {
+				lowName.endsWith(".mp3") || lowName.endsWith(".webm")) {
 				videoFile = curVideoFile;
 				break;
 			}
