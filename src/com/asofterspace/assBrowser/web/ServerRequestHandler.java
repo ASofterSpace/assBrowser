@@ -373,7 +373,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			buttonHtml.append("&file=" + fileName);
 		}
 		buttonHtml.append("&console=cd ..\" class='button'>");
-		buttonHtml.append("One Folder Up");
+		buttonHtml.append("..");
 		buttonHtml.append("</a>");
 
 		if (fileName != null) {
@@ -385,7 +385,11 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		buttonHtml.append("</span>");
 
 		buttonHtml.append("<span class='button' onclick='browser.openFolderInOS()'>");
-		buttonHtml.append("Open Folder in OS");
+		buttonHtml.append("Open in OS");
+		buttonHtml.append("</span>");
+
+		buttonHtml.append("<span class='button' onclick='browser.openComicView()'>");
+		buttonHtml.append("Comic");
 		buttonHtml.append("</span>");
 
 		buttonHtml.append("<span class='button' onclick='browser.expandConsole()' id='expandConsoleBtn'>");

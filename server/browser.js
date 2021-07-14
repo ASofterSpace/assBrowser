@@ -61,6 +61,20 @@ window.browser = {
 		document.getElementById("uploadFileModal").style.display = "none";
 	},
 
+	openComicView: function() {
+		var imageStrips = document.getElementsByClassName("imageStrip");
+		var imageStrip = imageStrips[0];
+		imageStrip.style.position = "fixed";
+		imageStrip.style.width = "100%";
+		imageStrip.style.height = "100%";
+		imageStrip.style.zIndex = 100;
+		imageStrip.style.backgroundColor = "#FFFFFF";
+
+		var body = document.getElementsByTagName("body")[0];
+		body.style.padding = "0px";
+		body.style.margin = "0px";
+	},
+
 }
 
 
