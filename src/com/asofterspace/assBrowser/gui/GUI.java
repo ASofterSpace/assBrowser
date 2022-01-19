@@ -12,7 +12,7 @@ import com.asofterspace.assBrowser.paths.PathCtrl;
 import com.asofterspace.toolbox.coders.UrlEncoder;
 import com.asofterspace.toolbox.gui.Arrangement;
 import com.asofterspace.toolbox.gui.MainWindow;
-import com.asofterspace.toolbox.images.ColorRGB;
+import com.asofterspace.toolbox.images.ColorRGBA;
 import com.asofterspace.toolbox.io.IoUtils;
 
 import java.awt.BorderLayout;
@@ -79,8 +79,8 @@ public class GUI extends MainWindow {
 
 	private JPanel createMainPanel(JFrame parent) {
 
-		ColorRGB bgColor = new ColorRGB(0, 0, 0);
-		ColorRGB fgColor = new ColorRGB(255, 255, 255);
+		ColorRGBA bgColor = new ColorRGBA(0, 0, 0);
+		ColorRGBA fgColor = new ColorRGBA(255, 255, 255);
 
 		JPanel mainPanel = new JPanel();
 		mainPanel.setBackground(bgColor.toColor());
