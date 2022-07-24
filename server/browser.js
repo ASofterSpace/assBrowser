@@ -73,6 +73,25 @@ window.browser = {
 		var body = document.getElementsByTagName("body")[0];
 		body.style.padding = "0px";
 		body.style.margin = "0px";
+
+		var closeComicViewBtn = document.getElementById('closeComicViewBtn');
+		closeComicViewBtn.style.display = 'block';
+	},
+
+	closeComicView: function() {
+		var imageStrips = document.getElementsByClassName("imageStrip");
+		var imageStrip = imageStrips[0];
+		imageStrip.style.position = "unset";
+		imageStrip.style.width = "15%";
+		imageStrip.style.height = "90%";
+		imageStrip.style.backgroundColor = "unset";
+
+		var body = document.getElementsByTagName("body")[0];
+		body.style.padding = "0pt 60pt 0pt 4pt";
+		body.style.margin = "8px";
+
+		var closeComicViewBtn = document.getElementById('closeComicViewBtn');
+		closeComicViewBtn.style.display = 'none';
 	},
 
 }

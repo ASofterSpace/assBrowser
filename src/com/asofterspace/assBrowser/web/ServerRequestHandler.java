@@ -477,7 +477,10 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					imgNum++;
 				}
 				if (imgNum > 1) {
-					imagesStr = "<div class='imageStrip'>" + imagesStrBuilder.toString() + "</div>";
+					imagesStr = "<div class='imageStrip'>" +
+						"<span class='button' onclick='browser.closeComicView()' style='display:none;' " +
+						"id='closeComicViewBtn'>Close View</span><br>" +
+						imagesStrBuilder.toString() + "</div>";
 				}
 
 			// only now check if the file even exists - as we allow for STPU files which do not exist,
