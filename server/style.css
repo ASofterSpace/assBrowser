@@ -85,6 +85,22 @@ div.line > span {
 	vertical-align: top;
 }
 
+div.line.folder {
+	font-weight: bold;
+}
+
+div.line.link {
+	font-style: italic;
+}
+
+div.line.entry {
+	/* just default styling */
+}
+
+div.line.text {
+	/* just default styling */
+}
+
 div#fileContentContainer, div.imageStrip {
 	overflow-y: auto;
 	height: 90%;

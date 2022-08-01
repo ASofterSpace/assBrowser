@@ -233,19 +233,6 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		// by a filename without the .stpu (so link=/foo/bar may link to the folder bar inside the folder foo,
 		// or may link to the file bar.stpu inside the folder foo)
 		String link = arguments.get("link");
-		if (link != null) {
-			String localLink = resolvePath(link);
-			Directory localLinkDir = new Directory(localLink);
-			if (localLinkDir.exists()) {
-				path = link;
-				fileName = null;
-			} else {
-				link = StrUtils.replaceAll(link, "\\", "/");
-				int pos = link.lastIndexOf("/");
-				path = link.substring(0, pos);
-				fileName = link.substring(pos + 1) + ".stpu";
-			}
-		}
 
 		String consoleValue = "";
 
@@ -260,9 +247,27 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 			newPath = PathCtrl.ensurePathIsSafe(newPath);
 
+			// if the path has changed, that overrides the link, which overrides the path and the file
+			// (we override link, not just path, because an SLL file interpreted by the console could
+			// have redirected to a file, rather than to a path!
+			// as a side effect, we can write cd file in the console to actually open the file, which is
+			// fine ^^)
 			if (!newPath.equals(path)) {
+				link = newPath;
+			}
+		}
+
+		if (link != null) {
+			String localLink = resolvePath(link);
+			Directory localLinkDir = new Directory(localLink);
+			if (localLinkDir.exists()) {
+				path = link;
 				fileName = null;
-				path = newPath;
+			} else {
+				link = StrUtils.replaceAll(link, "\\", "/");
+				int pos = link.lastIndexOf("/");
+				path = link.substring(0, pos);
+				fileName = link.substring(pos + 1) + ".stpu";
 			}
 		}
 
@@ -691,23 +696,43 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 	private void addFolderToHtml(StringBuilder folderContent, Directory childFolder, String path) {
 		folderContent.append("<a href=\"/?path=" + path + "/");
 		folderContent.append(childFolder.getLocalDirname() + "\">");
-		folderContent.append("<div class='line'>");
+		folderContent.append("<div class='line folder'>");
 		folderContent.append(HTML.escapeHTMLstr(childFolder.getLocalDirname()));
 		folderContent.append("</div>");
 		folderContent.append("</a>");
 	}
 
 	private void addFileToHtml(StringBuilder folderContent, String filename, File childFile, String path) {
+		String entryOrLink = "entry";
+		TextFile txtFile = new TextFile(childFile);
+		boolean complainIfMissing = false;
+		String txt = txtFile.getContent(complainIfMissing);
+		if ((txt != null) && txt.startsWith("%[")) {
+			boolean haveLink = false;
+			int endind = txt.indexOf("]\r\n");
+			if (endind >= 0) {
+				haveLink = endind < txt.indexOf("\r\n");
+			} else {
+				endind = txt.indexOf("]\n");
+				if (endind >= 0) {
+					haveLink = endind < txt.indexOf("\n");
+				}
+			}
+			if (haveLink) {
+				// we have not just a file, but the file is a link!
+				entryOrLink = "link";
+			}
+		}
 		folderContent.append("<a href=\"/?path=" + path);
 		folderContent.append("&file=" + childFile.getLocalFilename() + "\">");
-		folderContent.append("<div class='line'>");
+		folderContent.append("<div class='line " + entryOrLink + "'>");
 		folderContent.append(HTML.escapeHTMLstr(filename));
 		folderContent.append("</div>");
 		folderContent.append("</a>");
 	}
 
 	private void addTextToHtml(StringBuilder folderContent, String text) {
-		folderContent.append("<div>");
+		folderContent.append("<div class='line text'>");
 		if ("".equals(text)) {
 			folderContent.append("&nbsp;");
 		} else {
