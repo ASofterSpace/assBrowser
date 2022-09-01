@@ -62,8 +62,7 @@ window.browser = {
 	},
 
 	openComicView: function() {
-		var imageStrips = document.getElementsByClassName("imageStrip");
-		var imageStrip = imageStrips[0];
+		var imageStrip = document.getElementById("imageStrip");
 		imageStrip.style.position = "fixed";
 		imageStrip.style.width = "100%";
 		imageStrip.style.height = "100%";
@@ -78,9 +77,30 @@ window.browser = {
 		closeComicViewBtn.style.display = 'block';
 	},
 
-	closeComicView: function() {
-		var imageStrips = document.getElementsByClassName("imageStrip");
-		var imageStrip = imageStrips[0];
+	openTileView: function() {
+		var imageStrip = document.getElementById("imageStrip");
+		imageStrip.style.display = 'none';
+
+		var tileStripsContainer = document.getElementById("tileStripsContainer");
+		tileStripsContainer.style.display = 'block';
+
+		tileStripsContainer.style.position = "fixed";
+		tileStripsContainer.style.width = "100%";
+		tileStripsContainer.style.height = "100%";
+		tileStripsContainer.style.zIndex = 100;
+		tileStripsContainer.style.backgroundColor = "rgb(64,0,128)";
+
+		var body = document.getElementsByTagName("body")[0];
+		body.style.padding = "0px";
+		body.style.margin = "0px";
+	},
+
+	closeView: function() {
+		var tileStripsContainer = document.getElementById("tileStripsContainer");
+		tileStripsContainer.style.display = 'none';
+
+		var imageStrip = document.getElementById("imageStrip");
+		imageStrip.style.display = 'block';
 		imageStrip.style.position = "unset";
 		imageStrip.style.width = "15%";
 		imageStrip.style.height = "90%";

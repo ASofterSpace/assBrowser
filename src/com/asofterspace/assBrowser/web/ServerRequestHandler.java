@@ -393,6 +393,10 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		buttonHtml.append("Open in OS");
 		buttonHtml.append("</span>");
 
+		buttonHtml.append("<span class='button' onclick='browser.openTileView()'>");
+		buttonHtml.append("Tile");
+		buttonHtml.append("</span>");
+
 		buttonHtml.append("<span class='button' onclick='browser.openComicView()'>");
 		buttonHtml.append("Comic");
 		buttonHtml.append("</span>");
@@ -460,6 +464,12 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				newFileHtml.append(fileHtmlStr.substring(start));
 				fileHtmlStr = newFileHtml.toString();
 
+				final int TILE_COLUMN_AMOUNT = 4;
+				List<StringBuilder> imagesColStrBuilders = new ArrayList<>();
+				for (int i = 0; i < TILE_COLUMN_AMOUNT; i++) {
+					imagesColStrBuilders.add(new StringBuilder());
+				}
+
 				StringBuilder imagesStrBuilder = new StringBuilder();
 				String baseName = fileName.substring(0, fileName.lastIndexOf("."));
 				int imgNum = 1;
@@ -479,13 +489,34 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					imagesStrBuilder.append("<a target=\"_blank\" href=\"" + imgUrl + "\">");
 					imagesStrBuilder.append("<img src=\"" + imgUrl + "\">");
 					imagesStrBuilder.append("</a>");
+					imagesColStrBuilders.get((imgNum - 1) % 4).append("<a target=\"_blank\" href=\"" + imgUrl + "\">");
+					imagesColStrBuilders.get((imgNum - 1) % 4).append("<img src=\"" + imgUrl + "\">");
+					imagesColStrBuilders.get((imgNum - 1) % 4).append("</a>");
 					imgNum++;
 				}
 				if (imgNum > 1) {
-					imagesStr = "<div class='imageStrip'>" +
-						"<span class='button' onclick='browser.closeComicView()' style='display:none;' " +
-						"id='closeComicViewBtn'>Close View</span><br>" +
-						imagesStrBuilder.toString() + "</div>";
+					StringBuilder overallBuilder = new StringBuilder();
+					overallBuilder.append("<div id='imageStrip' class='imageStrip'>");
+					overallBuilder.append("<span class='button' onclick='browser.closeView()' style='display:none; margin-top:5pt; margin-bottom:5pt;' ");
+					overallBuilder.append("id='closeComicViewBtn'>Close View</span>");
+					overallBuilder.append(imagesStrBuilder);
+					overallBuilder.append("</div>");
+
+					overallBuilder.append("<div id='tileStripsContainer' style='display:none; overflow-y:scroll;'>");
+					overallBuilder.append("<span class='button' onclick='browser.closeView()' style='display:block; margin-top:5pt; margin-bottom:5pt;' ");
+					overallBuilder.append("id='closeTileViewBtn'>Close View</span>");
+					overallBuilder.append("<div>");
+
+					for (int i = 0; i < TILE_COLUMN_AMOUNT; i++) {
+						overallBuilder.append("<div class='imageStrip imageStripColumn'>");
+						overallBuilder.append(imagesColStrBuilders.get(i));
+						overallBuilder.append("</div>");
+					}
+
+					overallBuilder.append("</div>");
+					overallBuilder.append("</div>");
+
+					imagesStr = overallBuilder.toString();
 				}
 
 			// only now check if the file even exists - as we allow for STPU files which do not exist,

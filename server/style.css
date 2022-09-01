@@ -119,6 +119,14 @@ div.imageStrip > a > img {
 	width: 100%;
 }
 
+div.imageStripColumn {
+	width: 24.5%;
+	float: left;
+	height: unset;
+	margin-left: 0.225%;
+	margin-right: 0.225%;
+}
+
 a.sidebar, div.sidebar, div.projectbar {
 	position: absolute;
 	right: 10pt;
