@@ -55,8 +55,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 	private List<String> IMAGE_EXTENSIONS;
 
-	// TODO :: make configurable - but ensure it contains forward slashes and ends with a slash!
-	private String videoDirPathStr = "E:/videos (actual)/";
+	private String videoDirPathStr = null;
 
 	private Random rand = new Random();
 
@@ -70,6 +69,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		super(server, request, webRoot);
 
 		this.database = database;
+
+		this.videoDirPathStr = database.getVideoDirPathStr();
 
 		this.serverDir = serverDir;
 
@@ -837,7 +838,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 	private String getLowEnding(String path) {
 		if (path.contains(".")) {
-			path = path.substring(path.indexOf(".") + 1);
+			path = path.substring(path.lastIndexOf(".") + 1);
 		}
 		return path.toLowerCase();
 	}

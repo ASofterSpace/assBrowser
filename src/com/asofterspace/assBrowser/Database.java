@@ -9,6 +9,7 @@ import com.asofterspace.toolbox.io.JSON;
 import com.asofterspace.toolbox.io.JsonFile;
 import com.asofterspace.toolbox.io.JsonParseException;
 import com.asofterspace.toolbox.utils.Record;
+import com.asofterspace.toolbox.utils.StrUtils;
 
 import java.util.List;
 
@@ -25,6 +26,8 @@ public class Database {
 
 	private final static String FUNTUBE_CATEGORIES = "funtubeCategories";
 
+	private final static String VIDEO_DIR = "videoDir";
+
 	private JsonFile dbFile;
 
 	private JSON root;
@@ -38,6 +41,8 @@ public class Database {
 	private String ffmpegPath;
 
 	private List<Record> funtubeCategories;
+
+	private String videoDirPath;
 
 
 	public Database() {
@@ -61,6 +66,8 @@ public class Database {
 		this.ffmpegPath = root.getString(FFMPEG_PATH);
 
 		this.funtubeCategories = root.getArray(FUNTUBE_CATEGORIES);
+
+		this.videoDirPath = root.getString(VIDEO_DIR);
 	}
 
 	public Record getRoot() {
@@ -80,6 +87,8 @@ public class Database {
 		root.set(FFMPEG_PATH, ffmpegPath);
 
 		root.set(FUNTUBE_CATEGORIES, funtubeCategories);
+
+		root.set(VIDEO_DIR, videoDirPath);
 
 		dbFile.setAllContents(root);
 		dbFile.save();
@@ -106,6 +115,16 @@ public class Database {
 
 	public List<Record> getFuntubeCategories() {
 		return funtubeCategories;
+	}
+
+	public String getVideoDirPathStr() {
+		if (videoDirPath.contains("\\")) {
+			videoDirPath = StrUtils.replaceAll(videoDirPath, "\\", "/");
+		}
+		if (!videoDirPath.endsWith("/")) {
+			videoDirPath = videoDirPath + "/";
+		}
+		return videoDirPath;
 	}
 
 }
