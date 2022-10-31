@@ -315,32 +315,37 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				files.put(file.getLocalFilename().toLowerCase(), file);
 			}
 
-			for (String entry : entries) {
-				Directory curDir = directories.get(entry.toLowerCase());
-				if (curDir != null) {
-					addFolderToHtml(folderContent, curDir, path);
-				} else {
-					File curFile = null;
-					if (entry.toLowerCase().endsWith(".sll")) {
-						curFile = files.get(entry.toLowerCase());
+			if (entries == null) {
+				addTextToHtml(folderContent, "! Unable to load VSTPU.stpu !");
+			} else {
+
+				for (String entry : entries) {
+					Directory curDir = directories.get(entry.toLowerCase());
+					if (curDir != null) {
+						addFolderToHtml(folderContent, curDir, path);
 					} else {
-						curFile = files.get(entry.toLowerCase() + ".stpu");
-					}
-					if (curFile != null) {
-						addFileToHtml(folderContent, entry, curFile, path);
-					} else {
-						boolean foundImage = false;
-						for (String imageExt : IMAGE_EXTENSIONS) {
-							File imageFile = new File(folder, entry + "_1." + imageExt);
-							if (imageFile.exists()) {
-								foundImage = true;
-								break;
-							}
-						}
-						if (foundImage) {
-							addFileToHtml(folderContent, entry, new File(folder, entry + ".stpu"), path);
+						File curFile = null;
+						if (entry.toLowerCase().endsWith(".sll")) {
+							curFile = files.get(entry.toLowerCase());
 						} else {
-							addTextToHtml(folderContent, entry);
+							curFile = files.get(entry.toLowerCase() + ".stpu");
+						}
+						if (curFile != null) {
+							addFileToHtml(folderContent, entry, curFile, path);
+						} else {
+							boolean foundImage = false;
+							for (String imageExt : IMAGE_EXTENSIONS) {
+								File imageFile = new File(folder, entry + "_1." + imageExt);
+								if (imageFile.exists()) {
+									foundImage = true;
+									break;
+								}
+							}
+							if (foundImage) {
+								addFileToHtml(folderContent, entry, new File(folder, entry + ".stpu"), path);
+							} else {
+								addTextToHtml(folderContent, entry);
+							}
 						}
 					}
 				}
@@ -433,6 +438,10 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					fileHtmlStr = file.getContent();
 				} else {
 					fileHtmlStr = genericFile.getLocalFilenameWithoutType() + "\n\n";
+				}
+
+				if (fileHtmlStr == null) {
+					fileHtmlStr = "! Unable to load file: " + genericFile.getAbsoluteFilename() + " !";
 				}
 
 				// follow link automatically
@@ -729,7 +738,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		folderContent.append("<a href=\"/?path=" + path + "/");
 		folderContent.append(childFolder.getLocalDirname() + "\">");
 		folderContent.append("<div class='line folder'>");
-		folderContent.append(HTML.escapeHTMLstr(childFolder.getLocalDirname()));
+		folderContent.append(HTML.escapeHTMLstrNbsp(childFolder.getLocalDirname()));
 		folderContent.append("</div>");
 		folderContent.append("</a>");
 	}
@@ -758,7 +767,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		folderContent.append("<a href=\"/?path=" + path);
 		folderContent.append("&file=" + childFile.getLocalFilename() + "\">");
 		folderContent.append("<div class='line " + entryOrLink + "'>");
-		folderContent.append(HTML.escapeHTMLstr(filename));
+		folderContent.append(HTML.escapeHTMLstrNbsp(filename));
 		folderContent.append("</div>");
 		folderContent.append("</a>");
 	}
@@ -768,7 +777,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		if ("".equals(text)) {
 			folderContent.append("&nbsp;");
 		} else {
-			folderContent.append(HTML.escapeHTMLstr(text));
+			folderContent.append(HTML.escapeHTMLstrNbsp(text));
 		}
 		folderContent.append("</div>");
 	}
