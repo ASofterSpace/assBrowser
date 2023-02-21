@@ -57,10 +57,15 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 	private String videoDirPathStr = null;
 
+	private boolean accessFilesLocally = true;
+
 	private Random rand = new Random();
 
 	// the link to the video that is played next (the first entry on the list of other videos)
 	private String nextVidLink = null;
+
+	private String desktopLocation;
+	private String oneUpDesktopLocation;
 
 
 	public ServerRequestHandler(WebServer server, Socket request, Directory webRoot, Directory serverDir,
@@ -69,6 +74,10 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		super(server, request, webRoot);
 
 		this.database = database;
+
+		this.desktopLocation = database.getDesktopLocation();
+		this.desktopLocation = PathCtrl.ensurePathIsSafe(this.desktopLocation) + "/";
+		this.oneUpDesktopLocation = PathCtrl.oneUp(this.desktopLocation);
 
 		this.videoDirPathStr = database.getVideoDirPathStr();
 
@@ -276,8 +285,6 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		// if path starts with the local path of the Desktop, replace it with /Desktop/
 		String pathCompare = path + "/";
-		String desktopLocation = database.getDesktopLocation();
-		desktopLocation = PathCtrl.ensurePathIsSafe(desktopLocation) + "/";
 		if (pathCompare.startsWith(desktopLocation)) {
 			pathCompare = PathCtrl.DESKTOP + "/" + pathCompare.substring(desktopLocation.length());
 			path = PathCtrl.ensurePathIsSafe(pathCompare);
@@ -494,8 +501,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					if (imgExtFound == null) {
 						break;
 					}
-					String imgUrl = "/?path=" + path + "&file=" + baseName + "_" +
-						imgNum + "." + imgExtFound + "&action=download";
+					String imgUrl = getFileAccessUrl(path, baseName + "_" + imgNum + "." + imgExtFound);
 					imagesStrBuilder.append("<a target=\"_blank\" href=\"" + imgUrl + "\">");
 					imagesStrBuilder.append("<img src=\"" + imgUrl + "\">");
 					imagesStrBuilder.append("</a>");
@@ -543,7 +549,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			} else if (lowCaseFileName.endsWith(".jpg") || lowCaseFileName.endsWith(".jpeg") ||
 				lowCaseFileName.endsWith(".png") || lowCaseFileName.endsWith(".gif") ||
 				lowCaseFileName.endsWith(".bmp")) {
-				String imgUrl = "/?path=" + path + "&file=" + fileName + "&action=download";
+				String imgUrl = getFileAccessUrl(path, fileName);
 				fileHtmlStr = "<a target=\"_blank\" href=\"" + imgUrl + "\" style='max-width:99%; max-height:99%;' />";
 				fileHtmlStr += "<img src=\"" + imgUrl + "\" style='max-width:100%; max-height:100%;' />";
 				fileHtmlStr += "</a>";
@@ -820,10 +826,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 	private String resolvePath(String path) {
 
 		if (PathCtrl.startsWithDesktopPath(path)) {
-			String desktopLocation = database.getDesktopLocation();
-			desktopLocation = PathCtrl.oneUp(desktopLocation);
 			return StrUtils.replaceAll(
-				StrUtils.replaceAll(desktopLocation + "/" + path, "\\", "/"),
+				StrUtils.replaceAll(oneUpDesktopLocation + "/" + path, "\\", "/"),
 				"//", "/");
 		}
 
@@ -831,9 +835,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 	}
 
 	private String getDownloadButtonHtml(String path, String fileName, String style) {
-		return "<a href=\"/?path=" + path +
-			   "&file=" + fileName +
-			   "&action=download\" target='_blank' " +
+		return "<a href=\"" + getFileAccessUrl(path, fileName) +
+			   "\" target='_blank' " +
 			   "class='button'" +
 			   "style='" + style + "'>" +
 			   "Download Current File" +
@@ -850,6 +853,18 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			path = path.substring(path.lastIndexOf(".") + 1);
 		}
 		return path.toLowerCase();
+	}
+
+	private String getFileAccessUrl(String path, String fileName) {
+		if (accessFilesLocally) {
+			// works only if the browser is jury-rigged to accept localhost connecting to local files
+			return "file:///" + StrUtils.replaceAll(StrUtils.replaceAll(
+				oneUpDesktopLocation + "/" + path + "/" + fileName,
+				"\\", "/"), "//", "/");
+		}
+
+		// works in any browser, but is more effort - linking through this server:
+		return "/?path=" + path + "&file=" + fileName + "&action=download";
 	}
 
 }
