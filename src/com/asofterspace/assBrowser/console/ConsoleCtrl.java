@@ -206,11 +206,9 @@ public class ConsoleCtrl {
 			recursively = false;
 			for (File file : osDir.getAllFilesEndingWith(".stpu", recursively)) {
 				String locName = file.getLocalFilename();
-				System.out.println(commandLow + " vs " + locName);
 				if (locName.toLowerCase().startsWith(commandLow)) {
 					// found one! actually open the file...
 					result.setPath(previousPath + "/" + locName.substring(0, locName.length() - 5));
-				System.out.println("path: " + previousPath + "/" + locName.substring(0, locName.length() - 5));
 					return result;
 				}
 			}
