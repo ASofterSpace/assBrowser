@@ -102,7 +102,8 @@ public class GUI extends MainWindow {
 				String previousPath = PathCtrl.DESKTOP;
 				previousPath = PathCtrl.ensurePathIsSafe(previousPath);
 
-				ConsoleResult consoleResult = consoleCtrl.interpretCommand(command, previousPath);
+				boolean fromOutside = true;
+				ConsoleResult consoleResult = consoleCtrl.interpretCommand(command, previousPath, fromOutside);
 
 				String newCommand = consoleResult.getCommand();
 				consoleField.setText(newCommand);

@@ -4,6 +4,7 @@
  */
 package com.asofterspace.assBrowser.paths;
 
+import com.asofterspace.assBrowser.Database;
 import com.asofterspace.toolbox.utils.StrUtils;
 
 
@@ -11,6 +12,16 @@ public class PathCtrl {
 
 	public final static String DESKTOP = "\\Desktop\\";
 
+	private static String desktopLocation = null;
+
+	private static String oneUpDesktopLocation = null;
+
+	private static Database database = null;
+
+
+	public static void setDatabase(Database arg) {
+		database = arg;
+	}
 
 	public static String removeTrailingSlash(String path) {
 		while (path.endsWith("/")) {
@@ -58,6 +69,32 @@ public class PathCtrl {
 			} else {
 				path = "/";
 			}
+		}
+
+		return path;
+	}
+
+	public static String getDesktopLocation() {
+		if (desktopLocation == null) {
+			desktopLocation = database.getDesktopLocation();
+			desktopLocation = PathCtrl.ensurePathIsSafe(desktopLocation) + "/";
+		}
+		return desktopLocation;
+	}
+
+	public static String getOneUpDesktopLocation() {
+		if (oneUpDesktopLocation == null) {
+			oneUpDesktopLocation = PathCtrl.oneUp(getDesktopLocation());
+		}
+		return oneUpDesktopLocation;
+	}
+
+	public static String resolvePath(String path) {
+
+		if (startsWithDesktopPath(path)) {
+			return StrUtils.replaceAll(
+				StrUtils.replaceAll(getOneUpDesktopLocation() + "/" + path, "\\", "/"),
+				"//", "/");
 		}
 
 		return path;

@@ -64,9 +64,6 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 	// the link to the video that is played next (the first entry on the list of other videos)
 	private String nextVidLink = null;
 
-	private String desktopLocation;
-	private String oneUpDesktopLocation;
-
 
 	public ServerRequestHandler(WebServer server, Socket request, Directory webRoot, Directory serverDir,
 		Database database, ConsoleCtrl consoleCtrl) {
@@ -74,10 +71,6 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		super(server, request, webRoot);
 
 		this.database = database;
-
-		this.desktopLocation = database.getDesktopLocation();
-		this.desktopLocation = PathCtrl.ensurePathIsSafe(this.desktopLocation) + "/";
-		this.oneUpDesktopLocation = PathCtrl.oneUp(this.desktopLocation);
 
 		this.videoDirPathStr = database.getVideoDirPathStr();
 
@@ -106,7 +99,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			WebRequestFormDataBlock pathBlock = formData.getByName("path");
 			String pathContent = pathBlock.getContent().trim();
 			String path = PathCtrl.ensurePathIsSafe(pathContent);
-			path = resolvePath(path);
+			path = PathCtrl.resolvePath(path);
 			Directory parentDir = new Directory(path);
 			TextFile uploadedFile = new TextFile(parentDir, fileNameContent);
 			uploadedFile.setEncoding(TextEncoding.ISO_LATIN_1);
@@ -146,7 +139,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				if (json.getString("path") == null) {
 					respond(403);
 				}
-				String localPath = resolvePath(json.getString("path"));
+				String localPath = PathCtrl.resolvePath(json.getString("path"));
 				GuiUtils.openFolder(localPath);
 				break;
 
@@ -251,7 +244,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		// interpret console commands - in case we do a cd, the path has to be changed here - not earlier,
 		// not later
 		if (arguments.get("console") != null) {
-			ConsoleResult consoleResult = consoleCtrl.interpretCommand(arguments.get("console"), path);
+			boolean fromOutside = true;
+			ConsoleResult consoleResult = consoleCtrl.interpretCommand(arguments.get("console"), path, fromOutside);
 			String newPath = consoleResult.getPath();
 			consoleValue = consoleResult.getCommand();
 
@@ -268,7 +262,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		}
 
 		if (link != null) {
-			String localLink = resolvePath(link);
+			String localLink = PathCtrl.resolvePath(link);
 			Directory localLinkDir = new Directory(localLink);
 			if (localLinkDir.exists()) {
 				path = link;
@@ -285,6 +279,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		// if path starts with the local path of the Desktop, replace it with /Desktop/
 		String pathCompare = path + "/";
+		String desktopLocation = PathCtrl.getDesktopLocation();
 		if (pathCompare.startsWith(desktopLocation)) {
 			pathCompare = PathCtrl.DESKTOP + "/" + pathCompare.substring(desktopLocation.length());
 			path = PathCtrl.ensurePathIsSafe(pathCompare);
@@ -292,7 +287,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		consoleCtrl.addPath(path);
 
-		String localPath = resolvePath(path);
+		String localPath = PathCtrl.resolvePath(path);
 
 		Directory folder = new Directory(localPath);
 
@@ -823,17 +818,6 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		return null;
 	}
 
-	private String resolvePath(String path) {
-
-		if (PathCtrl.startsWithDesktopPath(path)) {
-			return StrUtils.replaceAll(
-				StrUtils.replaceAll(oneUpDesktopLocation + "/" + path, "\\", "/"),
-				"//", "/");
-		}
-
-		return path;
-	}
-
 	private String getDownloadButtonHtml(String path, String fileName, String style) {
 		return "<a href=\"" + getFileAccessUrl(path, fileName) +
 			   "\" target='_blank' " +
@@ -859,7 +843,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		if (accessFilesLocally) {
 			// works only if the browser is jury-rigged to accept localhost connecting to local files
 			return "file:///" + StrUtils.replaceAll(StrUtils.replaceAll(
-				oneUpDesktopLocation + "/" + path + "/" + fileName,
+				PathCtrl.getOneUpDesktopLocation() + "/" + path + "/" + fileName,
 				"\\", "/"), "//", "/");
 		}
 

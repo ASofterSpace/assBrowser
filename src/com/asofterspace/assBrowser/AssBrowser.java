@@ -6,6 +6,7 @@ package com.asofterspace.assBrowser;
 
 import com.asofterspace.assBrowser.console.ConsoleCtrl;
 import com.asofterspace.assBrowser.gui.GUI;
+import com.asofterspace.assBrowser.paths.PathCtrl;
 import com.asofterspace.assBrowser.web.Server;
 import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.io.JSON;
@@ -59,6 +60,8 @@ public class AssBrowser {
 		System.out.println("Saving database...");
 
 		database.save();
+
+		PathCtrl.setDatabase(database);
 
 
 		System.out.println("Looking at directories...");

@@ -56,7 +56,7 @@ public class ConsoleCtrl {
 	/**
 	 * Return the state of the path after executing the command
 	 */
-	public ConsoleResult interpretCommand(String command, String previousPath) {
+	public ConsoleResult interpretCommand(String command, String previousPath, boolean calledFromOutside) {
 
 		ConsoleResult result = new ConsoleResult("", previousPath);
 
@@ -197,6 +197,25 @@ public class ConsoleCtrl {
 				return result;
 			}
 		}
+
+
+		// only if called from the outside (not e.g. from an sll file)...
+		if (calledFromOutside) {
+			// ... interpret as beginning of the name of an article in the currently opened directory
+			Directory osDir = new Directory(PathCtrl.resolvePath(previousPath));
+			recursively = false;
+			for (File file : osDir.getAllFilesEndingWith(".stpu", recursively)) {
+				String locName = file.getLocalFilename();
+				System.out.println(commandLow + " vs " + locName);
+				if (locName.toLowerCase().startsWith(commandLow)) {
+					// found one! actually open the file...
+					result.setPath(previousPath + "/" + locName.substring(0, locName.length() - 5));
+				System.out.println("path: " + previousPath + "/" + locName.substring(0, locName.length() - 5));
+					return result;
+				}
+			}
+		}
+
 
 		history.add("ERROR: Command '" + command + "' not understood!");
 		return result;
@@ -383,7 +402,7 @@ public class ConsoleCtrl {
 				continue;
 			}
 
-			result = interpretCommand(line, result.getPath());
+			result = interpretCommand(line, result.getPath(), false);
 		}
 
 		return result;
