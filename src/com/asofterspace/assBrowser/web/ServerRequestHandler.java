@@ -333,7 +333,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 							curFile = files.get(entry.toLowerCase() + ".stpu");
 						}
 						if (curFile != null) {
-							addFileToHtml(folderContent, entry, curFile, path);
+							addFileToHtml(folderContent, entry, curFile, path, true);
 						} else {
 							boolean foundImage = false;
 							for (String imageExt : IMAGE_EXTENSIONS) {
@@ -344,7 +344,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 								}
 							}
 							if (foundImage) {
-								addFileToHtml(folderContent, entry, new File(folder, entry + ".stpu"), path);
+								addFileToHtml(folderContent, entry, new File(folder, entry + ".stpu"), path, false);
 							} else {
 								addTextToHtml(folderContent, entry);
 							}
@@ -362,7 +362,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			}
 
 			for (File childFile : childFiles) {
-				addFileToHtml(folderContent, childFile.getLocalFilename(), childFile, path);
+				addFileToHtml(folderContent, childFile.getLocalFilename(), childFile, path, true);
 			}
 		}
 
@@ -615,7 +615,13 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		html = StrUtils.replaceAll(html, "[[TITLE]]", title);
 
-		html = StrUtils.replaceAll(html, "[[VIDEO_PATH]]", UrlEncoder.encode(videoPath));
+		if (accessFilesLocally) {
+			File vidfile = new File(viddir, UrlDecoder.decode(videoPath));
+			html = StrUtils.replaceAll(html, "[[VIDEO_PATH]]", "file:///" +
+				StrUtils.replaceAll(vidfile.getCanonicalFilename(), "\\", "/"));
+		} else {
+			html = StrUtils.replaceAll(html, "[[VIDEO_PATH]]", "funtubeVideo?path=" + UrlEncoder.encode(videoPath));
+		}
 
 		StringBuilder otherVideos = new StringBuilder();
 
@@ -744,25 +750,32 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		folderContent.append("</a>");
 	}
 
-	private void addFileToHtml(StringBuilder folderContent, String filename, File childFile, String path) {
+	private void addFileToHtml(StringBuilder folderContent, String filename, File childFile, String path, boolean tryToLoad) {
 		String entryOrLink = "entry";
-		TextFile txtFile = new TextFile(childFile);
-		boolean complainIfMissing = false;
-		String txt = txtFile.getContent(complainIfMissing);
-		if ((txt != null) && txt.startsWith("%[")) {
-			boolean haveLink = false;
-			int endind = txt.indexOf("]\r\n");
-			if (endind >= 0) {
-				haveLink = endind < txt.indexOf("\r\n");
-			} else {
-				endind = txt.indexOf("]\n");
-				if (endind >= 0) {
-					haveLink = endind < txt.indexOf("\n");
+		if (tryToLoad) {
+			TextFile txtFile = new TextFile(childFile);
+
+			// only load the file if it is small - if it is huge, it is VERY VERY likely not to be a link anyway...
+			long contentLen = txtFile.getContentLength();
+			if (contentLen < 255) {
+				boolean complainIfMissing = false;
+				String txt = txtFile.getContent(complainIfMissing);
+				if ((txt != null) && txt.startsWith("%[")) {
+					boolean haveLink = false;
+					int endind = txt.indexOf("]\r\n");
+					if (endind >= 0) {
+						haveLink = endind < txt.indexOf("\r\n");
+					} else {
+						endind = txt.indexOf("]\n");
+						if (endind >= 0) {
+							haveLink = endind < txt.indexOf("\n");
+						}
+					}
+					if (haveLink) {
+						// we have not just a file, but the file is a link!
+						entryOrLink = "link";
+					}
 				}
-			}
-			if (haveLink) {
-				// we have not just a file, but the file is a link!
-				entryOrLink = "link";
 			}
 		}
 		folderContent.append("<a href=\"/?path=" + path);
