@@ -11,7 +11,10 @@ import com.asofterspace.toolbox.io.JsonParseException;
 import com.asofterspace.toolbox.utils.Record;
 import com.asofterspace.toolbox.utils.StrUtils;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 public class Database {
@@ -43,6 +46,8 @@ public class Database {
 	private List<Record> funtubeCategories;
 
 	private String videoDirPath;
+
+	private Map<String, String> inMemoryFolderContent = new ConcurrentHashMap<>();
 
 
 	public Database() {
@@ -125,6 +130,14 @@ public class Database {
 			videoDirPath = videoDirPath + "/";
 		}
 		return videoDirPath;
+	}
+
+	public String setInMemoryFolderContent(String path, String content) {
+		return inMemoryFolderContent.put(path, content);
+	}
+
+	public String getInMemoryFolderContent(String path) {
+		return inMemoryFolderContent.get(path);
 	}
 
 }

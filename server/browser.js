@@ -114,6 +114,26 @@ window.browser = {
 		closeComicViewBtn.style.display = 'none';
 	},
 
+	loadFullFolderView: function() {
+
+		var request = new XMLHttpRequest();
+		request.open("GET", "getFolderView?quickView=false&path=" + encodeURI(window.data.path), true);
+		request.setRequestHeader("Content-Type", "application/json");
+
+		request.onreadystatechange = function() {
+			if (request.readyState == 4 && request.status == 200) {
+				var result = JSON.parse(request.response);
+				// only update if the path didn't change in the meantime
+				// (it shouldn't, currently, but maybe in the future...)
+				if (window.data.path == result.path) {
+					document.getElementById("folderContainer").innerHTML = result.folderContent;
+				}
+			}
+		}
+
+		request.send();
+	},
+
 }
 
 
@@ -122,3 +142,5 @@ window.addEventListener("resize", window.browser.onResize);
 
 
 window.browser.onResize();
+
+window.browser.loadFullFolderView();

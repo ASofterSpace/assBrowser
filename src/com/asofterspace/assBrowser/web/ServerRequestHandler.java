@@ -205,6 +205,20 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			return generateAnswerToFunTubeRequest(arguments);
 		}
 
+		if (location.startsWith("/getFolderView")) {
+
+			String path = arguments.get("path");
+			String localPath = PathCtrl.resolvePath(path);
+			Directory folder = new Directory(localPath);
+
+			boolean quickView = !"false".equals(arguments.get("quickView"));
+			String folderContentStr = getFolderContentHtml(folder, path, quickView);
+			Record rec = Record.emptyObject();
+			rec.setString("path", path);
+			rec.setString("folderContent", folderContentStr);
+			return new WebServerAnswerInJson(rec);
+		}
+
 		return null;
 	}
 
@@ -295,78 +309,9 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			return new WebServerAnswerBasedOnFile(new File(folder, fileName));
 		}
 
-		StringBuilder folderContent = new StringBuilder();
-
-		boolean recursively = false;
-
-		List<Directory> childFolders = folder.getAllDirectories(recursively);
-		List<File> childFiles = folder.getAllFiles(recursively);
-
-		SimpleFile vstpuFile = new SimpleFile(folder, "VSTPU.stpu");
-		if (vstpuFile.exists()) {
-			vstpuFile.setEncoding(TextEncoding.ISO_LATIN_1);
-			List<String> entries = vstpuFile.getContents();
-
-			Map<String, Directory> directories = new HashMap<>();
-			for (Directory childFolder : childFolders) {
-				directories.put(childFolder.getLocalDirname().toLowerCase(), childFolder);
-			}
-
-			Map<String, File> files = new HashMap<>();
-			for (File file : childFiles) {
-				files.put(file.getLocalFilename().toLowerCase(), file);
-			}
-
-			if (entries == null) {
-				addTextToHtml(folderContent, "! Unable to load VSTPU.stpu !");
-			} else {
-
-				for (String entry : entries) {
-					Directory curDir = directories.get(entry.toLowerCase());
-					if (curDir != null) {
-						addFolderToHtml(folderContent, curDir, path);
-					} else {
-						File curFile = null;
-						if (entry.toLowerCase().endsWith(".sll")) {
-							curFile = files.get(entry.toLowerCase());
-						} else {
-							curFile = files.get(entry.toLowerCase() + ".stpu");
-						}
-						if (curFile != null) {
-							addFileToHtml(folderContent, entry, curFile, path, true);
-						} else {
-							boolean foundImage = false;
-							for (String imageExt : IMAGE_EXTENSIONS) {
-								File imageFile = new File(folder, entry + "_1." + imageExt);
-								if (imageFile.exists()) {
-									foundImage = true;
-									break;
-								}
-							}
-							if (foundImage) {
-								addFileToHtml(folderContent, entry, new File(folder, entry + ".stpu"), path, false);
-							} else {
-								addTextToHtml(folderContent, entry);
-							}
-						}
-					}
-				}
-			}
-		} else {
-			for (Directory childFolder : childFolders) {
-				addFolderToHtml(folderContent, childFolder, path);
-			}
-
-			if (childFolders.size() > 0) {
-				addTextToHtml(folderContent, "");
-			}
-
-			for (File childFile : childFiles) {
-				addFileToHtml(folderContent, childFile.getLocalFilename(), childFile, path, true);
-			}
-		}
-
-		indexContent = StrUtils.replaceAll(indexContent, "[[FOLDER_CONTENT]]", folderContent.toString());
+		boolean quickView = true;
+		String folderContentStr = getFolderContentHtml(folder, path, quickView);
+		indexContent = StrUtils.replaceAll(indexContent, "[[FOLDER_CONTENT]]", folderContentStr);
 
 		indexContent = StrUtils.replaceAll(indexContent, "[[CONSOLE]]", consoleCtrl.getHtmlStr());
 
@@ -862,6 +807,95 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		// works in any browser, but is more effort - linking through this server:
 		return "/?path=" + path + "&file=" + fileName + "&action=download";
+	}
+
+	private String getFolderContentHtml(Directory folder, String path, boolean quickView) {
+
+		if (quickView) {
+			String inMemoryFolderContent = database.getInMemoryFolderContent(path);
+			if (inMemoryFolderContent != null) {
+				return inMemoryFolderContent;
+			}
+		}
+
+		StringBuilder folderContent = new StringBuilder();
+
+		boolean recursively = false;
+
+		List<Directory> childFolders = folder.getAllDirectories(recursively);
+		List<File> childFiles = folder.getAllFiles(recursively);
+
+		SimpleFile vstpuFile = new SimpleFile(folder, "VSTPU.stpu");
+		if (vstpuFile.exists()) {
+			vstpuFile.setEncoding(TextEncoding.ISO_LATIN_1);
+			List<String> entries = vstpuFile.getContents();
+
+			Map<String, Directory> directories = new HashMap<>();
+			for (Directory childFolder : childFolders) {
+				directories.put(childFolder.getLocalDirname().toLowerCase(), childFolder);
+			}
+
+			Map<String, File> files = new HashMap<>();
+			for (File file : childFiles) {
+				files.put(file.getLocalFilename().toLowerCase(), file);
+			}
+
+			if (entries == null) {
+				addTextToHtml(folderContent, "! Unable to load VSTPU.stpu !");
+			} else {
+
+				for (String entry : entries) {
+					Directory curDir = directories.get(entry.toLowerCase());
+					if (curDir != null) {
+						addFolderToHtml(folderContent, curDir, path);
+					} else {
+						File curFile = null;
+						if (entry.toLowerCase().endsWith(".sll")) {
+							curFile = files.get(entry.toLowerCase());
+						} else {
+							curFile = files.get(entry.toLowerCase() + ".stpu");
+						}
+						if (curFile != null) {
+							addFileToHtml(folderContent, entry, curFile, path, !quickView);
+						} else {
+							boolean foundImage = false;
+							for (String imageExt : IMAGE_EXTENSIONS) {
+								File imageFile = new File(folder, entry + "_1." + imageExt);
+								if (imageFile.exists()) {
+									foundImage = true;
+									break;
+								}
+							}
+							if (foundImage) {
+								addFileToHtml(folderContent, entry, new File(folder, entry + ".stpu"), path, false);
+							} else {
+								addTextToHtml(folderContent, entry);
+							}
+						}
+					}
+				}
+			}
+		} else {
+			for (Directory childFolder : childFolders) {
+				addFolderToHtml(folderContent, childFolder, path);
+			}
+
+			if (childFolders.size() > 0) {
+				addTextToHtml(folderContent, "");
+			}
+
+			for (File childFile : childFiles) {
+				addFileToHtml(folderContent, childFile.getLocalFilename(), childFile, path, !quickView);
+			}
+		}
+
+		String result = folderContent.toString();
+
+		if (!quickView) {
+			database.setInMemoryFolderContent(path, result);
+		}
+
+		return result;
 	}
 
 }
