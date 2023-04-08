@@ -143,6 +143,23 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				GuiUtils.openFolder(localPath);
 				break;
 
+			case "/saveEntry":
+				String path = json.getString("path");
+				String fileName = json.getString("file");
+				String content = json.getString("content");
+				path = PathCtrl.ensurePathIsSafe(path);
+				path = resolveDesktop(path);
+				localPath = PathCtrl.resolvePath(path);
+				Directory folder = new Directory(localPath);
+				TextFile entryFile = new TextFile(folder, fileName);
+				entryFile.setEncoding(TextEncoding.ISO_LATIN_1);
+				entryFile.saveContent(content);
+				Record rec = Record.emptyObject();
+				rec.setString("path", path);
+				rec.setString("file", fileName);
+				answer = new WebServerAnswerInJson(rec);
+				break;
+
 			default:
 				respond(404);
 				return;
@@ -205,6 +222,25 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			return generateAnswerToFunTubeRequest(arguments);
 		}
 
+		if (location.startsWith("/getEntry")) {
+			String path = arguments.get("path");
+			String fileName = arguments.get("file");
+			path = PathCtrl.ensurePathIsSafe(path);
+			path = resolveDesktop(path);
+			String localPath = PathCtrl.resolvePath(path);
+			Directory folder = new Directory(localPath);
+			File genericFile = new File(folder, fileName);
+			String fileHtmlStr = loadFileAsStr(genericFile);
+			if ("false".equals(arguments.get("editingMode"))) {
+				fileHtmlStr = prepareEntryForDisplayInHtml(fileHtmlStr);
+			};
+			Record rec = Record.emptyObject();
+			rec.setString("path", path);
+			rec.setString("file", fileName);
+			rec.setString("entry", fileHtmlStr);
+			return new WebServerAnswerInJson(rec);
+		}
+
 		if (location.startsWith("/getFolderView")) {
 
 			String path = arguments.get("path");
@@ -245,6 +281,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		String path = arguments.get("path");
 		String fileName = arguments.get("file");
+		path = PathCtrl.ensurePathIsSafe(path);
 
 		// if a link argument exists, it overrides path and file - it may contain just a path, or a path followed
 		// by a filename without the .stpu (so link=/foo/bar may link to the folder bar inside the folder foo,
@@ -252,8 +289,6 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		String link = arguments.get("link");
 
 		String consoleValue = "";
-
-		path = PathCtrl.ensurePathIsSafe(path);
 
 		// interpret console commands - in case we do a cd, the path has to be changed here - not earlier,
 		// not later
@@ -291,13 +326,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		indexContent = StrUtils.replaceAll(indexContent, "[[CONSOLE_VALUE]]", consoleValue);
 
-		// if path starts with the local path of the Desktop, replace it with /Desktop/
-		String pathCompare = path + "/";
-		String desktopLocation = PathCtrl.getDesktopLocation();
-		if (pathCompare.startsWith(desktopLocation)) {
-			pathCompare = PathCtrl.DESKTOP + "/" + pathCompare.substring(desktopLocation.length());
-			path = PathCtrl.ensurePathIsSafe(pathCompare);
-		}
+		path = resolveDesktop(path);
 
 		consoleCtrl.addPath(path);
 
@@ -333,6 +362,14 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		buttonHtml.append("&console=cd ..\" class='button'>");
 		buttonHtml.append("..");
 		buttonHtml.append("</a>");
+
+		buttonHtml.append("<span id='save-btn' class='button' onclick='browser.saveEntry()' style='display:none;'>");
+		buttonHtml.append("Save");
+		buttonHtml.append("</span>");
+
+		buttonHtml.append("<span id='edit-btn' class='button' onclick='browser.toggleEditEntry()'>");
+		buttonHtml.append("Edit");
+		buttonHtml.append("</span>");
 
 		if (fileName != null) {
 			buttonHtml.append(getDownloadButtonHtml(path, fileName, ""));
@@ -379,17 +416,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			if (lowCaseFileName.endsWith(".stpu") || lowCaseFileName.endsWith(".sll") ||
 				lowCaseFileName.endsWith(".txt") || lowCaseFileName.endsWith(".ini")) {
 
-				if (genericFile.exists()) {
-					TextFile file = new TextFile(folder, fileName);
-					file.setEncoding(TextEncoding.ISO_LATIN_1);
-					fileHtmlStr = file.getContent();
-				} else {
-					fileHtmlStr = genericFile.getLocalFilenameWithoutType() + "\n\n";
-				}
-
-				if (fileHtmlStr == null) {
-					fileHtmlStr = "! Unable to load file: " + genericFile.getAbsoluteFilename() + " !";
-				}
+				fileHtmlStr = loadFileAsStr(genericFile);
 
 				// follow link automatically
 				if (fileHtmlStr.startsWith("%[") && fileHtmlStr.contains("]")) {
@@ -399,62 +426,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					return generateAnswerToMainGetRequest(newArgs, message);
 				}
 
-				fileHtmlStr = prepareStrForDisplayInHtml(fileHtmlStr);
-
-				// set first line as title
-				int firstLinefeed = fileHtmlStr.indexOf("<br>");
-				if (firstLinefeed >= 0) {
-					fileHtmlStr = "<span class='firstline'>" + fileHtmlStr.substring(0, firstLinefeed) + "</span>" +
-						fileHtmlStr.substring(firstLinefeed);
-				}
-
-				// replace %[...] with internal links
-				StringBuilder newFileHtml = new StringBuilder();
-				int pos = fileHtmlStr.indexOf("%[");
-				int start = 0;
-				while (pos >= 0) {
-					int end = fileHtmlStr.indexOf("]", pos);
-					if (end >= 0) {
-						newFileHtml.append(fileHtmlStr.substring(start, pos));
-						String linkStr = fileHtmlStr.substring(pos + 2, end);
-						newFileHtml.append("<a href=\"/?link=" + linkStr + "\">%[");
-						newFileHtml.append(linkStr);
-						newFileHtml.append("]</a>");
-						start = end + 1;
-						pos = fileHtmlStr.indexOf("%[", end);
-					} else {
-						break;
-					}
-				}
-				newFileHtml.append(fileHtmlStr.substring(start));
-				fileHtmlStr = newFileHtml.toString();
-
-				// replace C:\... > with OS links
-				newFileHtml = new StringBuilder();
-				start = 0;
-				fileHtmlStr += "<br>";
-				int nextLine = fileHtmlStr.indexOf("<br>", start);
-				while (nextLine >= 0) {
-					int begin = fileHtmlStr.indexOf(":", start);
-					int end = fileHtmlStr.indexOf(" &gt; ", start);
-					if ((begin == start + 1) && (end >= start) && (end < nextLine)) {
-						String linkStr = fileHtmlStr.substring(start, end);
-						newFileHtml.append("<span class='a' onclick=\"browser.openFolderInOS('" + StrUtils.replaceAll(linkStr, "\\", "\\\\") + "')\">");
-						newFileHtml.append(linkStr);
-						newFileHtml.append("</span>");
-						start = end;
-					} else {
-						if (nextLine >= start) {
-							newFileHtml.append(fileHtmlStr.substring(start, nextLine + 4));
-							start = nextLine + 4;
-							nextLine = fileHtmlStr.indexOf("<br>", start);
-						} else {
-							break;
-						}
-					}
-				}
-				newFileHtml.append(fileHtmlStr.substring(start));
-				fileHtmlStr = newFileHtml.toString().substring(0, newFileHtml.length() - 4);
+				fileHtmlStr = prepareEntryForDisplayInHtml(fileHtmlStr);
 
 				final int TILE_COLUMN_AMOUNT = 4;
 				List<StringBuilder> imagesColStrBuilders = new ArrayList<>();
@@ -931,6 +903,100 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		}
 
 		return result;
+	}
+
+	/**
+	 * if path starts with the local path of the Desktop, replace it with /Desktop/
+	 */
+	private String resolveDesktop(String path) {
+		String pathCompare = path + "/";
+		String desktopLocation = PathCtrl.getDesktopLocation();
+		if (pathCompare.startsWith(desktopLocation)) {
+			pathCompare = PathCtrl.DESKTOP + "/" + pathCompare.substring(desktopLocation.length());
+			path = PathCtrl.ensurePathIsSafe(pathCompare);
+		}
+		return path;
+	}
+
+	private String loadFileAsStr(File genericFile) {
+
+		String fileHtmlStr = null;
+
+		if (genericFile.exists()) {
+			TextFile file = new TextFile(genericFile);
+			file.setEncoding(TextEncoding.ISO_LATIN_1);
+			fileHtmlStr = file.getContent();
+		} else {
+			fileHtmlStr = genericFile.getLocalFilenameWithoutType() + "\n\n";
+		}
+
+		if (fileHtmlStr == null) {
+			fileHtmlStr = "! Unable to load file: " + genericFile.getAbsoluteFilename() + " !";
+		}
+
+		return fileHtmlStr;
+	}
+
+	private String prepareEntryForDisplayInHtml(String fileHtmlStr) {
+
+		fileHtmlStr = prepareStrForDisplayInHtml(fileHtmlStr);
+
+		// set first line as title
+		int firstLinefeed = fileHtmlStr.indexOf("<br>");
+		if (firstLinefeed >= 0) {
+			fileHtmlStr = "<span class='firstline'>" + fileHtmlStr.substring(0, firstLinefeed) + "</span>" +
+				fileHtmlStr.substring(firstLinefeed);
+		}
+
+		// replace %[...] with internal links
+		StringBuilder newFileHtml = new StringBuilder();
+		int pos = fileHtmlStr.indexOf("%[");
+		int start = 0;
+		while (pos >= 0) {
+			int end = fileHtmlStr.indexOf("]", pos);
+			if (end >= 0) {
+				newFileHtml.append(fileHtmlStr.substring(start, pos));
+				String linkStr = fileHtmlStr.substring(pos + 2, end);
+				newFileHtml.append("<a href=\"/?link=" + linkStr + "\">%[");
+				newFileHtml.append(linkStr);
+				newFileHtml.append("]</a>");
+				start = end + 1;
+				pos = fileHtmlStr.indexOf("%[", end);
+			} else {
+				break;
+			}
+		}
+		newFileHtml.append(fileHtmlStr.substring(start));
+		fileHtmlStr = newFileHtml.toString();
+
+		// replace C:\... > with OS links
+		newFileHtml = new StringBuilder();
+		start = 0;
+		fileHtmlStr += "<br>";
+		int nextLine = fileHtmlStr.indexOf("<br>", start);
+		while (nextLine >= 0) {
+			int begin = fileHtmlStr.indexOf(":", start);
+			int end = fileHtmlStr.indexOf(" &gt; ", start);
+			if ((begin == start + 1) && (end >= start) && (end < nextLine)) {
+				String linkStr = fileHtmlStr.substring(start, end);
+				newFileHtml.append("<span class='a' onclick=\"browser.openFolderInOS('" + StrUtils.replaceAll(linkStr, "\\", "\\\\") + "')\">");
+				newFileHtml.append(linkStr);
+				newFileHtml.append("</span>");
+				start = end;
+			} else {
+				if (nextLine >= start) {
+					newFileHtml.append(fileHtmlStr.substring(start, nextLine + 4));
+					start = nextLine + 4;
+					nextLine = fileHtmlStr.indexOf("<br>", start);
+				} else {
+					break;
+				}
+			}
+		}
+		newFileHtml.append(fileHtmlStr.substring(start));
+		fileHtmlStr = newFileHtml.toString().substring(0, newFileHtml.length() - 4);
+
+		return fileHtmlStr;
 	}
 
 }

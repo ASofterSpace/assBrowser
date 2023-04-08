@@ -11,7 +11,7 @@ a {
 	text-decoration: none;
 }
 
-body > div, div#mainContent > div {
+body > div, div#mainContent > div, div#mainContent > textarea {
 	color: #88AAFF;
 	padding-bottom: 10pt;
 }
@@ -56,7 +56,7 @@ span.button.highviz {
 div.buttonBar > span.button, div.buttonBar > a.button {
 	padding: 2pt 10pt;
 	border-radius: 5pt;
-	margin: 0pt 10pt;
+	margin: 0pt 4pt;
 }
 
 span.button:hover, a.button:hover {
@@ -101,9 +101,13 @@ div.line.text {
 	/* just default styling */
 }
 
-div#fileContentContainer, div.imageStrip {
+div#fileContentContainer, textarea#fileContentTextarea, div.imageStrip {
 	overflow-y: auto;
 	height: 90%;
+}
+
+textarea#fileContentTextarea {
+	width: 71%;
 }
 
 div#fileContentContainer > a, div#fileContentContainer > span.a {

@@ -1,5 +1,12 @@
 window.browser = {
 
+	// are we currently editing the entry?
+	editingMode: false,
+
+	// are we preventing the firing of entry change events to turn the save button red?
+	preventEntryChangeFire: false,
+
+
 	onResize: function() {
 
 		var retry = false;
@@ -138,12 +145,149 @@ window.browser = {
 		request.send();
 	},
 
+	toggleEditEntry: function() {
+		this.editingMode = !this.editingMode;
+		if (this.editingMode) {
+			document.getElementById("edit-btn").innerText = "Show";
+			document.getElementById("fileContentTextarea").style.width =
+				(document.getElementById("fileContentContainer").clientWidth - 20) + "px";
+			document.getElementById("fileContentContainer").style.display = "none";
+			document.getElementById("fileContentTextarea").style.display = "block";
+			browser.preventEntryChangeFire = true;
+			document.getElementById("fileContentTextarea").value = "Loading for Edit...";
+			window.setTimeout(function() {
+				browser.preventEntryChangeFire = false;
+			}, 100);
+			document.getElementById("save-btn").style.background =
+				document.getElementById("edit-btn").style.background;
+			document.getElementById("save-btn").style.display = "inline";
+		} else {
+			document.getElementById("edit-btn").innerText = "Edit";
+			document.getElementById("save-btn").style.display = "none";
+			document.getElementById("fileContentContainer").style.display = "block";
+			document.getElementById("fileContentTextarea").style.display = "none";
+			document.getElementById("fileContentContainer").innerHTML = "Loading View...";
+		}
+
+		var request = new XMLHttpRequest();
+		request.open("GET", "getEntry?editingMode=" + this.editingMode +
+			"&path=" + encodeURI(window.data.path) +
+			"&file=" + encodeURI(window.data.file), true);
+		request.setRequestHeader("Content-Type", "application/json");
+
+		request.onreadystatechange = function() {
+			if (request.readyState == 4 && request.status == 200) {
+				var result = JSON.parse(request.response);
+				// only update if the path didn't change in the meantime
+				// (it shouldn't, currently, but maybe in the future...)
+				if ((window.data.path == result.path) &&
+					(window.data.file == result.file)) {
+					if (window.browser.editingMode) {
+						browser.preventEntryChangeFire = true;
+						document.getElementById("fileContentTextarea").value = result.entry;
+						window.setTimeout(function() {
+							browser.preventEntryChangeFire = false;
+						}, 100);
+					} else {
+						document.getElementById("fileContentContainer").innerHTML = result.entry;
+					}
+				}
+			}
+		}
+
+		request.send();
+	},
+
+	entryChanged: function() {
+		if (!browser.preventEntryChangeFire) {
+			document.getElementById("save-btn").style.background = "#E02";
+		}
+	},
+
+	saveEntry: function() {
+
+		var request = new XMLHttpRequest();
+		request.open("POST", "saveEntry", true);
+		request.setRequestHeader("Content-Type", "application/json");
+
+		var savedContent = document.getElementById("fileContentTextarea").value;
+
+		var data = {
+			path: window.data.path,
+			file: window.data.file,
+			content: savedContent
+		};
+
+		request.onreadystatechange = function() {
+			if (request.readyState == 4 && request.status == 200) {
+				var result = JSON.parse(request.response);
+				// only update if the path didn't change in the meantime
+				// (it shouldn't, currently, but maybe in the future...)
+				if ((window.data.path == result.path) &&
+					(window.data.file == result.file) &&
+					(savedContent == document.getElementById("fileContentTextarea").value)) {
+					document.getElementById("save-btn").style.background = "#0B0";
+					window.setTimeout(function() {
+						document.getElementById("save-btn").style.background =
+							document.getElementById("edit-btn").style.background;
+					}, 2500);
+				}
+			}
+		}
+
+		request.send(JSON.stringify(data));
+	},
+
 }
 
 
 
-window.addEventListener("resize", window.browser.onResize);
+// disable any hotkeys while browser is open, so that the user cannot
+// accidentally refresh the page or something silly like that
+window.onhelp = function() {
+	// prevent F1 function key
+	return false;
+};
+window.onkeydown = function(event) {
+	if ((event.metaKey || event.ctrlKey) && event.keyCode == 83) {
+		if (browser.editingMode) {
+			browser.saveEntry();
+			// prevent [Ctrl]+[S]
+			event.preventDefault();
+			return false;
+		}
+	}
+	if ((event.keyCode > 111) && (event.keyCode < 124)) {
+		if (event.keyCode == 111 + 6) {
+			// if [F6] is pressed, and the log entry textarea is visible...
+			var fileContentTextarea = document.getElementById("fileContentTextarea");
+			if (fileContentTextarea && browser.editingMode) {
+				var start = fileContentTextarea.selectionStart;
+				var end = fileContentTextarea.selectionEnd;
+				// ... add a date-time-stamp!
+				var datetimestamp = toolbox.utils.DateUtils.getCurrentDateTimeStamp();
+				fileContentTextarea.value =
+					fileContentTextarea.value.substring(0, start) +
+					datetimestamp +
+					fileContentTextarea.value.substring(end);
+				fileContentTextarea.selectionStart = start + datetimestamp.length;
+				fileContentTextarea.selectionEnd = start + datetimestamp.length;
+			}
+		}
+		// prevent function keys
+		event.preventDefault();
+		return false;
+	}
+	if (event.keyCode == 27) {
+		// prevent escape
+		event.preventDefault();
+		return false;
+	}
+	// allow other keys
+	return true;
+};
 
+window.addEventListener("resize", window.browser.onResize);
 
 window.browser.onResize();
 
