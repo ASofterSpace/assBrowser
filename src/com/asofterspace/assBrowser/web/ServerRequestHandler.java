@@ -400,6 +400,14 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				}
 
 				fileHtmlStr = prepareStrForDisplayInHtml(fileHtmlStr);
+
+				// set first line as title
+				int firstLinefeed = fileHtmlStr.indexOf("<br>");
+				if (firstLinefeed >= 0) {
+					fileHtmlStr = "<span class='firstline'>" + fileHtmlStr.substring(0, firstLinefeed) + "</span>" +
+						fileHtmlStr.substring(firstLinefeed);
+				}
+
 				// replace %[...] with internal links
 				StringBuilder newFileHtml = new StringBuilder();
 				int pos = fileHtmlStr.indexOf("%[");
@@ -420,6 +428,33 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				}
 				newFileHtml.append(fileHtmlStr.substring(start));
 				fileHtmlStr = newFileHtml.toString();
+
+				// replace C:\... > with OS links
+				newFileHtml = new StringBuilder();
+				start = 0;
+				fileHtmlStr += "<br>";
+				int nextLine = fileHtmlStr.indexOf("<br>", start);
+				while (nextLine >= 0) {
+					int begin = fileHtmlStr.indexOf(":", start);
+					int end = fileHtmlStr.indexOf(" &gt; ", start);
+					if ((begin == start + 1) && (end >= start) && (end < nextLine)) {
+						String linkStr = fileHtmlStr.substring(start, end);
+						newFileHtml.append("<span class='a' onclick=\"browser.openFolderInOS('" + StrUtils.replaceAll(linkStr, "\\", "\\\\") + "')\">");
+						newFileHtml.append(linkStr);
+						newFileHtml.append("</span>");
+						start = end;
+					} else {
+						if (nextLine >= start) {
+							newFileHtml.append(fileHtmlStr.substring(start, nextLine + 4));
+							start = nextLine + 4;
+							nextLine = fileHtmlStr.indexOf("<br>", start);
+						} else {
+							break;
+						}
+					}
+				}
+				newFileHtml.append(fileHtmlStr.substring(start));
+				fileHtmlStr = newFileHtml.toString().substring(0, newFileHtml.length() - 4);
 
 				final int TILE_COLUMN_AMOUNT = 4;
 				List<StringBuilder> imagesColStrBuilders = new ArrayList<>();

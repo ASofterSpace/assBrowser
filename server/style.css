@@ -106,6 +106,17 @@ div#fileContentContainer, div.imageStrip {
 	height: 90%;
 }
 
+div#fileContentContainer > a, div#fileContentContainer > span.a {
+	color: #4488FF;
+	font-style: italic;
+	cursor: pointer;
+}
+
+div#fileContentContainer > span.firstline {
+	font-size: 120%;
+	font-weight: bold;
+}
+
 div.imageStrip {
 	width: 15%;
 	float: right;
