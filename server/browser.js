@@ -184,7 +184,13 @@ window.browser = {
 					(window.data.file == result.file)) {
 					if (window.browser.editingMode) {
 						browser.preventEntryChangeFire = true;
-						document.getElementById("fileContentTextarea").value = result.entry;
+
+						// UN-DO THE ENCODING - RE-DO BELOW
+						document.getElementById("fileContentTextarea").value = result.entry
+							.split("\u0092").join("’")
+							.split("\u0093").join("“")
+							.split("\u0094").join("”");
+
 						window.setTimeout(function() {
 							browser.preventEntryChangeFire = false;
 						}, 100);
@@ -215,7 +221,12 @@ window.browser = {
 		var data = {
 			path: window.data.path,
 			file: window.data.file,
+
+			// RE-DO THE ENCODING - UN-DO ABOVE
 			content: savedContent
+				.split("’").join("\u0092")
+				.split("“").join("\u0093")
+				.split("”").join("\u0094")
 		};
 
 		request.onreadystatechange = function() {
