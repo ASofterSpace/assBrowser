@@ -110,6 +110,13 @@ textarea#fileContentTextarea {
 	width: 71%;
 }
 
+textarea#folderTextarea {
+	height: 96%;
+	float: left;
+	overflow: auto scroll;
+	margin-right: 1%;
+}
+
 div#fileContentContainer > a, div#fileContentContainer > span.a {
 	color: #4488FF;
 	font-style: italic;

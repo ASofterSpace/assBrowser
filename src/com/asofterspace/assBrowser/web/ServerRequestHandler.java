@@ -160,6 +160,18 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				answer = new WebServerAnswerInJson(rec);
 				break;
 
+			case "/saveFolder":
+				path = json.getString("path");
+				localPath = PathCtrl.resolvePath(path);
+				folder = new Directory(localPath);
+				SimpleFile vstpuFile = new SimpleFile(folder, "VSTPU.stpu");
+				vstpuFile.setEncoding(TextEncoding.ISO_LATIN_1);
+				vstpuFile.saveContent(json.getString("content"));
+				rec = Record.emptyObject();
+				rec.setString("path", path);
+				answer = new WebServerAnswerInJson(rec);
+				break;
+
 			default:
 				respond(404);
 				return;
@@ -241,17 +253,28 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			return new WebServerAnswerInJson(rec);
 		}
 
-		if (location.startsWith("/getFolderView")) {
-
+		if (location.startsWith("/getFolder")) {
 			String path = arguments.get("path");
 			String localPath = PathCtrl.resolvePath(path);
 			Directory folder = new Directory(localPath);
 
-			boolean quickView = !"false".equals(arguments.get("quickView"));
-			String folderContentStr = getFolderContentHtml(folder, path, quickView);
+			String folderContentStr = null;
+
+			if ("false".equals(arguments.get("editingMode"))) {
+				boolean quickView = !"false".equals(arguments.get("quickView"));
+				folderContentStr = getFolderContentHtml(folder, path, quickView);
+			} else {
+				SimpleFile vstpuFile = new SimpleFile(folder, "VSTPU.stpu");
+				if (vstpuFile.exists()) {
+					vstpuFile.setEncoding(TextEncoding.ISO_LATIN_1);
+					folderContentStr = vstpuFile.getContent();
+				} else {
+					folderContentStr = null;
+				}
+			}
 			Record rec = Record.emptyObject();
 			rec.setString("path", path);
-			rec.setString("folderContent", folderContentStr);
+			rec.setString("content", folderContentStr);
 			return new WebServerAnswerInJson(rec);
 		}
 
@@ -355,6 +378,14 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		// buttonBar
 		StringBuilder buttonHtml = new StringBuilder();
 
+		buttonHtml.append("<span id='save-folder-btn' class='button' onclick='browser.saveFolder()' style='display:none;position:absolute;left:5%;bottom:0;'>");
+		buttonHtml.append("Save");
+		buttonHtml.append("</span>");
+
+		buttonHtml.append("<span id='edit-folder-btn' class='button' onclick='browser.toggleEditFolder()' style='position:absolute;left:10%;bottom:0;'>");
+		buttonHtml.append("Edit");
+		buttonHtml.append("</span>");
+
 		buttonHtml.append("<a href=\"/?path=" + path);
 		if (fileName != null) {
 			buttonHtml.append("&file=" + fileName);
@@ -363,15 +394,15 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		buttonHtml.append("..");
 		buttonHtml.append("</a>");
 
-		buttonHtml.append("<span id='save-btn' class='button' onclick='browser.saveEntry()' style='display:none;'>");
-		buttonHtml.append("Save");
-		buttonHtml.append("</span>");
-
-		buttonHtml.append("<span id='edit-btn' class='button' onclick='browser.toggleEditEntry()'>");
-		buttonHtml.append("Edit");
-		buttonHtml.append("</span>");
-
 		if (fileName != null) {
+			buttonHtml.append("<span id='save-btn' class='button' onclick='browser.saveEntry()' style='display:none;'>");
+			buttonHtml.append("Save");
+			buttonHtml.append("</span>");
+
+			buttonHtml.append("<span id='edit-btn' class='button' onclick='browser.toggleEditEntry()'>");
+			buttonHtml.append("Edit");
+			buttonHtml.append("</span>");
+
 			buttonHtml.append(getDownloadButtonHtml(path, fileName, ""));
 		}
 

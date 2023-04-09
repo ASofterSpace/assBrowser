@@ -6,6 +6,12 @@ window.browser = {
 	// are we preventing the firing of entry change events to turn the save button red?
 	preventEntryChangeFire: false,
 
+	// are we currently editing the folder?
+	folderEditingMode: false,
+
+	// are we preventing the firing of folder change events to turn the save button red?
+	preventFolderChangeFire: false,
+
 
 	onResize: function() {
 
@@ -128,7 +134,7 @@ window.browser = {
 	loadFullFolderView: function() {
 
 		var request = new XMLHttpRequest();
-		request.open("GET", "getFolderView?quickView=false&path=" + encodeURI(window.data.path), true);
+		request.open("GET", "getFolder?editingMode=false&quickView=false&path=" + encodeURI(window.data.path), true);
 		request.setRequestHeader("Content-Type", "application/json");
 
 		request.onreadystatechange = function() {
@@ -137,13 +143,14 @@ window.browser = {
 				// only update if the path didn't change in the meantime
 				// (it shouldn't, currently, but maybe in the future...)
 				if (window.data.path == result.path) {
-					document.getElementById("folderContainer").innerHTML = result.folderContent;
+					document.getElementById("folderContainer").innerHTML = result.content;
 				}
 			}
 		}
 
 		request.send();
 	},
+
 
 	toggleEditEntry: function() {
 		this.editingMode = !this.editingMode;
@@ -185,11 +192,7 @@ window.browser = {
 					if (window.browser.editingMode) {
 						browser.preventEntryChangeFire = true;
 
-						// UN-DO THE ENCODING - RE-DO BELOW
-						document.getElementById("fileContentTextarea").value = result.entry
-							.split("\u0092").join("’")
-							.split("\u0093").join("“")
-							.split("\u0094").join("”");
+						document.getElementById("fileContentTextarea").value = browser.decodeToTextarea(result.entry);
 
 						window.setTimeout(function() {
 							browser.preventEntryChangeFire = false;
@@ -222,11 +225,7 @@ window.browser = {
 			path: window.data.path,
 			file: window.data.file,
 
-			// RE-DO THE ENCODING - UN-DO ABOVE
-			content: savedContent
-				.split("’").join("\u0092")
-				.split("“").join("\u0093")
-				.split("”").join("\u0094")
+			content: browser.encodeFromTextarea(savedContent)
 		};
 
 		request.onreadystatechange = function() {
@@ -249,6 +248,122 @@ window.browser = {
 		request.send(JSON.stringify(data));
 	},
 
+
+	toggleEditFolder: function() {
+		this.folderEditingMode = !this.folderEditingMode;
+		if (this.folderEditingMode) {
+			document.getElementById("edit-folder-btn").innerText = "Show";
+			document.getElementById("folderTextarea").style.width =
+				document.getElementById("folderContainer").clientWidth + "px";
+			document.getElementById("folderContainer").style.display = "none";
+			document.getElementById("folderTextarea").style.display = "block";
+			browser.preventFolderChangeFire = true;
+			document.getElementById("folderTextarea").value = "Loading for Edit...";
+			window.setTimeout(function() {
+				browser.preventFolderChangeFire = false;
+			}, 100);
+			document.getElementById("save-folder-btn").style.background =
+				document.getElementById("edit-folder-btn").style.background;
+			document.getElementById("save-folder-btn").style.display = "inline";
+		} else {
+			document.getElementById("edit-folder-btn").innerText = "Edit";
+			document.getElementById("save-folder-btn").style.display = "none";
+			document.getElementById("folderContainer").style.display = "block";
+			document.getElementById("folderTextarea").style.display = "none";
+			document.getElementById("folderContainer").innerHTML = "Loading View...";
+		}
+
+		var request = new XMLHttpRequest();
+		request.open("GET", "getFolder?editingMode=" + this.folderEditingMode +
+			"&quickView=false&path=" + encodeURI(window.data.path), true);
+		request.setRequestHeader("Content-Type", "application/json");
+
+		request.onreadystatechange = function() {
+			if (request.readyState == 4 && request.status == 200) {
+				var result = JSON.parse(request.response);
+				// only update if the path didn't change in the meantime
+				// (it shouldn't, currently, but maybe in the future...)
+				if (window.data.path == result.path) {
+					if (window.browser.folderEditingMode) {
+						browser.preventFolderChangeFire = true;
+
+						if (result.content == null) {
+							result.content = document.getElementById("folderContainer").innerText;
+						}
+
+						document.getElementById("folderTextarea").value = browser.decodeToTextarea(result.content)
+
+						window.setTimeout(function() {
+							browser.preventFolderChangeFire = false;
+						}, 100);
+					} else {
+						document.getElementById("folderContainer").innerHTML = result.content;
+					}
+				}
+			}
+		}
+
+		request.send();
+	},
+
+	folderChanged: function() {
+		if (!browser.preventFolderChangeFire) {
+			document.getElementById("save-folder-btn").style.background = "#E02";
+		}
+	},
+
+	saveFolder: function() {
+
+		var request = new XMLHttpRequest();
+		request.open("POST", "saveFolder", true);
+		request.setRequestHeader("Content-Type", "application/json");
+
+		var savedContent = document.getElementById("folderTextarea").value;
+
+		var data = {
+			path: window.data.path,
+			file: window.data.file,
+
+			content: browser.encodeFromTextarea(savedContent)
+		};
+
+		request.onreadystatechange = function() {
+			if (request.readyState == 4 && request.status == 200) {
+				var result = JSON.parse(request.response);
+				// only update if the path didn't change in the meantime
+				// (it shouldn't, currently, but maybe in the future...)
+				if ((window.data.path == result.path) &&
+					(savedContent == document.getElementById("folderTextarea").value)) {
+					document.getElementById("save-folder-btn").style.background = "#0B0";
+					window.setTimeout(function() {
+						document.getElementById("save-folder-btn").style.background =
+							document.getElementById("edit-folder-btn").style.background;
+					}, 2500);
+				}
+			}
+		}
+
+		request.send(JSON.stringify(data));
+	},
+
+	decodeToTextarea: function(content) {
+		return content
+			.split("\u0084").join("„")
+			.split("\u0091").join("‘")
+			.split("\u0092").join("’")
+			.split("\u0093").join("“")
+			.split("\u0094").join("”");
+	},
+
+	encodeFromTextarea: function(content) {
+		return content
+			.split("„").join("\u0084")
+			.split("‘").join("\u0091")
+			.split("’").join("\u0092")
+			.split("“").join("\u0093")
+			.split("”").join("\u0094");
+	},
+
 }
 
 
@@ -263,7 +378,13 @@ window.onkeydown = function(event) {
 	if ((event.metaKey || event.ctrlKey) && event.keyCode == 83) {
 		if (browser.editingMode) {
 			browser.saveEntry();
-			// prevent [Ctrl]+[S]
+			// prevent [Ctrl]+[S] and instead save the entry
+			event.preventDefault();
+			return false;
+		}
+		if (browser.folderEditingMode) {
+			browser.saveFolder();
+			// prevent [Ctrl]+[S] and instead save the folder
 			event.preventDefault();
 			return false;
 		}
