@@ -761,12 +761,12 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				}
 			}
 		}
-		folderContent.append("<a href=\"/?path=" + path);
-		folderContent.append("&file=" + childFile.getLocalFilename() + "\">");
-		folderContent.append("<div class='line " + entryOrLink + "'>");
+		folderContent.append("<div class='a line " + entryOrLink + "' ");
+		String link = "/?path=" + path + "&file=" + childFile.getLocalFilename();
+		link = StrUtils.replaceAll(link, "'", "\\'");
+		folderContent.append("onclick=\"browser.navigateTo('" + link + "')\">");
 		folderContent.append(HTML.escapeHTMLstrNbsp(filename));
 		folderContent.append("</div>");
-		folderContent.append("</a>");
 	}
 
 	private void addTextToHtml(StringBuilder folderContent, String text) {
@@ -883,31 +883,23 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			} else {
 
 				for (String entry : entries) {
-					Directory curDir = directories.get(entry.toLowerCase());
-					if (curDir != null) {
-						addFolderToHtml(folderContent, curDir, path);
+					if ("".equals(entry)) {
+						addTextToHtml(folderContent, entry);
 					} else {
-						File curFile = null;
-						if (entry.toLowerCase().endsWith(".sll")) {
-							curFile = files.get(entry.toLowerCase());
+						Directory curDir = directories.get(entry.toLowerCase());
+						if (curDir != null) {
+							addFolderToHtml(folderContent, curDir, path);
 						} else {
-							curFile = files.get(entry.toLowerCase() + ".stpu");
-						}
-						if (curFile != null) {
-							addFileToHtml(folderContent, entry, curFile, path, !quickView);
-						} else {
-							boolean foundImage = false;
-							for (String imageExt : IMAGE_EXTENSIONS) {
-								File imageFile = new File(folder, entry + "_1." + imageExt);
-								if (imageFile.exists()) {
-									foundImage = true;
-									break;
-								}
-							}
-							if (foundImage) {
-								addFileToHtml(folderContent, entry, new File(folder, entry + ".stpu"), path, false);
+							File curFile = null;
+							if (entry.toLowerCase().endsWith(".sll")) {
+								curFile = files.get(entry.toLowerCase());
 							} else {
-								addTextToHtml(folderContent, entry);
+								curFile = files.get(entry.toLowerCase() + ".stpu");
+							}
+							if (curFile != null) {
+								addFileToHtml(folderContent, entry, curFile, path, !quickView);
+							} else {
+								addFileToHtml(folderContent, entry, new File(folder, entry + ".stpu"), path, false);
 							}
 						}
 					}
@@ -1000,6 +992,10 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		newFileHtml.append(fileHtmlStr.substring(start));
 		fileHtmlStr = newFileHtml.toString();
 
+		// replace http:// and https:// with external links
+		fileHtmlStr = prepareExternalLinks(fileHtmlStr, "http://");
+		fileHtmlStr = prepareExternalLinks(fileHtmlStr, "https://");
+
 		// replace C:\... > with OS links
 		newFileHtml = new StringBuilder();
 		start = 0;
@@ -1028,6 +1024,36 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		fileHtmlStr = newFileHtml.toString().substring(0, newFileHtml.length() - 4);
 
 		return fileHtmlStr;
+	}
+
+	private static String prepareExternalLinks(String fileHtmlStr, String urlStart) {
+		StringBuilder newFileHtml = new StringBuilder();
+		int pos = fileHtmlStr.indexOf(urlStart);
+		int start = 0;
+		while (pos >= 0) {
+			int end = fileHtmlStr.length();
+			int end1 = fileHtmlStr.indexOf(" ", pos);
+			int end2 = fileHtmlStr.indexOf("\t", pos);
+			int end3 = fileHtmlStr.indexOf("<br>", pos);
+			if (end1 >= start) {
+				end = Math.min(end1, end);
+			}
+			if (end2 >= start) {
+				end = Math.min(end2, end);
+			}
+			if (end3 >= start) {
+				end = Math.min(end3, end);
+			}
+			newFileHtml.append(fileHtmlStr.substring(start, pos));
+			String linkStr = fileHtmlStr.substring(pos, end);
+			newFileHtml.append("<a href=\"" + linkStr + "\" target='_blank'>");
+			newFileHtml.append(linkStr);
+			newFileHtml.append("</a>");
+			start = end;
+			pos = fileHtmlStr.indexOf(urlStart, end);
+		}
+		newFileHtml.append(fileHtmlStr.substring(start));
+		return newFileHtml.toString();
 	}
 
 }

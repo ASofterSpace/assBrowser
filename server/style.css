@@ -6,9 +6,10 @@ body {
 	padding-right: 60pt;
 }
 
-a {
+a, div.a {
 	color: #88AAFF;
 	text-decoration: none;
+	cursor: pointer;
 }
 
 body > div, div#mainContent > div, div#mainContent > textarea {

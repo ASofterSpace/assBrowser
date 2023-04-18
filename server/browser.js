@@ -144,6 +144,8 @@ window.browser = {
 				// (it shouldn't, currently, but maybe in the future...)
 				if (window.data.path == result.path) {
 					document.getElementById("folderContainer").innerHTML = result.content;
+
+					browser.scrollIfNecessary();
 				}
 			}
 		}
@@ -251,7 +253,10 @@ window.browser = {
 
 	toggleEditFolder: function() {
 		this.folderEditingMode = !this.folderEditingMode;
+		var scrollBefore = 0;
 		if (this.folderEditingMode) {
+			scrollBefore = document.getElementById("folderContainer").scrollTop /
+				document.getElementById("folderContainer").scrollTopMax;
 			document.getElementById("edit-folder-btn").innerText = "Show";
 			document.getElementById("folderTextarea").style.width =
 				document.getElementById("folderContainer").clientWidth + "px";
@@ -266,6 +271,8 @@ window.browser = {
 				document.getElementById("edit-folder-btn").style.background;
 			document.getElementById("save-folder-btn").style.display = "inline";
 		} else {
+			scrollBefore = document.getElementById("folderTextarea").scrollTop /
+				document.getElementById("folderTextarea").scrollTopMax;
 			document.getElementById("edit-folder-btn").innerText = "Edit";
 			document.getElementById("save-folder-btn").style.display = "none";
 			document.getElementById("folderContainer").style.display = "block";
@@ -295,9 +302,17 @@ window.browser = {
 
 						window.setTimeout(function() {
 							browser.preventFolderChangeFire = false;
+
+							document.getElementById("folderTextarea").scrollTo(0,
+								scrollBefore * document.getElementById("folderTextarea").scrollTopMax);
 						}, 100);
 					} else {
 						document.getElementById("folderContainer").innerHTML = result.content;
+
+						window.setTimeout(function() {
+							document.getElementById("folderContainer").scrollTo(0,
+								scrollBefore * document.getElementById("folderContainer").scrollTopMax);
+						}, 100);
 					}
 				}
 			}
@@ -364,6 +379,31 @@ window.browser = {
 			.split("”").join("\u0094");
 	},
 
+	scrollIfNecessary: function() {
+		var params = new URLSearchParams(window.location.search);
+		var scroll = params.get("scroll");
+		if (scroll != null) {
+			window.setTimeout(function() {
+				document.getElementById("folderContainer").scrollTo(0,
+					1*scroll * document.getElementById("folderContainer").scrollTopMax);
+			}, 100);
+		}
+	},
+
+	navigateTo: function(newUrl) {
+		var el = document.getElementById("folderContainer");
+
+		if (this.folderEditingMode) {
+			el = document.getElementById("folderTextarea");
+		}
+
+		if (el.scrollTopMax > 0) {
+			newUrl = newUrl + "&scroll=" + (el.scrollTop / el.scrollTopMax);
+		}
+
+		window.location = newUrl;
+	},
+
 }
 
 
@@ -424,3 +464,5 @@ window.addEventListener("resize", window.browser.onResize);
 window.browser.onResize();
 
 window.browser.loadFullFolderView();
+
+window.browser.scrollIfNecessary();
