@@ -8,7 +8,6 @@ import com.asofterspace.assBrowser.console.ConsoleCtrl;
 import com.asofterspace.assBrowser.console.ConsoleResult;
 import com.asofterspace.assBrowser.Database;
 import com.asofterspace.assBrowser.paths.PathCtrl;
-import com.asofterspace.toolbox.coders.UrlDecoder;
 import com.asofterspace.toolbox.coders.UrlEncoder;
 import com.asofterspace.toolbox.gui.GuiUtils;
 import com.asofterspace.toolbox.io.Directory;
@@ -214,16 +213,16 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		if (location.startsWith("/funtubeVideo")) {
 			Directory viddir = new Directory(videoDirPathStr);
-			File vidfile = new File(viddir, UrlDecoder.decode(arguments.get("path")));
+			File vidfile = new File(viddir, arguments.get("path"));
 			return new WebServerAnswerBasedOnFile(vidfile);
 		}
 
 		if (location.startsWith("/funtubePreview")) {
 			Directory viddir = new Directory(videoDirPathStr);
-			File prevfile = new File(viddir, UrlDecoder.decode(arguments.get("path")) + ".jpg");
+			File prevfile = new File(viddir, arguments.get("path") + ".jpg");
 			if (!prevfile.exists()) {
 				// generate the preview file
-				File vidfile = new File(viddir, UrlDecoder.decode(arguments.get("path")));
+				File vidfile = new File(viddir, arguments.get("path"));
 
 				generatePreviewFile(vidfile, prevfile);
 			}
@@ -244,7 +243,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			File genericFile = new File(folder, fileName);
 			String fileHtmlStr = loadFileAsStr(genericFile);
 			if ("false".equals(arguments.get("editingMode"))) {
-				fileHtmlStr = prepareEntryForDisplayInHtml(fileHtmlStr);
+				fileHtmlStr = prepareEntryForDisplayInHtml(fileHtmlStr, fileName);
 			};
 			Record rec = Record.emptyObject();
 			rec.setString("path", path);
@@ -402,17 +401,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			buttonHtml.append("<span id='edit-btn' class='button' onclick='browser.toggleEditEntry()'>");
 			buttonHtml.append("Edit");
 			buttonHtml.append("</span>");
-
-			buttonHtml.append(getDownloadButtonHtml(path, fileName, ""));
 		}
-
-		buttonHtml.append("<span class='button' onclick='browser.openUploadModal()'>");
-		buttonHtml.append("Upload a File");
-		buttonHtml.append("</span>");
-
-		buttonHtml.append("<span class='button' onclick='browser.openFolderInOS()'>");
-		buttonHtml.append("Open in OS");
-		buttonHtml.append("</span>");
 
 		buttonHtml.append("<span class='button' onclick='browser.openTileView()'>");
 		buttonHtml.append("Tile");
@@ -422,9 +411,40 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		buttonHtml.append("Comic");
 		buttonHtml.append("</span>");
 
+		buttonHtml.append("<span class='button' onclick='browser.toggleMoreActions()' id='more-actions-btn'>");
+		buttonHtml.append("More Actions...");
+		buttonHtml.append("</span>");
+
+		buttonHtml.append("<div id='more-actions-container' style='display:none;'>");
+
+		if (fileName != null) {
+			buttonHtml.append(getDownloadButtonHtml(path, fileName, ""));
+			buttonHtml.append("<br>");
+		}
+
+		buttonHtml.append("<span class='button' onclick='browser.openUploadModal()'>");
+		buttonHtml.append("Upload a File");
+		buttonHtml.append("</span>");
+		buttonHtml.append("<br>");
+
+		buttonHtml.append("<span class='button' onclick='browser.openFolderInOS()'>");
+		buttonHtml.append("Open in OS");
+		buttonHtml.append("</span>");
+		buttonHtml.append("<br>");
+
+		if (fileName != null) {
+			buttonHtml.append("<span class='button' onclick='browser.extractTLDR()'>");
+			buttonHtml.append("Extract TL;DR to clipboard");
+			buttonHtml.append("</span>");
+			buttonHtml.append("<textarea id='clipboardHelper' style='display:none'></textarea>");
+			buttonHtml.append("<br>");
+		}
+
 		buttonHtml.append("<span class='button' onclick='browser.expandConsole()' id='expandConsoleBtn'>");
 		buttonHtml.append("Expand Console");
 		buttonHtml.append("</span>");
+
+		buttonHtml.append("</div>");
 
 		indexContent = StrUtils.replaceAll(indexContent, "[[BUTTONS]]", buttonHtml.toString());
 
@@ -457,7 +477,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					return generateAnswerToMainGetRequest(newArgs, message);
 				}
 
-				fileHtmlStr = prepareEntryForDisplayInHtml(fileHtmlStr);
+				fileHtmlStr = prepareEntryForDisplayInHtml(fileHtmlStr, lowCaseFileName);
 
 				final int TILE_COLUMN_AMOUNT = 4;
 				List<StringBuilder> imagesColStrBuilders = new ArrayList<>();
@@ -552,7 +572,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		html = StrUtils.replaceAll(html, "[[SIDEBAR]]",
 			SideBarCtrl.getSidebarHtmlStr(SideBarEntryForTool.FUNTUBE));
 
-		String videoPath = UrlDecoder.decode(arguments.get("path"));
+		String videoPath = arguments.get("path");
 		String title = videoPathToTitle(videoPath);
 
 		Directory viddir = new Directory(videoDirPathStr);
@@ -599,7 +619,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		html = StrUtils.replaceAll(html, "[[TITLE]]", title);
 
 		if (accessFilesLocally) {
-			File vidfile = new File(viddir, UrlDecoder.decode(videoPath));
+			File vidfile = new File(viddir, videoPath);
 			html = StrUtils.replaceAll(html, "[[VIDEO_PATH]]", "file:///" +
 				StrUtils.replaceAll(vidfile.getCanonicalFilename(), "\\", "/"));
 		} else {
@@ -762,7 +782,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			}
 		}
 		folderContent.append("<div class='a line " + entryOrLink + "' ");
-		String link = "/?path=" + path + "&file=" + childFile.getLocalFilename();
+		String link = "/?path=" + funkCode(path) + "&file=" + funkCode(childFile.getLocalFilename());
 		link = StrUtils.replaceAll(link, "'", "\\'");
 		folderContent.append("onclick=\"browser.navigateTo('" + link + "')\">");
 		folderContent.append(HTML.escapeHTMLstrNbsp(filename));
@@ -891,15 +911,15 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 							addFolderToHtml(folderContent, curDir, path);
 						} else {
 							File curFile = null;
-							if (entry.toLowerCase().endsWith(".sll")) {
-								curFile = files.get(entry.toLowerCase());
-							} else {
-								curFile = files.get(entry.toLowerCase() + ".stpu");
+							String ext = "";
+							if (!entry.toLowerCase().endsWith(".sll")) {
+								ext = ".stpu";
 							}
+							curFile = files.get(entry.toLowerCase() + ext);
 							if (curFile != null) {
 								addFileToHtml(folderContent, entry, curFile, path, !quickView);
 							} else {
-								addFileToHtml(folderContent, entry, new File(folder, entry + ".stpu"), path, false);
+								addFileToHtml(folderContent, entry, new File(folder, entry + ext), path, false);
 							}
 						}
 					}
@@ -960,16 +980,22 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		return fileHtmlStr;
 	}
 
-	private String prepareEntryForDisplayInHtml(String fileHtmlStr) {
+	private String prepareEntryForDisplayInHtml(String fileHtmlStr, String fileName) {
 
 		fileHtmlStr = prepareStrForDisplayInHtml(fileHtmlStr);
 
+		String lowFileName = fileName.toLowerCase();
+		if (lowFileName.endsWith(".sll") || lowFileName.endsWith(".ini")) {
+			return fileHtmlStr;
+		}
+
 		// set first line as title
 		int firstLinefeed = fileHtmlStr.indexOf("<br>");
-		if (firstLinefeed >= 0) {
-			fileHtmlStr = "<span class='firstline'>" + fileHtmlStr.substring(0, firstLinefeed) + "</span>" +
-				fileHtmlStr.substring(firstLinefeed);
+		if (firstLinefeed < 0) {
+			firstLinefeed = fileHtmlStr.length();
 		}
+		fileHtmlStr = "<span class='firstline'>" + fileHtmlStr.substring(0, firstLinefeed) + "</span>" +
+			fileHtmlStr.substring(firstLinefeed);
 
 		// replace %[...] with internal links
 		StringBuilder newFileHtml = new StringBuilder();
@@ -980,7 +1006,10 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			if (end >= 0) {
 				newFileHtml.append(fileHtmlStr.substring(start, pos));
 				String linkStr = fileHtmlStr.substring(pos + 2, end);
-				newFileHtml.append("<a href=\"/?link=" + linkStr + "\">%[");
+				String encodedLinkStr = linkStr;
+				encodedLinkStr = HTML.unescapeHTMLstr(encodedLinkStr);
+				encodedLinkStr = UrlEncoder.encode(encodedLinkStr);
+				newFileHtml.append("<a href=\"/?link=" + encodedLinkStr + "\">%[");
 				newFileHtml.append(linkStr);
 				newFileHtml.append("]</a>");
 				start = end + 1;
@@ -1054,6 +1083,16 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		}
 		newFileHtml.append(fileHtmlStr.substring(start));
 		return newFileHtml.toString();
+	}
+
+	private static String funkCode(String str) {
+		str = UrlEncoder.encode(str);
+		str = StrUtils.replaceAll(str, "%C2%84", "%E2%80%9E");
+		str = StrUtils.replaceAll(str, "%C2%91", "%E2%80%98");
+		str = StrUtils.replaceAll(str, "%C2%92", "%E2%80%99");
+		str = StrUtils.replaceAll(str, "%C2%93", "%E2%80%9C");
+		str = StrUtils.replaceAll(str, "%C2%94", "%E2%80%9D");
+		return str;
 	}
 
 }

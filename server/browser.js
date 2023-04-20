@@ -40,6 +40,7 @@ window.browser = {
 	},
 
 	expandConsole: function() {
+		this.closeMoreActions();
 		if (document.getElementById("expandConsoleBtn").innerHTML == "Collapse Console") {
 			document.getElementById("fileContentContainer").style.height = "90%";
 			document.getElementById("consoleContainer").style.height = "1.5%";
@@ -52,6 +53,8 @@ window.browser = {
 	},
 
 	openFolderInOS: function(which) {
+
+		this.closeMoreActions();
 
 		var request = new XMLHttpRequest();
 		request.open("POST", "openFolderInOS", true);
@@ -69,16 +72,20 @@ window.browser = {
 	},
 
 	openUploadModal: function() {
+		this.closeMoreActions();
 		document.getElementById("modalBackground").style.display = "block";
 		document.getElementById("uploadFileModal").style.display = "block";
 	},
 
 	closeUploadModal: function() {
+		this.closeMoreActions();
 		document.getElementById("modalBackground").style.display = "none";
 		document.getElementById("uploadFileModal").style.display = "none";
 	},
 
 	openComicView: function() {
+		this.closeMoreActions();
+
 		var imageStrip = document.getElementById("imageStrip");
 		imageStrip.style.position = "fixed";
 		imageStrip.style.width = "100%";
@@ -95,6 +102,8 @@ window.browser = {
 	},
 
 	openTileView: function() {
+		this.closeMoreActions();
+
 		var imageStrip = document.getElementById("imageStrip");
 		imageStrip.style.display = 'none';
 
@@ -113,6 +122,8 @@ window.browser = {
 	},
 
 	closeView: function() {
+		this.closeMoreActions();
+
 		var tileStripsContainer = document.getElementById("tileStripsContainer");
 		tileStripsContainer.style.display = 'none';
 
@@ -155,6 +166,7 @@ window.browser = {
 
 
 	toggleEditEntry: function() {
+		this.closeMoreActions();
 		this.editingMode = !this.editingMode;
 		if (this.editingMode) {
 			document.getElementById("edit-btn").innerText = "Show";
@@ -252,6 +264,7 @@ window.browser = {
 
 
 	toggleEditFolder: function() {
+		this.closeMoreActions();
 		this.folderEditingMode = !this.folderEditingMode;
 		var scrollBefore = 0;
 		if (this.folderEditingMode) {
@@ -402,6 +415,69 @@ window.browser = {
 		}
 
 		window.location = newUrl;
+	},
+
+	closeMoreActions: function() {
+		document.getElementById('more-actions-container').style.display = 'none';
+		document.getElementById('more-actions-btn').innerText = 'More Actions...';
+	},
+
+	toggleMoreActions: function() {
+		var container = document.getElementById('more-actions-container');
+		if (container.style.display == 'none') {
+			container.style.display = 'block';
+			document.getElementById('more-actions-btn').innerText = 'Fewer Actions...';
+		} else {
+			this.closeMoreActions();
+		}
+	},
+
+	getCurrentEntryText: function() {
+
+		if (this.editingMode) {
+			return this.encodeFromTextarea(
+				document.getElementById("fileContentTextarea").value
+			);
+		}
+
+		return document.getElementById("fileContentContainer").innerText;
+	},
+
+	extractTLDR: function() {
+		var content = this.getCurrentEntryText();
+
+		content = content.split("TL;DR:");
+		content = content[1];
+		content = content.split("\n\n");
+		content = content[0];
+		content = content.trim();
+
+		// only replace " by ', but do not fully switch them, as ' also just appears regularly in the text
+		// in contractions
+		// so fixing ' to " manually is less work than fixing " back to ' where it shouldn't have been replaced
+		content = content.split('"').join("'");
+
+		var fileTitle = window.data.file;
+		if (fileTitle.endsWith(".stpu")) {
+			fileTitle = fileTitle.substring(0, fileTitle.length - 5);
+		}
+
+		content = 'see for: "' + content + '":' + "\n" +
+			"%[" + window.data.path.split("/").join("\\") + "\\" + fileTitle + "]";
+
+		this.copyToClipboard(content);
+
+		this.closeMoreActions();
+	},
+
+	copyToClipboard: function(content) {
+		var clipboardHelper = document.getElementById("clipboardHelper");
+		clipboardHelper.style.display = 'inline';
+		clipboardHelper.value = content;
+		clipboardHelper.select();
+		clipboardHelper.setSelectionRange(0, 99999);
+		navigator.clipboard.writeText(clipboardHelper.value);
+		clipboardHelper.style.display = 'none';
 	},
 
 }

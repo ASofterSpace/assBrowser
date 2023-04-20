@@ -54,7 +54,8 @@ span.button.highviz {
 	background: rgba(0, 20, 50, 0.8);
 }
 
-div.buttonBar > span.button, div.buttonBar > a.button {
+div.buttonBar > span.button, div.buttonBar > div#more-actions-container > span.button,
+div.buttonBar > a.button, div.buttonBar > div#more-actions-container > a.button {
 	padding: 2pt 10pt;
 	border-radius: 5pt;
 	margin: 0pt 4pt;
@@ -316,4 +317,15 @@ div.category > a {
 div.category > a:hover {
 	color: #8000A0;
 	background: #EEDDFF;
+}
+
+div#more-actions-container {
+	position:fixed;
+	bottom: 55pt;
+	left:45%;
+	background: rgba(30, 0, 25, 0.95);
+	border-radius: 9pt;
+	text-align: center;
+	line-height: 2;
+	padding: 5pt;
 }
