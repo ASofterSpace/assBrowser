@@ -152,6 +152,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				Directory folder = new Directory(localPath);
 				TextFile entryFile = new TextFile(folder, fileName);
 				entryFile.setEncoding(TextEncoding.ISO_LATIN_1);
+				// remove conditional break dashes
+				content = StrUtils.replaceAll(content, "­", "");
 				entryFile.saveContent(content);
 				Record rec = Record.emptyObject();
 				rec.setString("path", path);
@@ -165,7 +167,10 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				folder = new Directory(localPath);
 				SimpleFile vstpuFile = new SimpleFile(folder, "VSTPU.stpu");
 				vstpuFile.setEncoding(TextEncoding.ISO_LATIN_1);
-				vstpuFile.saveContent(json.getString("content"));
+				content = json.getString("content");
+				// remove conditional break dashes
+				content = StrUtils.replaceAll(content, "­", "");
+				vstpuFile.saveContent(content);
 				rec = Record.emptyObject();
 				rec.setString("path", path);
 				answer = new WebServerAnswerInJson(rec);
