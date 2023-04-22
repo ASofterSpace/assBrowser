@@ -381,7 +381,8 @@ window.browser = {
 			.split("\u0092").join("’")
 			.split("\u0093").join("“")
 			.split("\u0094").join("”")
-			.split("\u0096").join("–");
+			.split("\u0096").join("–")
+			.split("\u0097").join("—");
 	},
 
 	encodeFromTextarea: function(content) {
@@ -391,7 +392,8 @@ window.browser = {
 			.split("’").join("\u0092")
 			.split("“").join("\u0093")
 			.split("”").join("\u0094")
-			.split("–").join("\u0096");
+			.split("–").join("\u0096")
+			.split("—").join("\u0097");
 	},
 
 	scrollIfNecessary: function() {
