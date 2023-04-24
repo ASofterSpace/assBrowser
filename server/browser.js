@@ -439,9 +439,7 @@ window.browser = {
 	getCurrentEntryText: function() {
 
 		if (this.editingMode) {
-			return this.encodeFromTextarea(
-				document.getElementById("fileContentTextarea").value
-			);
+			return document.getElementById("fileContentTextarea").value;
 		}
 
 		return document.getElementById("fileContentContainer").innerText;
