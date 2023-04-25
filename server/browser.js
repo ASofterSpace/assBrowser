@@ -250,10 +250,12 @@ window.browser = {
 				if ((window.data.path == result.path) &&
 					(window.data.file == result.file) &&
 					(savedContent == document.getElementById("fileContentTextarea").value)) {
-					document.getElementById("save-btn").style.background = "#0B0";
+					document.getElementById("save-btn").style.background = "rgb(0, 187, 0)";
 					window.setTimeout(function() {
-						document.getElementById("save-btn").style.background =
-							document.getElementById("edit-btn").style.background;
+						if (document.getElementById("save-btn").style.background == "rgb(0, 187, 0)") {
+							document.getElementById("save-btn").style.background =
+								document.getElementById("edit-btn").style.background;
+						}
 					}, 2500);
 				}
 			}
@@ -362,10 +364,12 @@ window.browser = {
 				// (it shouldn't, currently, but maybe in the future...)
 				if ((window.data.path == result.path) &&
 					(savedContent == document.getElementById("folderTextarea").value)) {
-					document.getElementById("save-folder-btn").style.background = "#0B0";
+					document.getElementById("save-folder-btn").style.background = "rgb(0, 187, 0)";
 					window.setTimeout(function() {
-						document.getElementById("save-folder-btn").style.background =
-							document.getElementById("edit-folder-btn").style.background;
+						if (document.getElementById("save-folder-btn").style.background == "rgb(0, 187, 0)") {
+							document.getElementById("save-folder-btn").style.background =
+								document.getElementById("edit-folder-btn").style.background;
+						}
 					}, 2500);
 				}
 			}
@@ -376,6 +380,7 @@ window.browser = {
 
 	decodeToTextarea: function(content) {
 		return content
+			.split("\u0080").join("€")
 			.split("\u0084").join("„")
 			.split("\u0091").join("‘")
 			.split("\u0092").join("’")
@@ -387,6 +392,7 @@ window.browser = {
 
 	encodeFromTextarea: function(content) {
 		return content
+			.split("€").join("\u0080")
 			.split("„").join("\u0084")
 			.split("‘").join("\u0091")
 			.split("’").join("\u0092")
