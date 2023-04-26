@@ -18,6 +18,7 @@ import com.asofterspace.toolbox.io.JSON;
 import com.asofterspace.toolbox.io.JsonParseException;
 import com.asofterspace.toolbox.io.SimpleFile;
 import com.asofterspace.toolbox.io.TextFile;
+import com.asofterspace.toolbox.utils.DateUtils;
 import com.asofterspace.toolbox.utils.Record;
 import com.asofterspace.toolbox.utils.StrUtils;
 import com.asofterspace.toolbox.utils.TextEncoding;
@@ -246,10 +247,10 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			String localPath = PathCtrl.resolvePath(path);
 			Directory folder = new Directory(localPath);
 			File genericFile = new File(folder, fileName);
-			String fileHtmlStr = loadFileAsStr(genericFile);
+			String fileHtmlStr = loadEntryAsStr(genericFile);
 			if ("false".equals(arguments.get("editingMode"))) {
 				fileHtmlStr = prepareEntryForDisplayInHtml(fileHtmlStr, fileName);
-			};
+			}
 			Record rec = Record.emptyObject();
 			rec.setString("path", path);
 			rec.setString("file", fileName);
@@ -472,7 +473,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			if (lowCaseFileName.endsWith(".stpu") || lowCaseFileName.endsWith(".sll") ||
 				lowCaseFileName.endsWith(".txt") || lowCaseFileName.endsWith(".ini")) {
 
-				fileHtmlStr = loadFileAsStr(genericFile);
+				fileHtmlStr = loadEntryAsStr(genericFile);
 
 				// follow link automatically
 				if (fileHtmlStr.startsWith("%[") && fileHtmlStr.contains("]")) {
@@ -966,7 +967,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		return path;
 	}
 
-	private String loadFileAsStr(File genericFile) {
+	private String loadEntryAsStr(File genericFile) {
 
 		String fileHtmlStr = null;
 
@@ -974,6 +975,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			TextFile file = new TextFile(genericFile);
 			file.setEncoding(TextEncoding.ISO_LATIN_1);
 			fileHtmlStr = file.getContent();
+			fileHtmlStr = DateUtils.convertDateTimeStampsDEtoEN(fileHtmlStr);
 		} else {
 			fileHtmlStr = genericFile.getLocalFilenameWithoutType() + "\n\n";
 		}
