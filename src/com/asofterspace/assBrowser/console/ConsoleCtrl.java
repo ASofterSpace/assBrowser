@@ -138,6 +138,18 @@ public class ConsoleCtrl {
 		}
 
 
+		// switch to different disk
+		if (((commandLow.length() == 2) && (commandLow.charAt(1) == ':')) ||
+			((commandLow.length() == 3) && (commandLow.charAt(1) == ':') && (commandLow.charAt(2) == '/')) ||
+			((commandLow.length() == 3) && (commandLow.charAt(1) == ':') && (commandLow.charAt(2) == '\\'))) {
+			result.setPath(commandLow.toUpperCase() + "/");
+			if (commandLow.startsWith("c")) {
+				result.setPath("C:/home/");
+			}
+			return result;
+		}
+
+
 		// math org
 
 		if (commandLow.startsWith("mo:")) {

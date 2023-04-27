@@ -348,8 +348,13 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			} else {
 				link = StrUtils.replaceAll(link, "\\", "/");
 				int pos = link.lastIndexOf("/");
-				path = link.substring(0, pos);
-				fileName = link.substring(pos + 1) + ".stpu";
+				if (pos >= 0) {
+					path = link.substring(0, pos);
+					fileName = link.substring(pos + 1) + ".stpu";
+				} else {
+					path = link;
+					fileName = null;
+				}
 			}
 		}
 
@@ -472,7 +477,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			File genericFile = new File(folder, fileName);
 			String lowCaseFileName = fileName.toLowerCase();
 			if (lowCaseFileName.endsWith(".stpu") || lowCaseFileName.endsWith(".sll") ||
-				lowCaseFileName.endsWith(".txt") || lowCaseFileName.endsWith(".ini")) {
+				lowCaseFileName.endsWith(".txt") || lowCaseFileName.endsWith(".ini") ||
+				lowCaseFileName.endsWith(".srt")) {
 
 				fileHtmlStr = loadEntryAsStr(genericFile);
 
@@ -1006,7 +1012,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		fileHtmlStr = prepareStrForDisplayInHtml(fileHtmlStr);
 
 		String lowFileName = fileName.toLowerCase();
-		if (lowFileName.endsWith(".sll") || lowFileName.endsWith(".ini")) {
+		if (lowFileName.endsWith(".sll") || lowFileName.endsWith(".ini") ||
+			lowFileName.endsWith(".srt")) {
 			return fileHtmlStr;
 		}
 
