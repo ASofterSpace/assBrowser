@@ -145,7 +145,8 @@ window.browser = {
 	loadFullFolderView: function() {
 
 		var request = new XMLHttpRequest();
-		request.open("GET", "getFolder?editingMode=false&quickView=false&path=" + encodeURI(window.data.path), true);
+		request.open("GET", "getFolder?editingMode=false&quickView=false&path=" + encodeURI(window.data.path) +
+			"&file=" + encodeURI(window.data.file), true);
 		request.setRequestHeader("Content-Type", "application/json");
 
 		request.onreadystatechange = function() {
@@ -297,7 +298,7 @@ window.browser = {
 
 		var request = new XMLHttpRequest();
 		request.open("GET", "getFolder?editingMode=" + this.folderEditingMode +
-			"&quickView=false&path=" + encodeURI(window.data.path), true);
+			"&quickView=false&path=" + encodeURI(window.data.path) + "&file=" + encodeURI(window.data.file), true);
 		request.setRequestHeader("Content-Type", "application/json");
 
 		request.onreadystatechange = function() {
@@ -407,6 +408,15 @@ window.browser = {
 	scrollIfNecessary: function() {
 		var params = new URLSearchParams(window.location.search);
 		var scroll = params.get("scroll");
+		if (scroll == null) {
+			var nodes = document.getElementById("folderContainer").childNodes;
+			for (var i = 0; i < nodes.length; i++) {
+				if ((" " + nodes[i].className + " ").indexOf(" opened ") > -1) {
+					scroll = i / nodes.length;
+					break;
+				}
+			}
+		}
 		if (scroll != null) {
 			window.setTimeout(function() {
 				document.getElementById("folderContainer").scrollTo(0,

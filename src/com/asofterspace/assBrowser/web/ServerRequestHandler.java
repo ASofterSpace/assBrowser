@@ -260,6 +260,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		if (location.startsWith("/getFolder")) {
 			String path = arguments.get("path");
+			String fileName = arguments.get("file");
 			String localPath = PathCtrl.resolvePath(path);
 			Directory folder = new Directory(localPath);
 
@@ -267,7 +268,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 			if ("false".equals(arguments.get("editingMode"))) {
 				boolean quickView = !"false".equals(arguments.get("quickView"));
-				folderContentStr = getFolderContentHtml(folder, path, quickView);
+				folderContentStr = getFolderContentHtml(folder, path, fileName, quickView);
 			} else {
 				SimpleFile vstpuFile = new SimpleFile(folder, "VSTPU.stpu");
 				if (vstpuFile.exists()) {
@@ -367,7 +368,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		}
 
 		boolean quickView = true;
-		String folderContentStr = getFolderContentHtml(folder, path, quickView);
+		String folderContentStr = getFolderContentHtml(folder, path, fileName, quickView);
 		indexContent = StrUtils.replaceAll(indexContent, "[[FOLDER_CONTENT]]", folderContentStr);
 
 		indexContent = StrUtils.replaceAll(indexContent, "[[CONSOLE]]", consoleCtrl.getHtmlStr());
@@ -759,7 +760,9 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		folderContent.append("</a>");
 	}
 
-	private void addFileToHtml(StringBuilder folderContent, String filename, File childFile, String path, boolean tryToLoad) {
+	private void addFileToHtml(StringBuilder folderContent, String filename, File childFile, String path,
+		boolean tryToLoad, String compareToFileName) {
+
 		String entryOrLink = "entry";
 		if (tryToLoad) {
 			TextFile txtFile = new TextFile(childFile);
@@ -787,7 +790,11 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				}
 			}
 		}
-		folderContent.append("<div class='a line " + entryOrLink + "' ");
+		folderContent.append("<div class='a line ");
+		if (filename.equals(compareToFileName)) {
+			folderContent.append("opened ");
+		}
+		folderContent.append(entryOrLink + "' ");
 		String link = "/?path=" + funkCode(path) + "&file=" + funkCode(childFile.getLocalFilename());
 		link = StrUtils.replaceAll(link, "'", "\\'");
 		folderContent.append("onclick=\"browser.navigateTo('" + link + "')\">");
@@ -873,13 +880,20 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		return "/?path=" + path + "&file=" + fileName + "&action=download";
 	}
 
-	private String getFolderContentHtml(Directory folder, String path, boolean quickView) {
+	private String getFolderContentHtml(Directory folder, String path, String compareToFileName, boolean quickView) {
 
 		if (quickView) {
 			String inMemoryFolderContent = database.getInMemoryFolderContent(path);
 			if (inMemoryFolderContent != null) {
 				return inMemoryFolderContent;
 			}
+		}
+
+		if (compareToFileName == null) {
+			compareToFileName = "";
+		}
+		if (compareToFileName.endsWith(".stpu")) {
+			compareToFileName = compareToFileName.substring(0, compareToFileName.length() - 5);
 		}
 
 		StringBuilder folderContent = new StringBuilder();
@@ -923,9 +937,9 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 							}
 							curFile = files.get(entry.toLowerCase() + ext);
 							if (curFile != null) {
-								addFileToHtml(folderContent, entry, curFile, path, !quickView);
+								addFileToHtml(folderContent, entry, curFile, path, !quickView, compareToFileName);
 							} else {
-								addFileToHtml(folderContent, entry, new File(folder, entry + ext), path, false);
+								addFileToHtml(folderContent, entry, new File(folder, entry + ext), path, false, compareToFileName);
 							}
 						}
 					}
@@ -941,7 +955,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			}
 
 			for (File childFile : childFiles) {
-				addFileToHtml(folderContent, childFile.getLocalFilename(), childFile, path, !quickView);
+				addFileToHtml(folderContent, childFile.getLocalFilename(), childFile, path, !quickView, compareToFileName);
 			}
 		}
 

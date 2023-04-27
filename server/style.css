@@ -79,6 +79,16 @@ div.line:hover {
 	border-radius: 4pt;
 }
 
+div.line.opened {
+	background: rgba(255, 0, 255, 0.3);
+	color: #ECF;
+	border-radius: 4pt;
+}
+
+div.line.opened:hover {
+	background: rgba(255, 0, 255, 0.5);
+}
+
 div.line > span {
 	display: inline-block;
 	overflow: hidden;
