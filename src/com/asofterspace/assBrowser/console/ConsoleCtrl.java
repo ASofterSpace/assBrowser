@@ -12,6 +12,7 @@ import com.asofterspace.toolbox.io.File;
 import com.asofterspace.toolbox.io.IoUtils;
 import com.asofterspace.toolbox.io.SimpleFile;
 import com.asofterspace.toolbox.utils.StrUtils;
+import com.asofterspace.toolbox.utils.TextEncoding;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -399,7 +400,23 @@ public class ConsoleCtrl {
 
 		SimpleFile sllSimpleFile = new SimpleFile(sllFile);
 
-		List<String> lines = sllSimpleFile.getContents();
+		String content = sllSimpleFile.getContent();
+
+		if (content.contains("%")) {
+			SimpleFile envVarsFile = new SimpleFile(sllFile.getParentDirectory(), "Umgebungsvariablen.stpu");
+			envVarsFile.setEncoding(TextEncoding.ISO_LATIN_1);
+			List<String> envVars = envVarsFile.getContents();
+			for (int i = 0; i < envVars.size(); i++) {
+				if (envVars.get(i).endsWith("%")) {
+					content = StrUtils.replaceAll(content, "%" + envVars.get(i),
+						envVars.get(i+1));
+					i++;
+				}
+			}
+		}
+
+		String originalLineEndStr = StrUtils.detectLineEndStr(content);
+		String[] lines = content.split(originalLineEndStr);
 
 		for (String line : lines) {
 			if (line.trim().equals("")) {
