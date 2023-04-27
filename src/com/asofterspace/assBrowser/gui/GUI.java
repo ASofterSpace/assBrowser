@@ -75,11 +75,6 @@ public class GUI extends MainWindow {
 		// position...)
 		// super.show();
 
-		final int left = 0;
-		final int top = -30;
-		final int width = 1605;
-		final int height = 60;
-
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				// Stage everything to be shown
@@ -88,11 +83,7 @@ public class GUI extends MainWindow {
 				// Actually display the whole jazz
 				mainFrame.setVisible(true);
 
-				mainFrame.setSize(width, height);
-
-				mainFrame.setPreferredSize(new Dimension(width, height));
-
-				mainFrame.setLocation(new Point(left, top));
+				resetGuiLocation();
 
 				startTimerThread();
 			}
@@ -196,6 +187,15 @@ public class GUI extends MainWindow {
 		clockLabel = createLabel("00:00 ", bgColor, fgColor);
 		mainPanel.add(clockLabel, new Arrangement(5, 0, 0.0, 1.0));
 
+		clockLabel.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				copyToClipboard(DateUtils.getCurrentDateTimeStamp());
+				resetGuiLocation();
+			}
+		});
+
+
 		parent.add(mainPanel, BorderLayout.CENTER);
 
 		return mainPanel;
@@ -227,6 +227,8 @@ public class GUI extends MainWindow {
 					try {
 						clockLabel.setText(DateUtils.serializeTimeShort(DateUtils.now()) + " ");
 
+						resetGuiLocation();
+
 						// update time every 30 seconds
 						Thread.sleep(30 * 1000);
 
@@ -244,6 +246,20 @@ public class GUI extends MainWindow {
 		result.setBackground(bgColor.toColor());
 		result.setForeground(fgColor.toColor());
 		return result;
+	}
+
+	private void resetGuiLocation() {
+
+		final int left = 0;
+		final int top = -31;
+		final int width = 1605;
+		final int height = 61;
+
+		mainFrame.setSize(width, height);
+
+		mainFrame.setPreferredSize(new Dimension(width, height));
+
+		mainFrame.setLocation(new Point(left, top));
 	}
 
 }
