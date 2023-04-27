@@ -408,6 +408,8 @@ window.browser = {
 	scrollIfNecessary: function() {
 		var params = new URLSearchParams(window.location.search);
 		var scroll = params.get("scroll");
+
+		// if no scroll is given, scroll roughly to the currently opened entry, if we find one
 		if (scroll == null) {
 			var nodes = document.getElementById("folderContainer").childNodes;
 			for (var i = 0; i < nodes.length; i++) {
@@ -417,6 +419,7 @@ window.browser = {
 				}
 			}
 		}
+
 		if (scroll != null) {
 			window.setTimeout(function() {
 				document.getElementById("folderContainer").scrollTo(0,
