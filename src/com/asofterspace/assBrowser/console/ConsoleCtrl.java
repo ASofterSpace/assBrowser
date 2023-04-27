@@ -5,6 +5,7 @@
 package com.asofterspace.assBrowser.console;
 
 import com.asofterspace.assBrowser.Database;
+import com.asofterspace.assBrowser.gui.GUI;
 import com.asofterspace.assBrowser.paths.PathCtrl;
 import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.io.File;
@@ -23,6 +24,8 @@ public class ConsoleCtrl {
 	private Database database;
 
 	private String prevMathOrgResult = "0";
+
+	private GUI gui = null;
 
 
 	public ConsoleCtrl(Database database) {
@@ -174,6 +177,9 @@ public class ConsoleCtrl {
 		// close
 
 		if (commandLow.equals("close") || commandLow.equals("exit") || commandLow.equals("quit")) {
+			if (gui != null) {
+				gui.close();
+			}
 			System.exit(0);
 			return result;
 		}
@@ -404,6 +410,10 @@ public class ConsoleCtrl {
 		}
 
 		return result;
+	}
+
+	public void setGUI(GUI gui) {
+		this.gui = gui;
 	}
 
 }

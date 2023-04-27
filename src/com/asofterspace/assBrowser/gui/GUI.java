@@ -11,19 +11,32 @@ import com.asofterspace.assBrowser.Database;
 import com.asofterspace.assBrowser.paths.PathCtrl;
 import com.asofterspace.toolbox.coders.UrlEncoder;
 import com.asofterspace.toolbox.gui.Arrangement;
+import com.asofterspace.toolbox.gui.BarListener;
+import com.asofterspace.toolbox.gui.BarMenuItemForMainMenu;
 import com.asofterspace.toolbox.gui.MainWindow;
 import com.asofterspace.toolbox.images.ColorRGBA;
 import com.asofterspace.toolbox.io.IoUtils;
+import com.asofterspace.toolbox.utils.DateUtils;
+import com.asofterspace.toolbox.utils.StrUtils;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.GridBagLayout;
 import java.awt.Point;
+import java.awt.Toolkit;
 
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.Line;
 import javax.swing.AbstractAction;
+import javax.swing.border.LineBorder;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
@@ -34,6 +47,13 @@ public class GUI extends MainWindow {
 	private Database database;
 
 	private ConsoleCtrl consoleCtrl;
+
+	private JLabel counterLabel;
+	private JLabel quoteLabel1;
+	private JLabel quoteLabel2;
+	private JLabel clockLabel;
+
+	private boolean timerRunning = false;
 
 
 	public GUI(Database database, ConsoleCtrl consoleCtrl) {
@@ -57,7 +77,7 @@ public class GUI extends MainWindow {
 
 		final int left = 0;
 		final int top = -30;
-		final int width = 1600;
+		final int width = 1605;
 		final int height = 60;
 
 		SwingUtilities.invokeLater(new Runnable() {
@@ -73,6 +93,8 @@ public class GUI extends MainWindow {
 				mainFrame.setPreferredSize(new Dimension(width, height));
 
 				mainFrame.setLocation(new Point(left, top));
+
+				startTimerThread();
 			}
 		});
 	}
@@ -80,7 +102,9 @@ public class GUI extends MainWindow {
 	private JPanel createMainPanel(JFrame parent) {
 
 		ColorRGBA bgColor = new ColorRGBA(0, 0, 0);
-		ColorRGBA fgColor = new ColorRGBA(255, 255, 255);
+		ColorRGBA borderColor = new ColorRGBA(96, 0, 192);
+		ColorRGBA fgColorMain = new ColorRGBA(255, 255, 255);
+		ColorRGBA fgColor = new ColorRGBA(167, 62, 249);
 
 		JPanel mainPanel = new JPanel();
 		mainPanel.setBackground(bgColor.toColor());
@@ -90,8 +114,9 @@ public class GUI extends MainWindow {
 
 		JTextField consoleField = new JTextField();
 		consoleField.setBackground(bgColor.toColor());
-		consoleField.setForeground(fgColor.toColor());
+		consoleField.setForeground(fgColorMain.toColor());
 		consoleField.setCaretColor(fgColor.toColor());
+		consoleField.setBorder(new LineBorder(borderColor.toColor()));
 		mainPanel.add(consoleField, new Arrangement(0, 0, 1.0, 1.0));
 
 		consoleField.addActionListener(new AbstractAction() {
@@ -117,6 +142,60 @@ public class GUI extends MainWindow {
 			}
 		});
 
+		String nircmdPath = database.getNircmdPath();
+		IoUtils.executeAsync(nircmdPath + " setsysvolume 0");
+		IoUtils.executeAsync(nircmdPath + " mutesysvolume 0");
+
+		BarMenuItemForMainMenu volumeItem = new BarMenuItemForMainMenu();
+		volumeItem.setBackground(bgColor.toColor());
+		volumeItem.setForeground(fgColor.toColor());
+		volumeItem.setBarPosition(null, false);
+		volumeItem.setMaximum(100);
+		volumeItem.addBarListener(new BarListener() {
+			@Override
+			public void onBarMove(Integer position) {
+				if (position == null) {
+					position = 0;
+				}
+				IoUtils.executeAsync(nircmdPath + " setsysvolume " +
+					Math.min(65535, position * 656));
+			}
+		});
+		mainPanel.add(volumeItem, new Arrangement(1, 0, 0.0, 1.0));
+
+		counterLabel = createLabel(" 0 ", bgColor, fgColor);
+		mainPanel.add(counterLabel, new Arrangement(2, 0, 0.0, 1.0));
+
+		counterLabel.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				counterLabel.setText(" " + (StrUtils.strToInt(counterLabel.getText().trim()) + 1) + " ");
+			}
+		});
+
+		quoteLabel1 = createLabel("„“”", bgColor, fgColor);
+		mainPanel.add(quoteLabel1, new Arrangement(3, 0, 0.0, 1.0));
+
+		quoteLabel1.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				copyToClipboard("„“”");
+			}
+		});
+
+		quoteLabel2 = createLabel("‚‘’ ", bgColor, fgColor);
+		mainPanel.add(quoteLabel2, new Arrangement(4, 0, 0.0, 1.0));
+
+		quoteLabel2.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				copyToClipboard("‚‘’");
+			}
+		});
+
+		clockLabel = createLabel("00:00 ", bgColor, fgColor);
+		mainPanel.add(clockLabel, new Arrangement(5, 0, 0.0, 1.0));
+
 		parent.add(mainPanel, BorderLayout.CENTER);
 
 		return mainPanel;
@@ -124,6 +203,47 @@ public class GUI extends MainWindow {
 
 	private void refreshTitleBar() {
 		mainFrame.setTitle(AssBrowser.PROGRAM_TITLE);
+	}
+
+	private void copyToClipboard(String toBeCopiedText) {
+		StringSelection selection = new StringSelection(toBeCopiedText);
+		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+		clipboard.setContents(selection, selection);
+	}
+
+	public void close() {
+		timerRunning = false;
+	}
+
+	private void startTimerThread() {
+
+		timerRunning = true;
+
+		Thread timerThread = new Thread() {
+
+			public void run() {
+
+				while (timerRunning) {
+					try {
+						clockLabel.setText(DateUtils.serializeTimeShort(DateUtils.now()) + " ");
+
+						// update time every 30 seconds
+						Thread.sleep(30 * 1000);
+
+					} catch (InterruptedException e) {
+						// just keep sleeping...
+					}
+				}
+			}
+		};
+		timerThread.start();
+	}
+
+	private JLabel createLabel(String text, ColorRGBA bgColor, ColorRGBA fgColor) {
+		JLabel result = new JLabel(text);
+		result.setBackground(bgColor.toColor());
+		result.setForeground(fgColor.toColor());
+		return result;
 	}
 
 }

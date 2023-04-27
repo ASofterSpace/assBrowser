@@ -77,7 +77,9 @@ public class AssBrowser {
 
 		System.out.println("Starting up console line GUI...");
 
-		SwingUtilities.invokeLater(new GUI(database, consoleCtrl));
+		GUI gui = new GUI(database, consoleCtrl);
+		SwingUtilities.invokeLater(gui);
+		consoleCtrl.setGUI(gui);
 
 
 		try {
