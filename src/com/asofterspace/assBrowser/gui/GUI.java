@@ -30,6 +30,11 @@ import java.awt.event.MouseEvent;
 import java.awt.GridBagLayout;
 import java.awt.Point;
 import java.awt.Toolkit;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.Line;
@@ -51,9 +56,18 @@ public class GUI extends MainWindow {
 	private JLabel counterLabel;
 	private JLabel quoteLabel1;
 	private JLabel quoteLabel2;
+	private JLabel batteryLabel;
 	private JLabel clockLabel;
 
 	private boolean timerRunning = false;
+
+	private final static ColorRGBA bgColor = new ColorRGBA(0, 0, 0);
+	private final static ColorRGBA borderColor = new ColorRGBA(96, 0, 192);
+	private final static ColorRGBA fgColorMain = new ColorRGBA(255, 255, 255);
+	private final static ColorRGBA fgColor = new ColorRGBA(167, 62, 249);
+	private final static Color fgColorCol = fgColor.toColor();
+	private final static ColorRGBA errorColor = new ColorRGBA(255, 0, 64);
+	private final static Color errorColorCol = errorColor.toColor();
 
 
 	public GUI(Database database, ConsoleCtrl consoleCtrl) {
@@ -91,11 +105,6 @@ public class GUI extends MainWindow {
 	}
 
 	private JPanel createMainPanel(JFrame parent) {
-
-		ColorRGBA bgColor = new ColorRGBA(0, 0, 0);
-		ColorRGBA borderColor = new ColorRGBA(96, 0, 192);
-		ColorRGBA fgColorMain = new ColorRGBA(255, 255, 255);
-		ColorRGBA fgColor = new ColorRGBA(167, 62, 249);
 
 		JPanel mainPanel = new JPanel();
 		mainPanel.setBackground(bgColor.toColor());
@@ -160,7 +169,11 @@ public class GUI extends MainWindow {
 		counterLabel.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				counterLabel.setText(" " + (StrUtils.strToInt(counterLabel.getText().trim()) + 1) + " ");
+				int num = StrUtils.strToInt(counterLabel.getText().trim()) + 1;
+				if (SwingUtilities.isRightMouseButton(e)) {
+					num = 0;
+				}
+				counterLabel.setText(" " + num + " ");
 			}
 		});
 
@@ -184,8 +197,19 @@ public class GUI extends MainWindow {
 			}
 		});
 
+		batteryLabel = createLabel("BATTERY STATE UNINITIALIZED ", bgColor, errorColor);
+		mainPanel.add(batteryLabel, new Arrangement(5, 0, 0.0, 1.0));
+
+		batteryLabel.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				checkBatteryStatus();
+				resetGuiLocation();
+			}
+		});
+
 		clockLabel = createLabel("00:00 ", bgColor, fgColor);
-		mainPanel.add(clockLabel, new Arrangement(5, 0, 0.0, 1.0));
+		mainPanel.add(clockLabel, new Arrangement(6, 0, 0.0, 1.0));
 
 		clockLabel.addMouseListener(new MouseAdapter() {
 			@Override
@@ -225,9 +249,14 @@ public class GUI extends MainWindow {
 
 				while (timerRunning) {
 					try {
+						// adjust clock
 						clockLabel.setText(DateUtils.serializeTimeShort(DateUtils.now()) + " ");
 
+						// ensure the GUI is located where it should be
 						resetGuiLocation();
+
+						// check battery status
+						checkBatteryStatus();
 
 						// update time every 30 seconds
 						Thread.sleep(30 * 1000);
@@ -260,6 +289,63 @@ public class GUI extends MainWindow {
 		mainFrame.setPreferredSize(new Dimension(width, height));
 
 		mainFrame.setLocation(new Point(left, top));
+	}
+
+	private void checkBatteryStatus() {
+
+		String batScriptPath = database.getBatteryStateScriptPath();
+		if (batScriptPath == null) {
+			batteryLabel.setText("BATTERY STATE UNKNOWN ");
+			batteryLabel.setForeground(errorColorCol);
+			return;
+		}
+
+		try {
+
+			List<String> cmdAndArgs = new ArrayList<>();
+			cmdAndArgs.add(batScriptPath);
+
+			ProcessBuilder processBuilder = new ProcessBuilder(cmdAndArgs);
+
+			processBuilder.redirectErrorStream(true);
+
+			Process proc = processBuilder.start();
+
+			try (BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()))) {
+				String curline = reader.readLine();
+
+				while (curline != null) {
+					String trimline = curline.trim();
+					if (!"".equals(trimline) && !trimline.contains("Battery")) {
+						String[] values = trimline.split(" ");
+
+						if (values.length > 1) {
+							// BatteryStatus returns 1 if running on battery / unplugged
+							String powerState = values[0];
+
+							// EstimatedChargeRemaining is the percentage of the battery charge remaining
+							String batteryCharge = values[values.length-1];
+
+							if ("1".equals(powerState)) {
+								batteryLabel.setText(" ON BATTERY :: " + batteryCharge + "% ");
+								batteryLabel.setForeground(errorColorCol);
+							} else {
+								batteryLabel.setText("~ (" + batteryCharge + "%) ");
+								batteryLabel.setForeground(fgColorCol);
+							}
+						}
+					}
+					curline = reader.readLine();
+				}
+			} catch (IOException e) {
+				batteryLabel.setText("BATTERY STATE ERROR 2 ");
+				batteryLabel.setForeground(errorColorCol);
+			}
+
+		} catch (IOException ex) {
+			batteryLabel.setText("BATTERY STATE ERROR 1 ");
+			batteryLabel.setForeground(errorColorCol);
+		}
 	}
 
 }

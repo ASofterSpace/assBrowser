@@ -485,23 +485,28 @@ window.browser = {
 		var content = this.getCurrentEntryText();
 
 		content = content.split("TL;DR:");
-		content = content[1];
-		content = content.split("\n\n");
-		content = content[0];
-		content = content.trim();
+		if (content.length > 1) {
+			content = content[1];
+			content = content.split("\n\n");
+			content = content[0];
+			content = content.trim();
 
-		// only replace " by ', but do not fully switch them, as ' also just appears regularly in the text
-		// in contractions
-		// so fixing ' to " manually is less work than fixing " back to ' where it shouldn't have been replaced
-		content = content.split('"').join("'");
+			// only replace " by ', but do not fully switch them, as ' also just appears regularly in the text
+			// in contractions
+			// so fixing ' to " manually is less work than fixing " back to ' where it shouldn't have been replaced
+			content = content.split('"').join("'");
+
+			content = 'see for: "' + content + '":' + "\n";
+		} else {
+			content = '';
+		}
 
 		var fileTitle = window.data.file;
 		if (fileTitle.endsWith(".stpu")) {
 			fileTitle = fileTitle.substring(0, fileTitle.length - 5);
 		}
 
-		content = 'see for: "' + content + '":' + "\n" +
-			"%[" + window.data.path.split("/").join("\\") + "\\" + fileTitle + "]";
+		content += "%[" + window.data.path.split("/").join("\\") + "\\" + fileTitle + "]";
 
 		this.copyToClipboard(content);
 
@@ -516,6 +521,18 @@ window.browser = {
 		clipboardHelper.setSelectionRange(0, 99999);
 		navigator.clipboard.writeText(clipboardHelper.value);
 		clipboardHelper.style.display = 'none';
+	},
+
+	// Adjust the open browser field on the right-hand side to point to
+	// the same location as we are currently pointing to
+	adjustOpenBrowserField: function() {
+		var elems = document.getElementsByTagName("a");
+		var compareTo = "http://localhost:" + window.location.port + "/";
+		for (var i = 0; i < elems.length; i++) {
+			if (elems[i].href == compareTo) {
+				elems[i].href = window.location.href;
+			}
+		}
 	},
 
 }
@@ -580,3 +597,5 @@ window.browser.onResize();
 window.browser.loadFullFolderView();
 
 window.browser.scrollIfNecessary();
+
+window.browser.adjustOpenBrowserField();

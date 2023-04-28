@@ -78,12 +78,24 @@ public class ConsoleCtrl {
 
 
 		// POSIX: cd (change directory)
+		if (commandLow.equals("..")) {
+			command = "cd ..";
+			commandLow = command;
+		}
+		if (commandLow.equals("...")) {
+			command = "cd ../..";
+			commandLow = command;
+		}
 		if (commandLow.startsWith(PathCtrl.DESKTOP.toLowerCase())) {
 			command = "cd " + command;
 			commandLow = "cd " + commandLow;
 		}
-		if (commandLow.equals("cd")) {
+		if (commandLow.equals("cd") || commandLow.equals("cd ~")) {
 			result.setPath(PathCtrl.DESKTOP);
+			return result;
+		}
+		if (("cd /".equals(commandLow)) || ("cd \\".equals(commandLow))) {
+			result.setPath("");
 			return result;
 		}
 		if (commandLow.startsWith("cd ")) {
@@ -134,6 +146,13 @@ public class ConsoleCtrl {
 				}
 			}
 			result.setPath(previousPath + "/" + command);
+			return result;
+		}
+
+
+		// switch to disk overview
+		if (("/".equals(commandLow)) || ("\\".equals(commandLow))) {
+			result.setPath("");
 			return result;
 		}
 
@@ -223,13 +242,28 @@ public class ConsoleCtrl {
 		if (calledFromOutside) {
 			// ... interpret as beginning of the name of an article in the currently opened directory
 			Directory osDir = new Directory(PathCtrl.resolvePath(previousPath));
-			recursively = false;
-			for (File file : osDir.getAllFilesEndingWith(".stpu", recursively)) {
-				String locName = file.getLocalFilename();
-				if (locName.toLowerCase().startsWith(commandLow)) {
-					// found one! actually open the file...
-					result.setPath(previousPath + "/" + locName.substring(0, locName.length() - 5));
-					return result;
+
+			// if a vstpu file exists, use that one to find priority among potential entries to be opened
+			SimpleFile vstpuFile = new SimpleFile(osDir, "VSTPU.stpu");
+			vstpuFile.setEncoding(TextEncoding.ISO_LATIN_1);
+			if (vstpuFile.exists()) {
+				List<String> vstpuLines = vstpuFile.getContents();
+				for (String vstpuLine : vstpuLines) {
+					if (vstpuLine.toLowerCase().startsWith(commandLow)) {
+						// found one! actually open the file...
+						result.setPath(previousPath + "/" + vstpuLine);
+						return result;
+					}
+				}
+			} else {
+				recursively = false;
+				for (File file : osDir.getAllFiles(recursively)) {
+					String locName = file.getLocalFilename();
+					if (locName.toLowerCase().startsWith(commandLow)) {
+						// found one! actually open the file...
+						result.setPath(previousPath + "/" + locName);
+						return result;
+					}
 				}
 			}
 		}

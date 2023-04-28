@@ -360,15 +360,25 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		if (link != null) {
 			String localLink = PathCtrl.resolvePath(link);
 			Directory localLinkDir = new Directory(localLink);
+			// if a directory exists with the specified name, go for that immediately
 			if (localLinkDir.exists()) {
 				path = link;
 				fileName = null;
 			} else {
+				// otherwise, go one up and check for a file with the name that the link ends in
 				link = StrUtils.replaceAll(link, "\\", "/");
 				int pos = link.lastIndexOf("/");
 				if (pos >= 0) {
 					path = link.substring(0, pos);
-					fileName = link.substring(pos + 1) + ".stpu";
+					Directory pathDir = new Directory(path);
+					// if a file exists with that exact name, go for it!
+					File notStpuFile = new File(pathDir, link.substring(pos + 1));
+					if (notStpuFile.exists()) {
+						fileName = link.substring(pos + 1);
+					} else {
+						// otherwise, assume an stpu file is meant
+						fileName = link.substring(pos + 1) + ".stpu";
+					}
 				} else {
 					path = link;
 					fileName = null;
@@ -778,10 +788,27 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 	}
 
 	private void addFolderToHtml(StringBuilder folderContent, Directory childFolder, String path) {
-		folderContent.append("<a href=\"/?path=" + path + "/");
-		folderContent.append(childFolder.getLocalDirname() + "\">");
+		String mainStr = childFolder.getLocalDirname();
+		String displayStr = mainStr;
+		if ("".equals(path)) {
+			// display a disk
+			displayStr = "Disk " + displayStr;
+			List<File> files = childFolder.getAllFilesStartingAndEndingWith(
+				"hdd_", ".txt", false);
+			if (files.size() > 0) {
+				displayStr += " :: " + files.get(0).getLocalFilenameWithoutType();
+			}
+		} else {
+			// display a regular folder
+			path += "/";
+		}
+
+		folderContent.append("<a href=\"/?path=");
+		folderContent.append(path);
+		folderContent.append(mainStr);
+		folderContent.append("\">");
 		folderContent.append("<div class='line folder'>");
-		folderContent.append(HTML.escapeHTMLstrNbsp(childFolder.getLocalDirname()));
+		folderContent.append(HTML.escapeHTMLstrNbsp(displayStr));
 		folderContent.append("</div>");
 		folderContent.append("</a>");
 	}
@@ -942,64 +969,76 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		StringBuilder folderContent = new StringBuilder();
 
-		boolean recursively = false;
+		if ("".equals(folder.getDirname())) {
 
-		List<Directory> childFolders = folder.getAllDirectories(recursively);
-		List<File> childFiles = folder.getAllFiles(recursively);
-
-		SimpleFile vstpuFile = new SimpleFile(folder, "VSTPU.stpu");
-		if (vstpuFile.exists()) {
-			vstpuFile.setEncoding(TextEncoding.ISO_LATIN_1);
-			List<String> entries = vstpuFile.getContents();
-
-			Map<String, Directory> directories = new HashMap<>();
-			for (Directory childFolder : childFolders) {
-				directories.put(childFolder.getLocalDirname().toLowerCase(), childFolder);
+			for (char letter = 'A'; letter < 'Z'; letter++) {
+				Directory disk = new Directory(letter + ":");
+				if (disk.exists()) {
+					addFolderToHtml(folderContent, disk, "");
+				}
 			}
 
-			Map<String, File> files = new HashMap<>();
-			for (File file : childFiles) {
-				files.put(file.getLocalFilename().toLowerCase(), file);
-			}
+		} else {
 
-			if (entries == null) {
-				addTextToHtml(folderContent, "! Unable to load VSTPU.stpu !");
-			} else {
+			boolean recursively = false;
 
-				for (String entry : entries) {
-					if ("".equals(entry)) {
-						addTextToHtml(folderContent, entry);
-					} else {
-						Directory curDir = directories.get(entry.toLowerCase());
-						if (curDir != null) {
-							addFolderToHtml(folderContent, curDir, path);
+			List<Directory> childFolders = folder.getAllDirectories(recursively);
+			List<File> childFiles = folder.getAllFiles(recursively);
+
+			SimpleFile vstpuFile = new SimpleFile(folder, "VSTPU.stpu");
+			if (vstpuFile.exists()) {
+				vstpuFile.setEncoding(TextEncoding.ISO_LATIN_1);
+				List<String> entries = vstpuFile.getContents();
+
+				Map<String, Directory> directories = new HashMap<>();
+				for (Directory childFolder : childFolders) {
+					directories.put(childFolder.getLocalDirname().toLowerCase(), childFolder);
+				}
+
+				Map<String, File> files = new HashMap<>();
+				for (File file : childFiles) {
+					files.put(file.getLocalFilename().toLowerCase(), file);
+				}
+
+				if (entries == null) {
+					addTextToHtml(folderContent, "! Unable to load VSTPU.stpu !");
+				} else {
+
+					for (String entry : entries) {
+						if ("".equals(entry)) {
+							addTextToHtml(folderContent, entry);
 						} else {
-							File curFile = null;
-							String ext = "";
-							if (!entry.toLowerCase().endsWith(".sll")) {
-								ext = ".stpu";
-							}
-							curFile = files.get(entry.toLowerCase() + ext);
-							if (curFile != null) {
-								addFileToHtml(folderContent, entry, curFile, path, !quickView, compareToFileName);
+							Directory curDir = directories.get(entry.toLowerCase());
+							if (curDir != null) {
+								addFolderToHtml(folderContent, curDir, path);
 							} else {
-								addFileToHtml(folderContent, entry, new File(folder, entry + ext), path, false, compareToFileName);
+								File curFile = null;
+								String ext = "";
+								if (!entry.toLowerCase().endsWith(".sll")) {
+									ext = ".stpu";
+								}
+								curFile = files.get(entry.toLowerCase() + ext);
+								if (curFile != null) {
+									addFileToHtml(folderContent, entry, curFile, path, !quickView, compareToFileName);
+								} else {
+									addFileToHtml(folderContent, entry, new File(folder, entry + ext), path, false, compareToFileName);
+								}
 							}
 						}
 					}
 				}
-			}
-		} else {
-			for (Directory childFolder : childFolders) {
-				addFolderToHtml(folderContent, childFolder, path);
-			}
+			} else {
+				for (Directory childFolder : childFolders) {
+					addFolderToHtml(folderContent, childFolder, path);
+				}
 
-			if (childFolders.size() > 0) {
-				addTextToHtml(folderContent, "");
-			}
+				if (childFolders.size() > 0) {
+					addTextToHtml(folderContent, "");
+				}
 
-			for (File childFile : childFiles) {
-				addFileToHtml(folderContent, childFile.getLocalFilename(), childFile, path, !quickView, compareToFileName);
+				for (File childFile : childFiles) {
+					addFileToHtml(folderContent, childFile.getLocalFilename(), childFile, path, !quickView, compareToFileName);
+				}
 			}
 		}
 

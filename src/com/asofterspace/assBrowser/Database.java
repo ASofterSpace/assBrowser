@@ -27,6 +27,8 @@ public class Database {
 
 	private final static String NIRCMD_PATH = "nircmdPath";
 
+	private final static String BATTERY_STATE_SCRIPT_PATH = "batteryStateScriptPath";
+
 	private final static String FFMPEG_PATH = "ffmpegPath";
 
 	private final static String FUNTUBE_CATEGORIES = "funtubeCategories";
@@ -46,6 +48,8 @@ public class Database {
 	private String browserPath;
 
 	private String nircmdPath;
+
+	private String batteryStateScriptPath;
 
 	private String ffmpegPath;
 
@@ -78,6 +82,8 @@ public class Database {
 
 		this.nircmdPath = root.getString(NIRCMD_PATH);
 
+		this.batteryStateScriptPath = root.getString(BATTERY_STATE_SCRIPT_PATH);
+
 		this.ffmpegPath = root.getString(FFMPEG_PATH);
 
 		this.funtubeCategories = root.getArray(FUNTUBE_CATEGORIES);
@@ -102,6 +108,8 @@ public class Database {
 		root.set(BROWSER_PATH, browserPath);
 
 		root.set(NIRCMD_PATH, nircmdPath);
+
+		root.set(BATTERY_STATE_SCRIPT_PATH, batteryStateScriptPath);
 
 		root.set(FFMPEG_PATH, ffmpegPath);
 
@@ -134,6 +142,10 @@ public class Database {
 		return nircmdPath;
 	}
 
+	public String getBatteryStateScriptPath() {
+		return batteryStateScriptPath;
+	}
+
 	public String getFfmpegPath() {
 		return ffmpegPath;
 	}
@@ -163,6 +175,5 @@ public class Database {
 	public Map<String, String> getProgramsToOpenFiles() {
 		return programsToOpenFiles;
 	}
-
 
 }
