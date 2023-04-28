@@ -141,27 +141,16 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				}
 				List<String> arguments = new ArrayList<>();
 				String fileToOpenPath = json.getString("path");
-				if (fileToOpenPath.toLowerCase().endsWith(".xlsx")) {
-					/*
-					IoUtils.execute(
-						"EXCEL.EXE",
-						new Directory("C:\\Program Files (x86)\\Microsoft Office\\root\\Office16"));
-					/*
-					IoUtils.execute(
-						"EXCEL.EXE",
-						new Directory("C:\\Program Files (x86)\\Microsoft Office\\root\\Office16"),
-						fileToOpenPath);
-					*/
-					/*
-					IoUtils.executeAsync(
-						"cmd.exe /c start \"" + fileToOpenPath + "\"");
-					*/
-					IoUtils.executeAsync(
-						"cmd.exe",
-						"/c start \"" + fileToOpenPath + "\"");
-				} else {
-					IoUtils.executeAsync(fileToOpenPath);
+				int dotIndex = fileToOpenPath.lastIndexOf(".");
+				if (dotIndex >= 0) {
+					Map<String, String> programs = database.getProgramsToOpenFiles();
+					String program = programs.get(fileToOpenPath.substring(dotIndex).toLowerCase());
+					if (program != null) {
+						IoUtils.executeAsync(program, fileToOpenPath);
+						break;
+					}
 				}
+				IoUtils.executeAsync(fileToOpenPath);
 				break;
 
 			case "/openFolderInOS":

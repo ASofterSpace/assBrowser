@@ -33,6 +33,8 @@ public class Database {
 
 	private final static String VIDEO_DIR = "videoDir";
 
+	private final static String PROGRAMS_TO_OPEN_FILES = "programsToOpenFiles";
+
 	private JsonFile dbFile;
 
 	private JSON root;
@@ -50,6 +52,8 @@ public class Database {
 	private List<Record> funtubeCategories;
 
 	private String videoDirPath;
+
+	private Map<String, String> programsToOpenFiles = new HashMap<>();
 
 	private Map<String, String> inMemoryFolderContent = new ConcurrentHashMap<>();
 
@@ -79,6 +83,8 @@ public class Database {
 		this.funtubeCategories = root.getArray(FUNTUBE_CATEGORIES);
 
 		this.videoDirPath = root.getString(VIDEO_DIR);
+
+		this.programsToOpenFiles = root.getStringMap(PROGRAMS_TO_OPEN_FILES);
 	}
 
 	public Record getRoot() {
@@ -102,6 +108,8 @@ public class Database {
 		root.set(FUNTUBE_CATEGORIES, funtubeCategories);
 
 		root.set(VIDEO_DIR, videoDirPath);
+
+		root.set(PROGRAMS_TO_OPEN_FILES, programsToOpenFiles);
 
 		dbFile.setAllContents(root);
 		dbFile.save();
@@ -151,5 +159,10 @@ public class Database {
 	public String getInMemoryFolderContent(String path) {
 		return inMemoryFolderContent.get(path);
 	}
+
+	public Map<String, String> getProgramsToOpenFiles() {
+		return programsToOpenFiles;
+	}
+
 
 }
