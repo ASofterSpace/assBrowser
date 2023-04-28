@@ -135,6 +135,35 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		switch (fileLocation) {
 
+			case "/openFileInOS":
+				if (json.getString("path") == null) {
+					respond(403);
+				}
+				List<String> arguments = new ArrayList<>();
+				String fileToOpenPath = json.getString("path");
+				if (fileToOpenPath.toLowerCase().endsWith(".xlsx")) {
+					/*
+					IoUtils.execute(
+						"EXCEL.EXE",
+						new Directory("C:\\Program Files (x86)\\Microsoft Office\\root\\Office16"));
+					/*
+					IoUtils.execute(
+						"EXCEL.EXE",
+						new Directory("C:\\Program Files (x86)\\Microsoft Office\\root\\Office16"),
+						fileToOpenPath);
+					*/
+					/*
+					IoUtils.executeAsync(
+						"cmd.exe /c start \"" + fileToOpenPath + "\"");
+					*/
+					IoUtils.executeAsync(
+						"cmd.exe",
+						"/c start \"" + fileToOpenPath + "\"");
+				} else {
+					IoUtils.executeAsync(fileToOpenPath);
+				}
+				break;
+
 			case "/openFolderInOS":
 				if (json.getString("path") == null) {
 					respond(403);
@@ -430,7 +459,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		buttonHtml.append("<div id='more-actions-container' style='display:none;'>");
 
 		if (fileName != null) {
-			buttonHtml.append(getDownloadButtonHtml(path, fileName, ""));
+			buttonHtml.append(getFileButtonsHtml(path, fileName, ""));
 			buttonHtml.append("<br>");
 		}
 
@@ -565,8 +594,10 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				fileHtmlStr += "<img src=\"" + imgUrl + "\" style='max-width:100%; max-height:100%;' />";
 				fileHtmlStr += "</a>";
 			} else {
-				fileHtmlStr = "No preview for '" + fileName + "' available.<br><br>" +
-							  getDownloadButtonHtml(path, fileName, "padding: 4pt 9pt;");
+				fileHtmlStr = "<div style='line-height: 2.5;text-align: center;'>" +
+							  "No preview for '" + fileName + "' available.<br><br>" +
+							  getFileButtonsHtml(path, fileName, "padding: 4pt 9pt;") +
+							  "</div>";
 			}
 		}
 
@@ -853,13 +884,31 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		return null;
 	}
 
-	private String getDownloadButtonHtml(String path, String fileName, String style) {
-		return "<a href=\"" + getFileAccessUrl(path, fileName) +
+	private String getFileButtonsHtml(String path, String fileName, String style) {
+		return "<span class='button' onclick='browser.openFileInOS(\"" + path + "/" + fileName + "\")' " +
+			   "style='" + style + "'>" +
+			   "Open Current File" +
+			   "</span>" +
+			   "<br>" +
+
+			   "<a href=\"" + getFileAccessUrl(path, fileName) +
 			   "\" target='_blank' " +
 			   "class='button'" +
 			   "style='" + style + "'>" +
 			   "Download Current File" +
-			   "</a>";
+			   "</a>" +
+			   "<br>" +
+
+			   "<span class='button' onclick='' " +
+			   "style='opacity:0.4; " + style + "'>" +
+			   "Rename Current File" +
+			   "</span>" +
+			   "<br>" +
+
+			   "<span class='button' onclick='' " +
+			   "style='opacity:0.4; " + style + "'>" +
+			   "Delete Current File" +
+			   "</span>";
 	}
 
 	private boolean isAudio(String path) {

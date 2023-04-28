@@ -71,6 +71,21 @@ window.browser = {
 		request.send(JSON.stringify(data));
 	},
 
+	openFileInOS: function(which) {
+
+		this.closeMoreActions();
+
+		var request = new XMLHttpRequest();
+		request.open("POST", "openFileInOS", true);
+		request.setRequestHeader("Content-Type", "application/json");
+
+		var data = {
+			path: which,
+		};
+
+		request.send(JSON.stringify(data));
+	},
+
 	openUploadModal: function() {
 		this.closeMoreActions();
 		document.getElementById("modalBackground").style.display = "block";
