@@ -184,7 +184,11 @@ window.browser = {
 	toggleEditEntry: function() {
 		this.closeMoreActions();
 		this.editingMode = !this.editingMode;
+		var entryScrollBefore = 0;
+
 		if (this.editingMode) {
+			entryScrollBefore = document.getElementById("fileContentContainer").scrollTop /
+				document.getElementById("fileContentContainer").scrollTopMax;
 			document.getElementById("edit-btn").innerText = "Show";
 			document.getElementById("fileContentTextarea").style.width =
 				(document.getElementById("fileContentContainer").clientWidth - 20) + "px";
@@ -199,6 +203,8 @@ window.browser = {
 				document.getElementById("edit-btn").style.background;
 			document.getElementById("save-btn").style.display = "inline";
 		} else {
+			entryScrollBefore = document.getElementById("fileContentTextarea").scrollTop /
+				document.getElementById("fileContentTextarea").scrollTopMax;
 			document.getElementById("edit-btn").innerText = "Edit";
 			document.getElementById("save-btn").style.display = "none";
 			document.getElementById("fileContentContainer").style.display = "block";
@@ -224,11 +230,17 @@ window.browser = {
 
 						document.getElementById("fileContentTextarea").value = browser.decodeToTextarea(result.entry);
 
+						document.getElementById("fileContentTextarea").scrollTo(0,
+							entryScrollBefore * document.getElementById("fileContentTextarea").scrollTopMax);
+
 						window.setTimeout(function() {
 							browser.preventEntryChangeFire = false;
 						}, 100);
 					} else {
 						document.getElementById("fileContentContainer").innerHTML = result.entry;
+
+						document.getElementById("fileContentContainer").scrollTo(0,
+							entryScrollBefore * document.getElementById("fileContentContainer").scrollTopMax);
 					}
 				}
 			}

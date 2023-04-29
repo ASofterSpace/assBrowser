@@ -165,6 +165,9 @@ public class Database {
 	}
 
 	public String setInMemoryFolderContent(String path, String content) {
+		// for quick in memory folder content, remove the opened-highlighting as this will be shown
+		// when opening a different entry as well!
+		content = StrUtils.replaceAll(content, "<div class='a line opened ", "<div class='a line ");
 		return inMemoryFolderContent.put(path, content);
 	}
 

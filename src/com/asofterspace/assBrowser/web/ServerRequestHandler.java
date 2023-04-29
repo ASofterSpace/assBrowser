@@ -849,7 +849,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			}
 		}
 		folderContent.append("<div class='a line ");
-		if (filename.equals(compareToFileName)) {
+		if (filename.toLowerCase().equals(compareToFileName)) {
 			folderContent.append("opened ");
 		}
 		folderContent.append(entryOrLink + "' ");
@@ -971,6 +971,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		if (compareToFileName.endsWith(".stpu")) {
 			compareToFileName = compareToFileName.substring(0, compareToFileName.length() - 5);
 		}
+		compareToFileName = compareToFileName.toLowerCase();
 
 		StringBuilder folderContent = new StringBuilder();
 
@@ -1094,8 +1095,13 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		fileHtmlStr = prepareStrForDisplayInHtml(fileHtmlStr);
 
 		String lowFileName = fileName.toLowerCase();
+
+		// for sll and similar files, just show the plain content
 		if (lowFileName.endsWith(".sll") || lowFileName.endsWith(".ini") ||
-			lowFileName.endsWith(".srt")) {
+			lowFileName.endsWith(".srt") ||
+			// if the entry is practically similar to an sll file, as in just opening an
+			// external program, then also just show the plain content
+			fileHtmlStr.startsWith("%[se:")) {
 			return fileHtmlStr;
 		}
 
