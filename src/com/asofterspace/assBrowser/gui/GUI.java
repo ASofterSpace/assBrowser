@@ -27,6 +27,7 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.Font;
 import java.awt.GridBagLayout;
 import java.awt.Point;
 import java.awt.Toolkit;
@@ -69,6 +70,13 @@ public class GUI extends MainWindow {
 	private final static ColorRGBA errorColor = new ColorRGBA(255, 0, 64);
 	private final static Color errorColorCol = errorColor.toColor();
 
+	private final static int left = 0;
+	private final static int top = 0;
+	private final static int width = (int) Toolkit.getDefaultToolkit().getScreenSize().getWidth();
+	private final static int height = 22;
+
+	private Font sharedFont = null;
+
 
 	public GUI(Database database, ConsoleCtrl consoleCtrl) {
 		this.database = database;
@@ -79,6 +87,9 @@ public class GUI extends MainWindow {
 	public void run() {
 
 		super.create();
+
+		// remove title bar
+		mainFrame.setUndecorated(true);
 
 		refreshTitleBar();
 
@@ -275,15 +286,15 @@ public class GUI extends MainWindow {
 		JLabel result = new JLabel(text);
 		result.setBackground(bgColor.toColor());
 		result.setForeground(fgColor.toColor());
+		if (sharedFont == null) {
+			sharedFont = result.getFont();
+			sharedFont = new Font(sharedFont.getName(), sharedFont.getStyle(), (sharedFont.getSize() * 13) / 10);
+		}
+		result.setFont(sharedFont);
 		return result;
 	}
 
 	private void resetGuiLocation() {
-
-		final int left = 0;
-		final int top = -31;
-		final int width = 1605;
-		final int height = 61;
 
 		mainFrame.setSize(width, height);
 
