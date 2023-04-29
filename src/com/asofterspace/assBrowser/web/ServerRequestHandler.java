@@ -334,7 +334,6 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		// by a filename without the .stpu (so link=/foo/bar may link to the folder bar inside the folder foo,
 		// or may link to the file bar.stpu inside the folder foo)
 		String link = arguments.get("link");
-
 		String consoleValue = "";
 
 		// interpret console commands - in case we do a cd, the path has to be changed here - not earlier,
@@ -513,9 +512,15 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				// follow link automatically
 				if (fileHtmlStr.startsWith("%[") && fileHtmlStr.contains("]")) {
 					String newLink = fileHtmlStr.substring(2, fileHtmlStr.indexOf("]"));
-					Map<String, String> newArgs = new HashMap<>();
-					newArgs.put("link", newLink);
-					return generateAnswerToMainGetRequest(newArgs, message);
+					if (newLink.startsWith("se:")) {
+						// actually, this is no link but a request to execute something - so do so,
+						// before continuing to just show the content as usual!
+						IoUtils.executeAsync(newLink.substring(3).trim());
+					} else {
+						Map<String, String> newArgs = new HashMap<>();
+						newArgs.put("link", newLink);
+						return generateAnswerToMainGetRequest(newArgs, message);
+					}
 				}
 
 				fileHtmlStr = prepareEntryForDisplayInHtml(fileHtmlStr, lowCaseFileName);
