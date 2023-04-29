@@ -12,6 +12,9 @@ window.browser = {
 	// are we preventing the firing of folder change events to turn the save button red?
 	preventFolderChangeFire: false,
 
+	COLOR_SAVE_GREEN: "rgb(0, 187, 0)",
+	COLOR_SAVE_RED: "rgb(238, 0, 34)" ,
+
 
 	onResize: function() {
 
@@ -251,7 +254,7 @@ window.browser = {
 
 	entryChanged: function() {
 		if (!browser.preventEntryChangeFire) {
-			document.getElementById("save-btn").style.background = "#E02";
+			document.getElementById("save-btn").style.background = browser.COLOR_SAVE_RED;
 		}
 	},
 
@@ -278,9 +281,9 @@ window.browser = {
 				if ((window.data.path == result.path) &&
 					(window.data.file == result.file) &&
 					(savedContent == document.getElementById("fileContentTextarea").value)) {
-					document.getElementById("save-btn").style.background = "rgb(0, 187, 0)";
+					document.getElementById("save-btn").style.background = browser.COLOR_SAVE_GREEN;
 					window.setTimeout(function() {
-						if (document.getElementById("save-btn").style.background == "rgb(0, 187, 0)") {
+						if (document.getElementById("save-btn").style.backgroundColor == browser.COLOR_SAVE_GREEN) {
 							document.getElementById("save-btn").style.background =
 								document.getElementById("edit-btn").style.background;
 						}
@@ -366,7 +369,7 @@ window.browser = {
 
 	folderChanged: function() {
 		if (!browser.preventFolderChangeFire) {
-			document.getElementById("save-folder-btn").style.background = "#E02";
+			document.getElementById("save-folder-btn").style.background = browser.COLOR_SAVE_RED;
 		}
 	},
 
@@ -392,9 +395,9 @@ window.browser = {
 				// (it shouldn't, currently, but maybe in the future...)
 				if ((window.data.path == result.path) &&
 					(savedContent == document.getElementById("folderTextarea").value)) {
-					document.getElementById("save-folder-btn").style.background = "rgb(0, 187, 0)";
+					document.getElementById("save-folder-btn").style.background = browser.COLOR_SAVE_GREEN;
 					window.setTimeout(function() {
-						if (document.getElementById("save-folder-btn").style.background == "rgb(0, 187, 0)") {
+						if (document.getElementById("save-folder-btn").style.backgroundColor == browser.COLOR_SAVE_GREEN) {
 							document.getElementById("save-folder-btn").style.background =
 								document.getElementById("edit-folder-btn").style.background;
 						}
@@ -560,7 +563,12 @@ window.onhelp = function() {
 window.onkeydown = function(event) {
 	if ((event.metaKey || event.ctrlKey) && event.keyCode == 83) {
 		if (browser.editingMode) {
-			browser.saveEntry();
+			if ((browser.folderEditingMode) &&
+				(document.getElementById("save-folder-btn").style.backgroundColor == browser.COLOR_SAVE_RED)) {
+				browser.saveFolder();
+			} else {
+				browser.saveEntry();
+			}
 			// prevent [Ctrl]+[S] and instead save the entry
 			event.preventDefault();
 			return false;
