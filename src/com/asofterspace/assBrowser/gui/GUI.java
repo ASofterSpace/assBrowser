@@ -151,6 +151,7 @@ public class GUI extends MainWindow {
 		volumeItem.setForeground(fgColor.toColor());
 		volumeItem.setBarPosition(null, false);
 		volumeItem.setMaximum(100);
+		volumeItem.setSendUpdateOnMousePress(true);
 		volumeItem.addBarListener(new BarListener() {
 			@Override
 			public void onBarMove(Integer position) {
