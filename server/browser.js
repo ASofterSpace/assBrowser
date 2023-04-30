@@ -513,7 +513,8 @@ window.browser = {
 
 			content = 'see for: "' + content + '":' + "\n";
 		} else {
-			content = '';
+			content = content[0].split("\n");
+			content = 'see for ' + content[0] + ':' + "\n";
 		}
 
 		var fileTitle = window.data.file;
