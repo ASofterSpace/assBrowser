@@ -1140,6 +1140,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		// replace http:// and https:// with external links
 		fileHtmlStr = prepareExternalLinks(fileHtmlStr, "http://");
 		fileHtmlStr = prepareExternalLinks(fileHtmlStr, "https://");
+		fileHtmlStr = prepareExternalLinks(fileHtmlStr, "file://");
 
 		// replace C:\... > with OS links
 		newFileHtml = new StringBuilder();
