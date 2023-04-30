@@ -443,11 +443,11 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		}
 
 		buttonHtml.append("<span class='button' onclick='browser.openTileView()'>");
-		buttonHtml.append("Tile");
+		buttonHtml.append("&#x25A6; Tile");
 		buttonHtml.append("</span>");
 
 		buttonHtml.append("<span class='button' onclick='browser.openComicView()'>");
-		buttonHtml.append("Comic");
+		buttonHtml.append("&#x25AF; Comic");
 		buttonHtml.append("</span>");
 
 		buttonHtml.append("<span class='button' onclick='browser.toggleMoreActions()' id='more-actions-btn'>");
@@ -557,15 +557,19 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				if (imgNum > 1) {
 					StringBuilder overallBuilder = new StringBuilder();
 					overallBuilder.append("<div id='imageStrip' class='imageStrip'>");
+					overallBuilder.append("<span style='position:fixed;top:2pt;right:15pt;background:rgba(64,0,128,0.8);border-radius: 6pt;padding: 0pt 3pt;'>");
 					overallBuilder.append("<span class='button' onclick='browser.closeView()' style='display:none; margin-top:5pt; margin-bottom:5pt;' ");
 					overallBuilder.append("id='closeComicViewBtn'>Close View</span>");
+					overallBuilder.append("</span>");
 					overallBuilder.append(imagesStrBuilder);
 					overallBuilder.append("</div>");
 
 					overallBuilder.append("<div id='tileStripsContainer' style='display:none; overflow-y:scroll;'>");
+					overallBuilder.append("<div style='position:fixed;top:0;left:0;right:0;background:rgb(64,0,128);'>");
 					overallBuilder.append("<span class='button' onclick='browser.closeView()' style='display:block; margin-top:5pt; margin-bottom:5pt;' ");
 					overallBuilder.append("id='closeTileViewBtn'>Close View</span>");
-					overallBuilder.append("<div>");
+					overallBuilder.append("</div>");
+					overallBuilder.append("<div style='padding-top:25pt;'>");
 
 					for (int i = 0; i < TILE_COLUMN_AMOUNT; i++) {
 						overallBuilder.append("<div class='imageStrip imageStripColumn'>");
