@@ -63,6 +63,7 @@ public class GUI extends MainWindow {
 	private boolean timerRunning = false;
 
 	private final static ColorRGBA bgColor = new ColorRGBA(0, 0, 0);
+	private final static Color bgColorCol = bgColor.toColor();
 	private final static ColorRGBA borderColor = new ColorRGBA(96, 0, 192);
 	private final static ColorRGBA fgColorMain = new ColorRGBA(255, 255, 255);
 	private final static ColorRGBA fgColor = new ColorRGBA(167, 62, 249);
@@ -74,6 +75,8 @@ public class GUI extends MainWindow {
 	private final static int top = 0;
 	private final static int width = (int) Toolkit.getDefaultToolkit().getScreenSize().getWidth();
 	private final static int height = 22;
+
+	private int batteryDisplayCounter = 0;
 
 	private Font sharedFont = null;
 
@@ -118,13 +121,13 @@ public class GUI extends MainWindow {
 	private JPanel createMainPanel(JFrame parent) {
 
 		JPanel mainPanel = new JPanel();
-		mainPanel.setBackground(bgColor.toColor());
+		mainPanel.setBackground(bgColorCol);
 		mainPanel.setPreferredSize(new Dimension(800, 500));
 		GridBagLayout mainPanelLayout = new GridBagLayout();
 		mainPanel.setLayout(mainPanelLayout);
 
 		JTextField consoleField = new JTextField();
-		consoleField.setBackground(bgColor.toColor());
+		consoleField.setBackground(bgColorCol);
 		consoleField.setForeground(fgColorMain.toColor());
 		consoleField.setCaretColor(fgColor.toColor());
 		consoleField.setBorder(new LineBorder(borderColor.toColor()));
@@ -158,7 +161,7 @@ public class GUI extends MainWindow {
 		IoUtils.executeAsync(nircmdPath + " mutesysvolume 0");
 
 		BarMenuItemForMainMenu volumeItem = new BarMenuItemForMainMenu();
-		volumeItem.setBackground(bgColor.toColor());
+		volumeItem.setBackground(bgColorCol);
 		volumeItem.setForeground(fgColor.toColor());
 		volumeItem.setBarPosition(null, false);
 		volumeItem.setMaximum(100);
@@ -210,6 +213,7 @@ public class GUI extends MainWindow {
 		});
 
 		batteryLabel = createLabel("BATTERY STATE UNINITIALIZED ", bgColor, errorColor);
+		batteryLabel.setOpaque(true);
 		mainPanel.add(batteryLabel, new Arrangement(5, 0, 0.0, 1.0));
 
 		batteryLabel.addMouseListener(new MouseAdapter() {
@@ -284,7 +288,7 @@ public class GUI extends MainWindow {
 
 	private JLabel createLabel(String text, ColorRGBA bgColor, ColorRGBA fgColor) {
 		JLabel result = new JLabel(text);
-		result.setBackground(bgColor.toColor());
+		result.setBackground(bgColorCol);
 		result.setForeground(fgColor.toColor());
 		if (sharedFont == null) {
 			sharedFont = result.getFont();
@@ -307,8 +311,7 @@ public class GUI extends MainWindow {
 
 		String batScriptPath = database.getBatteryStateScriptPath();
 		if (batScriptPath == null) {
-			batteryLabel.setText("BATTERY STATE UNKNOWN ");
-			batteryLabel.setForeground(errorColorCol);
+			setBatteryProblemText("BATTERY STATE UNKNOWN ");
 			return;
 		}
 
@@ -339,24 +342,38 @@ public class GUI extends MainWindow {
 							String batteryCharge = values[values.length-1];
 
 							if ("1".equals(powerState)) {
-								batteryLabel.setText(" ON BATTERY :: " + batteryCharge + "% ");
-								batteryLabel.setForeground(errorColorCol);
+								setBatteryProblemText(" ON BATTERY :: " + batteryCharge + "% ");
+
 							} else {
 								batteryLabel.setText("~ (" + batteryCharge + "%) ");
 								batteryLabel.setForeground(fgColorCol);
+								batteryLabel.setBackground(bgColorCol);
 							}
 						}
 					}
 					curline = reader.readLine();
 				}
 			} catch (IOException e) {
-				batteryLabel.setText("BATTERY STATE ERROR 2 ");
-				batteryLabel.setForeground(errorColorCol);
+				setBatteryProblemText("BATTERY STATE ERROR 2 ");
 			}
 
 		} catch (IOException ex) {
-			batteryLabel.setText("BATTERY STATE ERROR 1 ");
+			setBatteryProblemText("BATTERY STATE ERROR 1 ");
+		}
+	}
+
+	private void setBatteryProblemText(String text) {
+
+		batteryLabel.setText(text);
+
+		if (batteryDisplayCounter == 0) {
+			batteryDisplayCounter = 1;
 			batteryLabel.setForeground(errorColorCol);
+			batteryLabel.setBackground(bgColorCol);
+		} else {
+			batteryDisplayCounter = 0;
+			batteryLabel.setForeground(bgColorCol);
+			batteryLabel.setBackground(errorColorCol);
 		}
 	}
 

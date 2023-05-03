@@ -514,7 +514,7 @@ window.browser = {
 			content = 'see for: "' + content + '":' + "\n";
 		} else {
 			content = content[0].split("\n");
-			content = 'see for ' + content[0] + ':' + "\n";
+			content = 'see also for ' + content[0].toLowerCase() + ':' + "\n";
 		}
 
 		var fileTitle = window.data.file;
