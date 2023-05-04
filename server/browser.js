@@ -562,6 +562,7 @@ window.onhelp = function() {
 	return false;
 };
 window.onkeydown = function(event) {
+	// [Ctrl]+[S] for save - folder or entry
 	if ((event.metaKey || event.ctrlKey) && event.keyCode == 83) {
 		if (browser.editingMode) {
 			if ((browser.folderEditingMode) &&
@@ -570,16 +571,37 @@ window.onkeydown = function(event) {
 			} else {
 				browser.saveEntry();
 			}
-			// prevent [Ctrl]+[S] and instead save the entry
 			event.preventDefault();
 			return false;
 		}
 		if (browser.folderEditingMode) {
 			browser.saveFolder();
-			// prevent [Ctrl]+[S] and instead save the folder
 			event.preventDefault();
 			return false;
 		}
+	}
+	// [Ctrl]+[D] (to the right of [S] on German keyboards) for leave editing mode after saving,
+	// or even entering edit mode (of the entry) if neither entry nor folder are in editing mode
+	if ((event.metaKey || event.ctrlKey) && event.keyCode == 68) {
+		if (browser.editingMode) {
+			if (browser.folderEditingMode) {
+				if (document.getElementById("save-folder-btn").style.backgroundColor == browser.COLOR_SAVE_RED) {
+					browser.toggleEditEntry();
+				} else {
+					browser.toggleEditFolder();
+				}
+			} else {
+				browser.toggleEditEntry();
+			}
+		} else {
+			if (browser.folderEditingMode) {
+				browser.toggleEditFolder();
+			} else {
+				browser.toggleEditEntry();
+			}
+		}
+		event.preventDefault();
+		return false;
 	}
 	if ((event.keyCode > 111) && (event.keyCode < 124)) {
 		if (event.keyCode == 111 + 6) {
