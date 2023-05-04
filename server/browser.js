@@ -561,8 +561,10 @@ window.onhelp = function() {
 	// prevent F1 function key
 	return false;
 };
+
 window.onkeydown = function(event) {
-	// [Ctrl]+[S] for save - folder or entry
+
+	// [Ctrl]+[S] to save - folder or entry
 	if ((event.metaKey || event.ctrlKey) && event.keyCode == 83) {
 		if (browser.editingMode) {
 			if ((browser.folderEditingMode) &&
@@ -580,6 +582,7 @@ window.onkeydown = function(event) {
 			return false;
 		}
 	}
+
 	// [Ctrl]+[D] (to the right of [S] on German keyboards) for leave editing mode after saving,
 	// or even entering edit mode (of the entry) if neither entry nor folder are in editing mode
 	if ((event.metaKey || event.ctrlKey) && event.keyCode == 68) {
@@ -603,32 +606,102 @@ window.onkeydown = function(event) {
 		event.preventDefault();
 		return false;
 	}
+
+	// function keys in general
 	if ((event.keyCode > 111) && (event.keyCode < 124)) {
-		if (event.keyCode == 111 + 6) {
-			// if [F6] is pressed, and the log entry textarea is visible...
+
+		// [F1] to add „“
+		if (event.keyCode == 111 + 1) {
 			var fileContentTextarea = document.getElementById("fileContentTextarea");
 			if (fileContentTextarea && browser.editingMode) {
-				var start = fileContentTextarea.selectionStart;
-				var end = fileContentTextarea.selectionEnd;
-				// ... add a date-time-stamp!
-				var datetimestamp = toolbox.utils.DateUtils.getCurrentDateTimeStamp();
-				fileContentTextarea.value =
-					fileContentTextarea.value.substring(0, start) +
-					datetimestamp +
-					fileContentTextarea.value.substring(end);
-				fileContentTextarea.selectionStart = start + datetimestamp.length;
-				fileContentTextarea.selectionEnd = start + datetimestamp.length;
+				toolbox.utils.StrUtils.insertText(fileContentTextarea, "„“", event);
+			} else {
+				var folderTextarea = document.getElementById("folderTextarea");
+				if (folderTextarea && browser.folderEditingMode) {
+					toolbox.utils.StrUtils.insertText(folderTextarea, "„“", event);
+				}
 			}
 		}
+
+		// [F2] to add “”
+		if (event.keyCode == 111 + 2) {
+			var fileContentTextarea = document.getElementById("fileContentTextarea");
+			if (fileContentTextarea && browser.editingMode) {
+				toolbox.utils.StrUtils.insertText(fileContentTextarea, "“”", event);
+			} else {
+				var folderTextarea = document.getElementById("folderTextarea");
+				if (folderTextarea && browser.folderEditingMode) {
+					toolbox.utils.StrUtils.insertText(folderTextarea, "“”", event);
+				}
+			}
+		}
+
+		// [F3] to add ‚‘
+		if (event.keyCode == 111 + 3) {
+			var fileContentTextarea = document.getElementById("fileContentTextarea");
+			if (fileContentTextarea && browser.editingMode) {
+				toolbox.utils.StrUtils.insertText(fileContentTextarea, "‚‘", event);
+			} else {
+				var folderTextarea = document.getElementById("folderTextarea");
+				if (folderTextarea && browser.folderEditingMode) {
+					toolbox.utils.StrUtils.insertText(folderTextarea, "‚‘", event);
+				}
+			}
+		}
+
+		// [F4] to add ’ (as that is useful more often than ‘’)
+		if (event.keyCode == 111 + 4) {
+			var fileContentTextarea = document.getElementById("fileContentTextarea");
+			if (fileContentTextarea && browser.editingMode) {
+				toolbox.utils.StrUtils.insertText(fileContentTextarea, "’", event);
+			} else {
+				var folderTextarea = document.getElementById("folderTextarea");
+				if (folderTextarea && browser.folderEditingMode) {
+					toolbox.utils.StrUtils.insertText(folderTextarea, "’", event);
+				}
+			}
+		}
+
+		// [F6] to add a date-time-stamp
+		if (event.keyCode == 111 + 6) {
+			var fileContentTextarea = document.getElementById("fileContentTextarea");
+			if (fileContentTextarea && browser.editingMode) {
+				toolbox.utils.StrUtils.addDateTimeStamp(fileContentTextarea, event);
+			} else {
+				var folderTextarea = document.getElementById("folderTextarea");
+				if (folderTextarea && browser.folderEditingMode) {
+					toolbox.utils.StrUtils.addDateTimeStamp(folderTextarea, event);
+				}
+			}
+		}
+
 		// prevent function keys
 		event.preventDefault();
 		return false;
 	}
+
+	// [Tab] to indent or unindent selection
+	if (event.keyCode == 9) {
+		var fileContentTextarea = document.getElementById("fileContentTextarea");
+		if (fileContentTextarea && browser.editingMode) {
+			toolbox.utils.StrUtils.indentOrUnindent(fileContentTextarea, event);
+		} else {
+			var folderTextarea = document.getElementById("folderTextarea");
+			if (folderTextarea && browser.folderEditingMode) {
+				toolbox.utils.StrUtils.indentOrUnindent(folderTextarea, event);
+			}
+		}
+		event.preventDefault();
+		return false;
+	}
+
+	// [Esc]
 	if (event.keyCode == 27) {
 		// prevent escape
 		event.preventDefault();
 		return false;
 	}
+
 	// allow other keys
 	return true;
 };
