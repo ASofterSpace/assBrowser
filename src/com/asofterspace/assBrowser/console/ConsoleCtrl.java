@@ -446,6 +446,7 @@ public class ConsoleCtrl {
 	private ConsoleResult runSllFile(File sllFile, ConsoleResult result) {
 
 		SimpleFile sllSimpleFile = new SimpleFile(sllFile);
+		sllSimpleFile.setEncoding(TextEncoding.ISO_LATIN_1);
 
 		String content = sllSimpleFile.getContent();
 
