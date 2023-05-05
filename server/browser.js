@@ -367,6 +367,28 @@ window.browser = {
 		request.send();
 	},
 
+
+	doToggleSomeEditingMode: function() {
+
+		if (browser.editingMode) {
+			if (browser.folderEditingMode) {
+				if (document.getElementById("save-folder-btn").style.backgroundColor == browser.COLOR_SAVE_RED) {
+					browser.toggleEditEntry();
+				} else {
+					browser.toggleEditFolder();
+				}
+			} else {
+				browser.toggleEditEntry();
+			}
+		} else {
+			if (browser.folderEditingMode) {
+				browser.toggleEditFolder();
+			} else {
+				browser.toggleEditEntry();
+			}
+		}
+	},
+
 	folderChanged: function() {
 		if (!browser.preventFolderChangeFire) {
 			document.getElementById("save-folder-btn").style.background = browser.COLOR_SAVE_RED;
@@ -586,23 +608,7 @@ window.onkeydown = function(event) {
 	// [Ctrl]+[D] (to the right of [S] on German keyboards) for leave editing mode after saving,
 	// or even entering edit mode (of the entry) if neither entry nor folder are in editing mode
 	if ((event.metaKey || event.ctrlKey) && event.keyCode == 68) {
-		if (browser.editingMode) {
-			if (browser.folderEditingMode) {
-				if (document.getElementById("save-folder-btn").style.backgroundColor == browser.COLOR_SAVE_RED) {
-					browser.toggleEditEntry();
-				} else {
-					browser.toggleEditFolder();
-				}
-			} else {
-				browser.toggleEditEntry();
-			}
-		} else {
-			if (browser.folderEditingMode) {
-				browser.toggleEditFolder();
-			} else {
-				browser.toggleEditEntry();
-			}
-		}
+		browser.doToggleSomeEditingMode();
 		event.preventDefault();
 		return false;
 	}
@@ -695,8 +701,17 @@ window.onkeydown = function(event) {
 		return false;
 	}
 
-	// [Esc]
+	// [Esc] - close tile or comic view if open, or toggle off editing mode
 	if (event.keyCode == 27) {
+
+		var imageStrip = document.getElementById("imageStrip");
+		var tileStripsContainer = document.getElementById("tileStripsContainer");
+		if ((imageStrip.style.position == "fixed") || (tileStripsContainer.style.display == 'block')) {
+			browser.closeView();
+		} else {
+			browser.doToggleSomeEditingMode();
+		}
+
 		// prevent escape
 		event.preventDefault();
 		return false;
