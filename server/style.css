@@ -339,3 +339,10 @@ div#more-actions-container {
 	line-height: 2;
 	padding: 5pt;
 }
+
+div.quote {
+	padding-left: 25pt;
+	padding-right: 25pt;
+	font-style: italic;
+	opacity: 0.6;
+}

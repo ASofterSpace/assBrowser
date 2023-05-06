@@ -1117,6 +1117,40 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		fileHtmlStr = "<span class='firstline'>" + fileHtmlStr.substring(0, firstLinefeed) + "</span>" +
 			fileHtmlStr.substring(firstLinefeed);
 
+		// blockquotes should be formatted suchly
+		if (fileHtmlStr.contains("| ")) {
+			String[] contentStrs = fileHtmlStr.split("<br>");
+			StringBuilder contentStrBui = new StringBuilder();
+			String sep = "";
+			boolean inQuote = false;
+			for (String line : contentStrs) {
+				if (line.startsWith("| ")) {
+					contentStrBui.append(sep);
+					if (!inQuote) {
+						contentStrBui.append("<div class='quote'>");
+					}
+					contentStrBui.append(line.substring(2));
+					inQuote = true;
+				} else {
+					if (inQuote) {
+						contentStrBui.append("</div>");
+					} else {
+						// the </div> eats one separator, so we only put if it we did not put </div>
+						contentStrBui.append(sep);
+					}
+					contentStrBui.append(line);
+					inQuote = false;
+				}
+				// newlines should be shown as such, so we use <br> instead of \n
+				sep = "<br>";
+			}
+			if (inQuote) {
+				contentStrBui.append("</div>");
+			}
+			contentStrBui.append("<br>");
+			fileHtmlStr = contentStrBui.toString();
+		}
+
 		// replace %[...] with internal links
 		StringBuilder newFileHtml = new StringBuilder();
 		int pos = fileHtmlStr.indexOf("%[");
