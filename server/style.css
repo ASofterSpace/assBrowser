@@ -346,3 +346,16 @@ div.quote {
 	font-style: italic;
 	opacity: 0.6;
 }
+
+div.modal {
+	position: fixed;
+	z-index: 2000;
+	display: none;
+	top: 200pt;
+	left: 100pt;
+	right: 100pt;
+	border-radius: 16pt;
+	background: linear-gradient(15deg, rgb(60, 20, 50), rgb(40, 0, 80), rgb(60, 20, 50));
+	padding: 15pt;
+	opacity: 0.95;
+}

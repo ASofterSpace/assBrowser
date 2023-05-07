@@ -103,4 +103,33 @@
 			</script>
 		</div>
 
+		<div id="renameDeleteModalBackground" style="position: fixed; display: none; z-index: 500;top: 0;right: 0;left: 0;bottom: 0;background: black;opacity: 0.65;">
+			&nbsp;
+		</div>
+
+		<div class="modal" id="renameModal">
+			<div id="renameText">
+				Please enter the new name for '<span id='renameTextFileName'></span>', including the file ending:
+			</div>
+			<div>
+				<input id="renameInput" value="" style='width: 100%; box-sizing: border-box;' />
+			</div>
+			<div class="buttonBar modal" style="position: absolute;left: 200pt;right: 200pt;display: block;top: unset;bottom: -55pt; text-align: center;">
+				<span class="button" onclick="browser.doRename()">Rename</span>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				<span class="button" onclick="browser.closeRenameModal()">Cancel</span>
+			</div>
+		</div>
+
+		<div class="modal" id="deleteModal">
+			<div id="deleteText">
+				Do you really wish to delete the file?
+			</div>
+			<div class="buttonBar modal" style="position: absolute;left: 200pt;right: 200pt;display: block;top: unset;bottom: -55pt; text-align: center;">
+				<span class="button" onclick="browser.doDelete()">Delete</span>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				<span class="button" onclick="browser.closeDeleteModal()">Cancel</span>
+			</div>
+		</div>
+
 		@include(inc_common_end.htm)

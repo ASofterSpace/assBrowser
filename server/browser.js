@@ -573,6 +573,69 @@ window.browser = {
 		}
 	},
 
+	showModalBackground: function() {
+		document.getElementById('renameDeleteModalBackground').style.display = 'block';
+	},
+
+	hideModalBackground: function() {
+		document.getElementById('renameDeleteModalBackground').style.display = 'none';
+	},
+
+	showRenameModal: function() {
+		this.showModalBackground();
+		document.getElementById('renameInput').value = window.data.file;
+		document.getElementById('renameTextFileName').innerText = window.data.file;
+		document.getElementById('renameModal').style.display = 'block';
+	},
+
+	doRename: function() {
+
+		var request = new XMLHttpRequest();
+		request.open("POST", "doRename", true);
+		request.setRequestHeader("Content-Type", "application/json");
+
+		var data = {
+			path: window.data.path,
+			file: window.data.file,
+			newName: document.getElementById("renameInput").value
+		};
+
+		request.onreadystatechange = function() {
+			if (request.readyState == 4 && request.status == 200) {
+				var result = JSON.parse(request.response);
+				if (result.error) {
+					alert(result.error);
+				} else {
+					browser.navigateTo("/?path=" + encodeURI(window.data.path) + "&file=" + encodeURI(result.newName));
+				}
+			}
+		}
+
+		request.send(JSON.stringify(data));
+
+		this.closeRenameModal();
+	},
+
+	closeRenameModal: function() {
+		this.hideModalBackground();
+		document.getElementById('renameModal').style.display = 'none';
+	},
+
+	showDeleteModal: function() {
+		this.showModalBackground();
+		document.getElementById('deleteModal').style.display = 'block';
+	},
+
+	doDelete: function() {
+		alert("Sorry, not yet implemented!");
+		this.closeDeleteModal();
+	},
+
+	closeDeleteModal: function() {
+		this.hideModalBackground();
+		document.getElementById('deleteModal').style.display = 'none';
+	},
+
 }
 
 

@@ -38,6 +38,9 @@ import com.asofterspace.toolbox.web.WebServerRequestHandler;
 import java.io.IOException;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -195,12 +198,87 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				answer = new WebServerAnswerInJson(rec);
 				break;
 
+			case "/doRename":
+				path = json.getString("path");
+				fileName = json.getString("file");
+				String newName = json.getString("newName").trim();
+				path = PathCtrl.ensurePathIsSafe(path);
+				path = resolveDesktop(path);
+				localPath = PathCtrl.resolvePath(path);
+				folder = new Directory(localPath);
+				entryFile = new TextFile(folder, fileName);
+				rec = Record.emptyObject();
+				rec.setString("path", path);
+				rec.setString("file", fileName);
+				rec.setString("newName", newName);
+				if (fileName.equals(newName)) {
+					rec.setString("error", "The new name is identical to the previous one!");
+				} else {
+					TextFile newEntryFile = new TextFile(folder, newName);
+					if (newEntryFile.exists()) {
+						rec.setString("error", "A file with the name '" + newName + "' already exists!");
+					} else {
+						if (!entryFile.exists() && !fileName.endsWith(".stpu")) {
+							rec.setString("error", "Source file with the name '" + newName + "' does not exist!");
+						} else {
+							if (entryFile.exists()) {
+								try {
+									Path newPath = newEntryFile.getJavaPath();
+									Files.move(entryFile.getJavaPath(), newPath, StandardCopyOption.REPLACE_EXISTING);
+								} catch (IOException e) {
+									rec.setString("error", "Encountered an IOException: " + e);
+								}
+							}
+							if (fileName.endsWith(".stpu") && newName.endsWith(".stpu")) {
+								String fileBaseName = fileName.substring(0, fileName.length() - 5);
+								String newBaseName = newName.substring(0, newName.length() - 5);
+								int i = 1;
+								while (true) {
+									boolean didCopyAFile =
+										tryCopy(folder, fileBaseName, newBaseName, i, ".jpg") ||
+										tryCopy(folder, fileBaseName, newBaseName, i, ".jpeg") ||
+										tryCopy(folder, fileBaseName, newBaseName, i, ".gif") ||
+										tryCopy(folder, fileBaseName, newBaseName, i, ".png") ||
+										tryCopy(folder, fileBaseName, newBaseName, i, ".bmp") ||
+										tryCopy(folder, fileBaseName, newBaseName, i, ".jpg");
+									if (!didCopyAFile) {
+										break;
+									}
+									i++;
+								}
+
+								vstpuFile = new SimpleFile(folder, "VSTPU.stpu");
+								vstpuFile.setEncoding(TextEncoding.ISO_LATIN_1);
+								content = "\n" + vstpuFile.getContent() + "\n";
+								content = StrUtils.replaceAll(content, fileBaseName, newBaseName);
+								content = content.substring(1, content.length() - 1);
+								vstpuFile.saveContent(content);
+							}
+						}
+					}
+				}
+				answer = new WebServerAnswerInJson(rec);
+				break;
+
 			default:
 				respond(404);
 				return;
 		}
 
 		respond(200, answer);
+	}
+
+	private boolean tryCopy(Directory folder, String fileBaseName, String newBaseName, int i, String fileEnding) {
+		try {
+			File oldFile = new File(folder, fileBaseName + "_" + i + fileEnding);
+			File newFile = new File(folder, newBaseName + "_" + i + fileEnding);
+			if (oldFile.exists()) {
+				Files.move(oldFile.getJavaPath(), newFile.getJavaPath(), StandardCopyOption.REPLACE_EXISTING);
+				return true;
+			}
+		} catch (IOException e) {
+		}
+		return false;
 	}
 
 	@Override
@@ -924,14 +1002,14 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			   "</a>" +
 			   "<br>" +
 
-			   "<span class='button' onclick='' " +
-			   "style='opacity:0.4; " + style + "'>" +
+			   "<span class='button' onclick='browser.showRenameModal();' " +
+			   "style='" + style + "'>" +
 			   "Rename Current File" +
 			   "</span>" +
 			   "<br>" +
 
-			   "<span class='button' onclick='' " +
-			   "style='opacity:0.4; " + style + "'>" +
+			   "<span class='button' onclick='browser.showDeleteModal();' " +
+			   "style='" + style + "'>" +
 			   "Delete Current File" +
 			   "</span>";
 	}
