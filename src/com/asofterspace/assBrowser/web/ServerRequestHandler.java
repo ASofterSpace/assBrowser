@@ -43,9 +43,11 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 
 public class ServerRequestHandler extends WebServerRequestHandler {
@@ -56,7 +58,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 	private ConsoleCtrl consoleCtrl;
 
-	private List<String> IMAGE_EXTENSIONS;
+	private static final String[] IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "gif", "bmp"};
 
 	private String videoDirPathStr = null;
 
@@ -81,11 +83,6 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		this.consoleCtrl = consoleCtrl;
 
-		IMAGE_EXTENSIONS = new ArrayList<>();
-		IMAGE_EXTENSIONS.add("jpg");
-		IMAGE_EXTENSIONS.add("png");
-		IMAGE_EXTENSIONS.add("gif");
-		IMAGE_EXTENSIONS.add("bmp");
 	}
 
 	@Override
@@ -234,13 +231,13 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 								String newBaseName = newName.substring(0, newName.length() - 5);
 								int i = 1;
 								while (true) {
-									boolean didCopyAFile =
-										tryCopy(folder, fileBaseName, newBaseName, i, ".jpg") ||
-										tryCopy(folder, fileBaseName, newBaseName, i, ".jpeg") ||
-										tryCopy(folder, fileBaseName, newBaseName, i, ".gif") ||
-										tryCopy(folder, fileBaseName, newBaseName, i, ".png") ||
-										tryCopy(folder, fileBaseName, newBaseName, i, ".bmp") ||
-										tryCopy(folder, fileBaseName, newBaseName, i, ".jpg");
+									boolean didCopyAFile = false;
+									for (String curImgExt : IMAGE_EXTENSIONS) {
+										didCopyAFile = tryCopy(folder, fileBaseName, newBaseName, i, "." + curImgExt);
+										if (didCopyAFile) {
+											break;
+										}
+									}
 									if (!didCopyAFile) {
 										break;
 									}
@@ -345,7 +342,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			File genericFile = new File(folder, fileName);
 			String fileHtmlStr = loadEntryAsStr(genericFile);
 			if ("false".equals(arguments.get("editingMode"))) {
-				fileHtmlStr = prepareEntryForDisplayInHtml(fileHtmlStr, fileName);
+				fileHtmlStr = prepareEntryForDisplayInHtml(fileHtmlStr, folder, fileName);
 			}
 			Record rec = Record.emptyObject();
 			rec.setString("path", path);
@@ -601,7 +598,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					}
 				}
 
-				fileHtmlStr = prepareEntryForDisplayInHtml(fileHtmlStr, lowCaseFileName);
+				fileHtmlStr = prepareEntryForDisplayInHtml(fileHtmlStr, folder, fileName);
 
 				final int TILE_COLUMN_AMOUNT = 4;
 				List<StringBuilder> imagesColStrBuilders = new ArrayList<>();
@@ -672,18 +669,25 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				TextFile file = new TextFile(folder, fileName);
 				fileHtmlStr = file.getContent();
 				fileHtmlStr = prepareStrForDisplayInHtml(fileHtmlStr);
-			} else if (lowCaseFileName.endsWith(".jpg") || lowCaseFileName.endsWith(".jpeg") ||
-				lowCaseFileName.endsWith(".png") || lowCaseFileName.endsWith(".gif") ||
-				lowCaseFileName.endsWith(".bmp")) {
-				String imgUrl = getFileAccessUrl(path, fileName);
-				fileHtmlStr = "<a target=\"_blank\" href=\"" + imgUrl + "\" style='max-width:99%; max-height:99%;' />";
-				fileHtmlStr += "<img src=\"" + imgUrl + "\" style='max-width:100%; max-height:100%;' />";
-				fileHtmlStr += "</a>";
 			} else {
-				fileHtmlStr = "<div style='line-height: 2.5;text-align: center;'>" +
-							  "No preview for '" + fileName + "' available.<br><br>" +
-							  getFileButtonsHtml(path, fileName, "padding: 4pt 9pt;") +
-							  "</div>";
+				boolean isImageFile = false;
+				for (String curImgExt : IMAGE_EXTENSIONS) {
+					if (lowCaseFileName.endsWith("." + curImgExt)) {
+						isImageFile = true;
+						break;
+					}
+				}
+				if (isImageFile) {
+					String imgUrl = getFileAccessUrl(path, fileName);
+					fileHtmlStr = "<a target=\"_blank\" href=\"" + imgUrl + "\" style='max-width:99%; max-height:99%;' />";
+					fileHtmlStr += "<img src=\"" + imgUrl + "\" style='max-width:100%; max-height:100%;' />";
+					fileHtmlStr += "</a>";
+				} else {
+					fileHtmlStr = "<div style='line-height: 2.5;text-align: center;'>" +
+								  "No preview for '" + fileName + "' available.<br><br>" +
+								  getFileButtonsHtml(path, fileName, "padding: 4pt 9pt;") +
+								  "</div>";
+				}
 			}
 		}
 
@@ -1172,7 +1176,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		return fileHtmlStr;
 	}
 
-	private String prepareEntryForDisplayInHtml(String fileHtmlStr, String fileName) {
+	private String prepareEntryForDisplayInHtml(String fileHtmlStr, Directory folder, String fileName) {
 
 		fileHtmlStr = prepareStrForDisplayInHtml(fileHtmlStr);
 
@@ -1285,7 +1289,146 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		newFileHtml.append(fileHtmlStr.substring(start));
 		fileHtmlStr = newFileHtml.toString().substring(0, newFileHtml.length() - 4);
 
+		fileHtmlStr = addPicturesToEntryHtml(fileHtmlStr, folder, fileName);
+
 		return fileHtmlStr;
+	}
+
+	private static String addPicturesToEntryHtml(String contentStr, Directory folder, String fileName) {
+
+		List<String> screenshotFileNames = new ArrayList<>();
+		String baseFileName = fileName;
+		int index = baseFileName.lastIndexOf(".");
+		if (index >= 0) {
+			baseFileName = baseFileName.substring(0, index);
+		}
+		int curImgNum = 1;
+		while (true) {
+			boolean foundOne = false;
+			for (String curImgExt : IMAGE_EXTENSIONS) {
+				String curName = baseFileName + "_" + curImgNum + "." + curImgExt;
+				File imageFile = new File(folder, curName);
+				if (imageFile.exists()) {
+					screenshotFileNames.add(UrlEncoder.encode(curName));
+					foundOne = true;
+					break;
+				}
+			}
+			if (!foundOne) {
+				break;
+			}
+			curImgNum++;
+		}
+
+		// if there are no pictures, then there is nothing to do...
+		if (screenshotFileNames.size() < 1) {
+			return contentStr;
+		}
+
+		Set<Integer> screenshotsAdded = new HashSet<>();
+		String picLinkBase = "file:///" + UrlEncoder.encode(folder.getCanonicalDirname()) + "/";
+
+		for (int i = screenshotFileNames.size() - 1; i >= 0; i--) {
+
+			String beforeThisRound = contentStr;
+
+			// transform just the text screenshot 3 into a link to the third screenshot
+			String replaceWith = "<a href='" + picLinkBase + screenshotFileNames.get(i) + "' " +
+				"target='_blank'>" +
+				"picture " + (i+1) +
+				"</a>";
+
+			// replace all not preceded by >
+			contentStr = StrUtils.replaceAllIfNotInsideTag(
+				contentStr,
+				"picture " + (i+1),
+				replaceWith
+			);
+
+			// replace all preceded by exactly <br>
+			contentStr = StrUtils.replaceAll(
+				contentStr,
+				"<br>picture " + (i+1),
+				"<br>" + replaceWith
+			);
+
+			contentStr = StrUtils.addAfterLinesContaining(
+				contentStr,
+				replaceWith,
+				picToHtml(picLinkBase, screenshotFileNames.get(i)),
+				"<br>"
+			);
+
+			// transform just the text screenshots up to 3 into a link to the third screenshot,
+			// which will later be augmented by screenshots 1 and 2 (if they have not been added already)
+			replaceWith = "<a href='" + picLinkBase + screenshotFileNames.get(i) + "' " +
+				"target='_blank'>" +
+				"pictures up to " + (i+1) +
+				"</a>";
+
+			// replace all not preceded by >
+			contentStr = StrUtils.replaceAllIfNotInsideTag(
+				contentStr,
+				"pictures up to " + (i+1),
+				replaceWith
+			);
+
+			// replace all preceded by exactly <br>
+			contentStr = StrUtils.replaceAll(
+				contentStr,
+				"<br>pictures up to " + (i+1),
+				"<br>" + replaceWith
+			);
+
+			contentStr = StrUtils.addAfterLinesContaining(
+				contentStr,
+				replaceWith,
+				"[[LOGPIC-UP-TO-" + i + "]]" +
+				picToHtml(picLinkBase, screenshotFileNames.get(i)),
+				"<br>"
+			);
+
+			if (!contentStr.equals(beforeThisRound)) {
+				screenshotsAdded.add(i);
+			}
+		}
+
+		// second round to add the other pictures when going "up to" a certain one
+		for (int i = screenshotFileNames.size() - 1; i >= 0; i--) {
+			String token = "[[LOGPIC-UP-TO-" + i + "]]";
+			if (contentStr.contains(token)) {
+				Integer nextPic = i - 1;
+				if ((nextPic < 0) || screenshotsAdded.contains(nextPic)) {
+					contentStr = StrUtils.replaceAll(contentStr, token, "");
+				} else {
+					contentStr = StrUtils.replaceAll(contentStr, token,
+						"[[LOGPIC-UP-TO-" + nextPic + "]]" +
+						picToHtml(picLinkBase, screenshotFileNames.get(nextPic))
+					);
+					screenshotsAdded.add(nextPic);
+				}
+			}
+		}
+
+		// third round to add all remaining screenshots in the very end
+		int highestPicShown = -1;
+		for (Integer picNum : screenshotsAdded) {
+			if (picNum > highestPicShown) {
+				highestPicShown = picNum;
+			}
+		}
+
+		for (int i = highestPicShown + 1; i < screenshotFileNames.size(); i++) {
+			contentStr += picToHtml(picLinkBase, screenshotFileNames.get(i));
+		}
+
+		return contentStr;
+	}
+
+	private static String picToHtml(String picLinkBase, String picFileName) {
+		return "<a href='" + picLinkBase + picFileName + "' " +
+				"target='_blank'>" +
+				"<img src='" + picLinkBase + picFileName + "' style='padding-top: 4pt; max-width: 100%;' /></a><br>";
 	}
 
 	private static String prepareExternalLinks(String fileHtmlStr, String urlStart) {
