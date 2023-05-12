@@ -1296,7 +1296,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 	private static String addPicturesToEntryHtml(String contentStr, Directory folder, String fileName) {
 
-		List<String> screenshotFileNames = new ArrayList<>();
+		List<String> pictureFileNames = new ArrayList<>();
 		String baseFileName = fileName;
 		int index = baseFileName.lastIndexOf(".");
 		if (index >= 0) {
@@ -1309,7 +1309,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				String curName = baseFileName + "_" + curImgNum + "." + curImgExt;
 				File imageFile = new File(folder, curName);
 				if (imageFile.exists()) {
-					screenshotFileNames.add(UrlEncoder.encode(curName));
+					pictureFileNames.add(UrlEncoder.encode(curName));
 					foundOne = true;
 					break;
 				}
@@ -1321,19 +1321,19 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		}
 
 		// if there are no pictures, then there is nothing to do...
-		if (screenshotFileNames.size() < 1) {
+		if (pictureFileNames.size() < 1) {
 			return contentStr;
 		}
 
-		Set<Integer> screenshotsAdded = new HashSet<>();
+		Set<Integer> picturesAdded = new HashSet<>();
 		String picLinkBase = "file:///" + UrlEncoder.encode(folder.getCanonicalDirname()) + "/";
 
-		for (int i = screenshotFileNames.size() - 1; i >= 0; i--) {
+		for (int i = pictureFileNames.size() - 1; i >= 0; i--) {
 
 			String beforeThisRound = contentStr;
 
-			// transform just the text screenshot 3 into a link to the third screenshot
-			String replaceWith = "<a href='" + picLinkBase + screenshotFileNames.get(i) + "' " +
+			// transform just the text picture 3 into a link to the third picture
+			String replaceWith = "<a href='" + picLinkBase + pictureFileNames.get(i) + "' " +
 				"target='_blank'>" +
 				"picture " + (i+1) +
 				"</a>";
@@ -1355,13 +1355,13 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			contentStr = StrUtils.addAfterLinesContaining(
 				contentStr,
 				replaceWith,
-				picToHtml(picLinkBase, screenshotFileNames.get(i)),
+				picToHtml(picLinkBase, pictureFileNames.get(i)),
 				"<br>"
 			);
 
-			// transform just the text screenshots up to 3 into a link to the third screenshot,
-			// which will later be augmented by screenshots 1 and 2 (if they have not been added already)
-			replaceWith = "<a href='" + picLinkBase + screenshotFileNames.get(i) + "' " +
+			// transform just the text pictures up to 3 into a link to the third picture,
+			// which will later be augmented by pictures 1 and 2 (if they have not been added already)
+			replaceWith = "<a href='" + picLinkBase + pictureFileNames.get(i) + "' " +
 				"target='_blank'>" +
 				"pictures up to " + (i+1) +
 				"</a>";
@@ -1384,43 +1384,45 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				contentStr,
 				replaceWith,
 				"[[LOGPIC-UP-TO-" + i + "]]" +
-				picToHtml(picLinkBase, screenshotFileNames.get(i)),
+				picToHtml(picLinkBase, pictureFileNames.get(i)),
 				"<br>"
 			);
 
 			if (!contentStr.equals(beforeThisRound)) {
-				screenshotsAdded.add(i);
+				picturesAdded.add(i);
 			}
 		}
 
 		// second round to add the other pictures when going "up to" a certain one
-		for (int i = screenshotFileNames.size() - 1; i >= 0; i--) {
+		for (int i = pictureFileNames.size() - 1; i >= 0; i--) {
 			String token = "[[LOGPIC-UP-TO-" + i + "]]";
 			if (contentStr.contains(token)) {
 				Integer nextPic = i - 1;
-				if ((nextPic < 0) || screenshotsAdded.contains(nextPic)) {
+				if ((nextPic < 0) || picturesAdded.contains(nextPic)) {
 					contentStr = StrUtils.replaceAll(contentStr, token, "");
 				} else {
 					contentStr = StrUtils.replaceAll(contentStr, token,
 						"[[LOGPIC-UP-TO-" + nextPic + "]]" +
-						picToHtml(picLinkBase, screenshotFileNames.get(nextPic))
+						picToHtml(picLinkBase, pictureFileNames.get(nextPic))
 					);
-					screenshotsAdded.add(nextPic);
+					picturesAdded.add(nextPic);
 				}
 			}
 		}
 
-		// third round to add all remaining screenshots in the very end
+		/* actually, skip the third round and only add pictures when necessary
+		// third round to add all remaining pictures in the very end
 		int highestPicShown = -1;
-		for (Integer picNum : screenshotsAdded) {
+		for (Integer picNum : picturesAdded) {
 			if (picNum > highestPicShown) {
 				highestPicShown = picNum;
 			}
 		}
 
-		for (int i = highestPicShown + 1; i < screenshotFileNames.size(); i++) {
-			contentStr += picToHtml(picLinkBase, screenshotFileNames.get(i));
+		for (int i = highestPicShown + 1; i < pictureFileNames.size(); i++) {
+			contentStr += picToHtml(picLinkBase, pictureFileNames.get(i));
 		}
+		*/
 
 		return contentStr;
 	}
