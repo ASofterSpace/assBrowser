@@ -435,6 +435,7 @@ window.browser = {
 		return content
 			.split("\u0080").join("€")
 			.split("\u0084").join("„")
+			.split("\u0085").join("…")
 			.split("\u0091").join("‘")
 			.split("\u0092").join("’")
 			.split("\u0093").join("“")
@@ -448,6 +449,7 @@ window.browser = {
 		return content
 			.split("€").join("\u0080")
 			.split("„").join("\u0084")
+			.split("…").join("\u0085")
 			.split("‘").join("\u0091")
 			.split("’").join("\u0092")
 			.split("“").join("\u0093")
@@ -520,6 +522,7 @@ window.browser = {
 
 	extractTLDR: function() {
 		var content = this.getCurrentEntryText();
+		var commentText = "";
 
 		content = content.split("TL;DR:");
 		if (content.length > 1) {
@@ -527,6 +530,14 @@ window.browser = {
 			content = content.split("\n\n");
 			content = content[0];
 			content = content.trim();
+
+			// move comment below
+			var commentStartStr = "\nMoya: ";
+			content = content.split(commentStartStr);
+			if (content.length > 1) {
+				commentText = commentStartStr + content[1];
+			}
+			content = content[0].trim();
 
 			// only replace " by ', but do not fully switch them, as ' also just appears regularly in the text
 			// in contractions
@@ -545,6 +556,8 @@ window.browser = {
 		}
 
 		content += "%[" + window.data.path.split("/").join("\\") + "\\" + fileTitle + "]";
+
+		content += commentText;
 
 		this.copyToClipboard(content);
 

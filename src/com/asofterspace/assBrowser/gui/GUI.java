@@ -77,6 +77,8 @@ public class GUI extends MainWindow {
 	private final static int height = 22;
 
 	private int batteryDisplayCounter = 0;
+	private long lastVolumeTime = 0;
+	private String nircmdPath;
 
 	private Font sharedFont = null;
 
@@ -84,6 +86,7 @@ public class GUI extends MainWindow {
 	public GUI(Database database, ConsoleCtrl consoleCtrl) {
 		this.database = database;
 		this.consoleCtrl = consoleCtrl;
+		this.nircmdPath = database.getNircmdPath();
 	}
 
 	@Override
@@ -156,9 +159,8 @@ public class GUI extends MainWindow {
 			}
 		});
 
-		String nircmdPath = database.getNircmdPath();
-		IoUtils.executeAsync(nircmdPath + " setsysvolume 0");
-		IoUtils.executeAsync(nircmdPath + " mutesysvolume 0");
+		IoUtils.executeAsync(this.nircmdPath + " setsysvolume 0");
+		IoUtils.executeAsync(this.nircmdPath + " mutesysvolume 0");
 
 		BarMenuItemForMainMenu volumeItem = new BarMenuItemForMainMenu();
 		volumeItem.setBackground(bgColorCol);
@@ -169,11 +171,16 @@ public class GUI extends MainWindow {
 		volumeItem.addBarListener(new BarListener() {
 			@Override
 			public void onBarMove(Integer position) {
-				if (position == null) {
-					position = 0;
+				adjustVolume(position);
+			}
+
+			@Override
+			public void onBarDisplay(Integer position) {
+				long curTime = System.currentTimeMillis();
+				// send updates every 500 ms on draw
+				if (curTime - lastVolumeTime > 500) {
+					adjustVolume(position);
 				}
-				IoUtils.executeAsync(nircmdPath + " setsysvolume " +
-					Math.min(65535, position * 656));
 			}
 		});
 		mainPanel.add(volumeItem, new Arrangement(1, 0, 0.0, 1.0));
@@ -239,6 +246,18 @@ public class GUI extends MainWindow {
 		parent.add(mainPanel, BorderLayout.CENTER);
 
 		return mainPanel;
+	}
+
+	private void adjustVolume(Integer position) {
+
+		this.lastVolumeTime = System.currentTimeMillis();
+
+		if (position == null) {
+			position = 0;
+		}
+
+		IoUtils.executeAsync(this.nircmdPath + " setsysvolume " +
+			Math.min(65535, position * 656));
 	}
 
 	private void refreshTitleBar() {
