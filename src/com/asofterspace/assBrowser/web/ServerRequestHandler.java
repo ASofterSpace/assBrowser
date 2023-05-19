@@ -548,22 +548,22 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		if (fileName != null) {
 
-			buttonHtml.append("<span class='button editBtnDisabled' onclick='toolbox.utils.StrUtils.applyQuoteStyleToLog(\"fileContentTextarea\")'>");
+			buttonHtml.append("<span class='button editBtnDisabled' onclick='toolbox.utils.StrUtils.applyQuoteStyleToLog(\"fileContentTextarea\"); browser.closeMoreActions();'>");
 			buttonHtml.append("Quote Selection");
 			buttonHtml.append("</span>");
 			buttonHtml.append("<br>");
 
-			buttonHtml.append("<span class='button editBtnDisabled' onclick='toolbox.utils.StrUtils.applyEmailStyleToLog(\"fileContentTextarea\")'>");
+			buttonHtml.append("<span class='button editBtnDisabled' onclick='toolbox.utils.StrUtils.applyEmailStyleToLog(\"fileContentTextarea\"); browser.closeMoreActions();'>");
 			buttonHtml.append("Apply Email Un-styling to Selection");
 			buttonHtml.append("</span>");
 			buttonHtml.append("<br>");
 
-			buttonHtml.append("<span class='button editBtnDisabled' onclick='toolbox.utils.StrUtils.applyRemoveNewlineStyleToLog(\"fileContentTextarea\")'>");
+			buttonHtml.append("<span class='button editBtnDisabled' onclick='toolbox.utils.StrUtils.applyRemoveNewlineStyleToLog(\"fileContentTextarea\"); browser.closeMoreActions();'>");
 			buttonHtml.append("Remove \\n from Selection");
 			buttonHtml.append("</span>");
 			buttonHtml.append("<br>");
 
-			buttonHtml.append("<span class='button editBtnDisabled' onclick='toolbox.utils.StrUtils.applySpaceToBulletPoint(\"fileContentTextarea\")'>");
+			buttonHtml.append("<span class='button editBtnDisabled' onclick='toolbox.utils.StrUtils.applySpaceToBulletPoint(\"fileContentTextarea\"); browser.closeMoreActions();'>");
 			buttonHtml.append("\"&nbsp;&nbsp;&nbsp;&nbsp;\" to \"* \" in Selection");
 			buttonHtml.append("</span>");
 			buttonHtml.append("<br>");
