@@ -205,6 +205,10 @@ window.browser = {
 			document.getElementById("save-btn").style.background =
 				document.getElementById("edit-btn").style.background;
 			document.getElementById("save-btn").style.display = "inline";
+			var enableEditBtns = document.getElementsByClassName("editBtnDisabled");
+			for (var i = enableEditBtns.length - 1; i >= 0; i--) {
+				enableEditBtns[i].className = 'button editBtnEnabled';
+			}
 		} else {
 			entryScrollBefore = document.getElementById("fileContentTextarea").scrollTop /
 				document.getElementById("fileContentTextarea").scrollTopMax;
@@ -213,6 +217,10 @@ window.browser = {
 			document.getElementById("fileContentContainer").style.display = "block";
 			document.getElementById("fileContentTextarea").style.display = "none";
 			document.getElementById("fileContentContainer").innerHTML = "Loading View...";
+			var disableEditBtns = document.getElementsByClassName("editBtnEnabled");
+			for (var i = disableEditBtns.length - 1; i >= 0; i--) {
+				disableEditBtns[i].className = 'button editBtnDisabled';
+			}
 		}
 
 		var request = new XMLHttpRequest();
@@ -434,6 +442,7 @@ window.browser = {
 	decodeToTextarea: function(content) {
 		return content
 			.split("\u0080").join("€")
+			.split("\u0082").join("‚")
 			.split("\u0084").join("„")
 			.split("\u0085").join("…")
 			.split("\u0091").join("‘")
@@ -448,6 +457,7 @@ window.browser = {
 	encodeFromTextarea: function(content) {
 		return content
 			.split("€").join("\u0080")
+			.split("‚").join("\u0082")
 			.split("„").join("\u0084")
 			.split("…").join("\u0085")
 			.split("‘").join("\u0091")

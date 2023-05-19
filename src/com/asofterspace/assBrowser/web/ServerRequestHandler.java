@@ -547,6 +547,27 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		buttonHtml.append("<br>");
 
 		if (fileName != null) {
+
+			buttonHtml.append("<span class='button editBtnDisabled' onclick='toolbox.utils.StrUtils.applyQuoteStyleToLog(\"fileContentTextarea\")'>");
+			buttonHtml.append("Quote Selection");
+			buttonHtml.append("</span>");
+			buttonHtml.append("<br>");
+
+			buttonHtml.append("<span class='button editBtnDisabled' onclick='toolbox.utils.StrUtils.applyEmailStyleToLog(\"fileContentTextarea\")'>");
+			buttonHtml.append("Apply Email Un-styling to Selection");
+			buttonHtml.append("</span>");
+			buttonHtml.append("<br>");
+
+			buttonHtml.append("<span class='button editBtnDisabled' onclick='toolbox.utils.StrUtils.applyRemoveNewlineStyleToLog(\"fileContentTextarea\")'>");
+			buttonHtml.append("Remove \\n from Selection");
+			buttonHtml.append("</span>");
+			buttonHtml.append("<br>");
+
+			buttonHtml.append("<span class='button editBtnDisabled' onclick='toolbox.utils.StrUtils.applySpaceToBulletPoint(\"fileContentTextarea\")'>");
+			buttonHtml.append("\"&nbsp;&nbsp;&nbsp;&nbsp;\" to \"* \" in Selection");
+			buttonHtml.append("</span>");
+			buttonHtml.append("<br>");
+
 			buttonHtml.append("<span class='button' onclick='browser.extractTLDR()'>");
 			buttonHtml.append("Extract TL;DR to clipboard");
 			buttonHtml.append("</span>");
@@ -1465,6 +1486,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 	private static String funkCode(String str) {
 		str = UrlEncoder.encode(str);
+		str = StrUtils.replaceAll(str, "%C2%82", "%E2%80%9C");
 		str = StrUtils.replaceAll(str, "%C2%84", "%E2%80%9E");
 		str = StrUtils.replaceAll(str, "%C2%91", "%E2%80%98");
 		str = StrUtils.replaceAll(str, "%C2%92", "%E2%80%99");
