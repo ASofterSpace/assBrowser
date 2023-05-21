@@ -537,6 +537,8 @@ window.browser = {
 			if (textActionsBtn) {
 				textActionsBtn.innerText = 'Close Actions...';
 				textActionsBtn.className = 'button activeInBackground';
+				container.style.left = (13 + textActionsBtn.offsetLeft + (textActionsBtn.offsetWidth / 2) -
+					(container.clientWidth / 2)) + "px";
 			}
 		} else {
 			this.closeMoreActions();
@@ -552,6 +554,8 @@ window.browser = {
 			if (moreActionsBtn) {
 				moreActionsBtn.innerText = 'Close Actions...';
 				moreActionsBtn.className = 'button activeInBackground';
+				container.style.left = (13 + moreActionsBtn.offsetLeft + (moreActionsBtn.offsetWidth / 2) -
+					(container.clientWidth / 2)) + "px";
 			}
 		} else {
 			this.closeMoreActions();
