@@ -74,6 +74,11 @@ span.button.checked {
 	background: rgba(150, 200, 250, 0.6);
 }
 
+span.button.activeInBackground {
+	background: #406;
+	opacity: 0.5;
+}
+
 div.line:hover {
 	background: rgba(255, 0, 255, 0.19);
 	border-radius: 4pt;
@@ -329,15 +334,22 @@ div.category > a:hover {
 	background: #EEDDFF;
 }
 
-div#more-actions-container {
+div#more-actions-container, div#text-actions-container {
 	position:fixed;
 	bottom: 55pt;
-	left:45%;
 	background: rgba(30, 0, 25, 0.95);
 	border-radius: 9pt;
 	text-align: center;
 	line-height: 2;
 	padding: 5pt;
+}
+
+div#text-actions-container {
+	left: 39.5%;
+}
+
+div#more-actions-container {
+	left: 49.1%;
 }
 
 div.quote {

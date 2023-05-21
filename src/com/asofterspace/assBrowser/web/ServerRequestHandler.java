@@ -525,28 +525,13 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		buttonHtml.append("&#x25AF; Comic");
 		buttonHtml.append("</span>");
 
-		buttonHtml.append("<span class='button' onclick='browser.toggleMoreActions()' id='more-actions-btn'>");
-		buttonHtml.append("More Actions...");
-		buttonHtml.append("</span>");
-
-		buttonHtml.append("<div id='more-actions-container' style='display:none;'>");
-
 		if (fileName != null) {
-			buttonHtml.append(getFileButtonsHtml(path, fileName, ""));
-			buttonHtml.append("<br>");
-		}
 
-		buttonHtml.append("<span class='button' onclick='browser.openUploadModal()'>");
-		buttonHtml.append("Upload a File");
-		buttonHtml.append("</span>");
-		buttonHtml.append("<br>");
+			buttonHtml.append("<span class='button' onclick='browser.toggleTextActions()' id='text-actions-btn'>");
+			buttonHtml.append("Text Actions...");
+			buttonHtml.append("</span>");
 
-		buttonHtml.append("<span class='button' onclick='browser.openFolderInOS()'>");
-		buttonHtml.append("Open in OS");
-		buttonHtml.append("</span>");
-		buttonHtml.append("<br>");
-
-		if (fileName != null) {
+			buttonHtml.append("<div id='text-actions-container' style='display:none;'>");
 
 			buttonHtml.append("<span class='button editBtnDisabled' onclick='toolbox.utils.StrUtils.applyQuoteStyleToLog(\"fileContentTextarea\"); browser.closeMoreActions();'>");
 			buttonHtml.append("Quote Selection");
@@ -573,7 +558,30 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			buttonHtml.append("</span>");
 			buttonHtml.append("<textarea id='clipboardHelper' style='display:none'></textarea>");
 			buttonHtml.append("<br>");
+
+			buttonHtml.append("</div>");
 		}
+
+		buttonHtml.append("<span class='button' onclick='browser.toggleMoreActions()' id='more-actions-btn'>");
+		buttonHtml.append("Other Actions...");
+		buttonHtml.append("</span>");
+
+		buttonHtml.append("<div id='more-actions-container' style='display:none;'>");
+
+		if (fileName != null) {
+			buttonHtml.append(getFileButtonsHtml(path, fileName, ""));
+			buttonHtml.append("<br>");
+		}
+
+		buttonHtml.append("<span class='button' onclick='browser.openUploadModal()'>");
+		buttonHtml.append("Upload a File");
+		buttonHtml.append("</span>");
+		buttonHtml.append("<br>");
+
+		buttonHtml.append("<span class='button' onclick='browser.openFolderInOS()'>");
+		buttonHtml.append("Open in OS");
+		buttonHtml.append("</span>");
+		buttonHtml.append("<br>");
 
 		buttonHtml.append("<span class='button' onclick='browser.expandConsole()' id='expandConsoleBtn'>");
 		buttonHtml.append("Expand Console");

@@ -507,15 +507,52 @@ window.browser = {
 	},
 
 	closeMoreActions: function() {
-		document.getElementById('more-actions-container').style.display = 'none';
-		document.getElementById('more-actions-btn').innerText = 'More Actions...';
+		var textActionsContainer = document.getElementById('text-actions-container');
+		if (textActionsContainer) {
+			textActionsContainer.style.display = 'none';
+		}
+		var textActionsBtn = document.getElementById('text-actions-btn');
+		if (textActionsBtn) {
+			textActionsBtn.innerText = 'Text Actions...';
+			textActionsBtn.className = 'button';
+		}
+
+		var moreActionsContainer = document.getElementById('more-actions-container');
+		if (moreActionsContainer) {
+			moreActionsContainer.style.display = 'none';
+		}
+		var moreActionsBtn = document.getElementById('more-actions-btn');
+		if (moreActionsBtn) {
+			moreActionsBtn.innerText = 'Other Actions...';
+			moreActionsBtn.className = 'button';
+		}
+	},
+
+	toggleTextActions: function() {
+		var container = document.getElementById('text-actions-container');
+		if (container && (container.style.display == 'none')) {
+			this.closeMoreActions();
+			container.style.display = 'block';
+			var textActionsBtn = document.getElementById('text-actions-btn');
+			if (textActionsBtn) {
+				textActionsBtn.innerText = 'Close Actions...';
+				textActionsBtn.className = 'button activeInBackground';
+			}
+		} else {
+			this.closeMoreActions();
+		}
 	},
 
 	toggleMoreActions: function() {
 		var container = document.getElementById('more-actions-container');
-		if (container.style.display == 'none') {
+		if (container && (container.style.display == 'none')) {
+			this.closeMoreActions();
 			container.style.display = 'block';
-			document.getElementById('more-actions-btn').innerText = 'Fewer Actions...';
+			var moreActionsBtn = document.getElementById('more-actions-btn');
+			if (moreActionsBtn) {
+				moreActionsBtn.innerText = 'Close Actions...';
+				moreActionsBtn.className = 'button activeInBackground';
+			}
 		} else {
 			this.closeMoreActions();
 		}
