@@ -1494,7 +1494,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 	private static String funkCode(String str) {
 		str = UrlEncoder.encode(str);
-		str = StrUtils.replaceAll(str, "%C2%82", "%E2%80%9C");
+		str = StrUtils.replaceAll(str, "%C2%82", "%E2%80%9A");
 		str = StrUtils.replaceAll(str, "%C2%84", "%E2%80%9E");
 		str = StrUtils.replaceAll(str, "%C2%91", "%E2%80%98");
 		str = StrUtils.replaceAll(str, "%C2%92", "%E2%80%99");
