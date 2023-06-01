@@ -269,6 +269,14 @@ public class ConsoleCtrl {
 		}
 
 
+		// if this is the name of a folder, open it...
+		Directory openDir = new Directory(command);
+		if (openDir.exists()) {
+			IoUtils.executeAsync("explorer.exe " + command);
+			return result;
+		}
+
+
 		history.add("ERROR: Command '" + command + "' not understood!");
 		return result;
 	}

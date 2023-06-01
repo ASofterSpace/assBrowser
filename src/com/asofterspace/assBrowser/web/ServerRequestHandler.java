@@ -58,7 +58,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 	private ConsoleCtrl consoleCtrl;
 
-	private static final String[] IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "gif", "bmp"};
+	private static final String[] IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "gif", "bmp", "webp"};
 
 	private String videoDirPathStr = null;
 
