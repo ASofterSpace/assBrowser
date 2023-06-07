@@ -240,6 +240,7 @@ window.browser = {
 						browser.preventEntryChangeFire = true;
 
 						document.getElementById("fileContentTextarea").value = browser.decodeToTextarea(result.entry);
+						document.getElementById("fileContentTextarea").focus();
 
 						document.getElementById("fileContentTextarea").scrollTo(0,
 							entryScrollBefore * document.getElementById("fileContentTextarea").scrollTopMax);
@@ -352,7 +353,8 @@ window.browser = {
 							result.content = document.getElementById("folderContainer").innerText;
 						}
 
-						document.getElementById("folderTextarea").value = browser.decodeToTextarea(result.content)
+						document.getElementById("folderTextarea").value = browser.decodeToTextarea(result.content);
+						document.getElementById("folderTextarea").focus();
 
 						window.setTimeout(function() {
 							browser.preventFolderChangeFire = false;
