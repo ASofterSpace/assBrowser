@@ -242,11 +242,11 @@ window.browser = {
 						document.getElementById("fileContentTextarea").value = browser.decodeToTextarea(result.entry);
 						document.getElementById("fileContentTextarea").focus();
 
-						document.getElementById("fileContentTextarea").scrollTo(0,
-							entryScrollBefore * document.getElementById("fileContentTextarea").scrollTopMax);
-
 						window.setTimeout(function() {
 							browser.preventEntryChangeFire = false;
+
+							document.getElementById("fileContentTextarea").scrollTo(0,
+								entryScrollBefore * document.getElementById("fileContentTextarea").scrollTopMax);
 						}, 100);
 					} else {
 						document.getElementById("fileContentContainer").innerHTML = result.entry;
