@@ -140,9 +140,24 @@ div#fileContentContainer > a, div#fileContentContainer > span.a {
 	cursor: pointer;
 }
 
-div#fileContentContainer > span.firstline {
-	font-size: 120%;
+div#fileContentContainer > h1, div#fileContentContainer > h2 {
 	font-weight: bold;
+	padding: 0;
+	margin: 0;
+	display: inline;
+}
+
+div#fileContentContainer > h1 {
+	font-size: 120%;
+}
+
+div#fileContentContainer > h2 {
+	font-size: 110%;
+}
+
+div#fileContentContainer > span.headSection {
+	font-weight: bold;
+	text-decoration: underline;
 }
 
 div.imageStrip {

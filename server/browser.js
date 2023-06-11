@@ -578,6 +578,9 @@ window.browser = {
 		var commentText = "";
 
 		content = content.split("TL;DR:");
+		if (content.length == 1) {
+			content = content[0].split("Summary:");
+		}
 		if (content.length > 1) {
 			content = content[1];
 			content = content.split("\n\n");

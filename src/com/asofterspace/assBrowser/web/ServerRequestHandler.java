@@ -554,7 +554,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			buttonHtml.append("<br>");
 
 			buttonHtml.append("<span class='button' onclick='browser.extractTLDR()'>");
-			buttonHtml.append("Extract TL;DR to clipboard");
+			buttonHtml.append("Extract Summary to clipboard");
 			buttonHtml.append("</span>");
 			buttonHtml.append("<textarea id='clipboardHelper' style='display:none'></textarea>");
 			buttonHtml.append("<br>");
@@ -1225,42 +1225,73 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		if (firstLinefeed < 0) {
 			firstLinefeed = fileHtmlStr.length();
 		}
-		fileHtmlStr = "<span class='firstline'>" + fileHtmlStr.substring(0, firstLinefeed) + "</span>" +
+		fileHtmlStr = "<h1>" + fileHtmlStr.substring(0, firstLinefeed) + "</h1>" +
 			fileHtmlStr.substring(firstLinefeed);
 
-		// blockquotes should be formatted suchly
-		if (fileHtmlStr.contains("| ")) {
-			String[] contentStrs = fileHtmlStr.split("<br>");
-			StringBuilder contentStrBui = new StringBuilder();
-			String sep = "";
-			boolean inQuote = false;
-			for (String line : contentStrs) {
-				if (line.startsWith("| ")) {
-					contentStrBui.append(sep);
-					if (!inQuote) {
-						contentStrBui.append("<div class='quote'>");
-					}
-					contentStrBui.append(line.substring(2));
-					inQuote = true;
-				} else {
-					if (inQuote) {
-						contentStrBui.append("</div>");
-					} else {
-						// the </div> eats one separator, so we only put if it we did not put </div>
-						contentStrBui.append(sep);
-					}
-					contentStrBui.append(line);
-					inQuote = false;
+		// iterate over the lines and specially highlight headlines
+		String[] contentStrs = fileHtmlStr.split("<br>");
+		int emptyLinesSoFar = 0;
+		for (int i = 0; i < contentStrs.length - 1; i++) {
+			String line = contentStrs[i];
+			if ("".equals(line)) {
+				emptyLinesSoFar++;
+			} else {
+				boolean addSummaryText = false;
+				if (line.startsWith("Summary: ")) {
+					line = line.substring(9);
+					addSummaryText = true;
 				}
-				// newlines should be shown as such, so we use <br> instead of \n
-				sep = "<br>";
+				if (line.startsWith("TL;DR: ")) {
+					line = line.substring(7);
+					addSummaryText = true;
+				}
+				if (addSummaryText) {
+					line = "<span class='headSection'>Summary:</span> " + line;
+					contentStrs[i] = line;
+				}
+				if (line.endsWith(":")) {
+					contentStrs[i] = "<span class='headSection'>" + contentStrs[i] + "</span>";
+				}
+				if ((emptyLinesSoFar > 1) && ("".equals(contentStrs[i+1]))) {
+					// if there are two empty lines following, do not apply <h2>!
+					if ((i+2 >= contentStrs.length) || (!"".equals(contentStrs[i+2]))) {
+						contentStrs[i] = "<h2>" + line + "</h2>";
+					}
+				}
+				emptyLinesSoFar = 0;
 			}
-			if (inQuote) {
-				contentStrBui.append("</div>");
-			}
-			contentStrBui.append("<br>");
-			fileHtmlStr = contentStrBui.toString();
 		}
+
+		// blockquotes should be formatted suchly
+		StringBuilder contentStrBui = new StringBuilder();
+		String sep = "";
+		boolean inQuote = false;
+		for (String line : contentStrs) {
+			if (line.startsWith("| ")) {
+				contentStrBui.append(sep);
+				if (!inQuote) {
+					contentStrBui.append("<div class='quote'>");
+				}
+				contentStrBui.append(line.substring(2));
+				inQuote = true;
+			} else {
+				if (inQuote) {
+					contentStrBui.append("</div>");
+				} else {
+					// the </div> eats one separator, so we only put if it we did not put </div>
+					contentStrBui.append(sep);
+				}
+				contentStrBui.append(line);
+				inQuote = false;
+			}
+			// newlines should be shown as such, so we use <br> instead of \n
+			sep = "<br>";
+		}
+		if (inQuote) {
+			contentStrBui.append("</div>");
+		}
+		contentStrBui.append("<br>");
+		fileHtmlStr = contentStrBui.toString();
 
 		// replace %[...] with internal links
 		StringBuilder newFileHtml = new StringBuilder();
