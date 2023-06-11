@@ -1249,7 +1249,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					line = "<span class='headSection'>Summary:</span> " + line;
 					contentStrs[i] = line;
 				}
-				if (line.endsWith(":") && !line.startsWith("see ")) {
+				if (line.endsWith(":") && !line.endsWith("&quot;:") && !line.startsWith("see ")) {
 					contentStrs[i] = "<span class='headSection'>" + contentStrs[i] + "</span>";
 				}
 				if ((emptyLinesSoFar > 1) && ("".equals(contentStrs[i+1]))) {
