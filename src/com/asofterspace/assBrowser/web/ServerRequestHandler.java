@@ -1249,7 +1249,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					line = "<span class='headSection'>Summary:</span> " + line;
 					contentStrs[i] = line;
 				} else {
-					if (line.endsWith(":") && !line.endsWith("&quot;:") && !line.startsWith("see ")) {
+					if (line.endsWith(":") && !line.endsWith("&quot;:") && !line.startsWith("see ") &&
+						!line.contains("picture ") && !line.contains("pictures up to ")) {
 						line = "<span class='headSection'>" + line + "</span>";
 						contentStrs[i] = line;
 					}
