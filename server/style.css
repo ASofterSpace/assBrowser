@@ -155,7 +155,7 @@ div#fileContentContainer > h2 {
 	font-size: 110%;
 }
 
-div#fileContentContainer > span.headSection {
+div#fileContentContainer span.headSection {
 	font-weight: bold;
 	text-decoration: underline;
 }

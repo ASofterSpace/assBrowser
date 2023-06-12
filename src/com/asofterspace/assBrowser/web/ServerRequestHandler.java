@@ -1248,9 +1248,11 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				if (addSummaryText) {
 					line = "<span class='headSection'>Summary:</span> " + line;
 					contentStrs[i] = line;
-				}
-				if (line.endsWith(":") && !line.endsWith("&quot;:") && !line.startsWith("see ")) {
-					contentStrs[i] = "<span class='headSection'>" + contentStrs[i] + "</span>";
+				} else {
+					if (line.endsWith(":") && !line.endsWith("&quot;:") && !line.startsWith("see ")) {
+						line = "<span class='headSection'>" + line + "</span>";
+						contentStrs[i] = line;
+					}
 				}
 				if ((emptyLinesSoFar > 1) && ("".equals(contentStrs[i+1]))) {
 					// if there are two empty lines following, do not apply <h2>!
