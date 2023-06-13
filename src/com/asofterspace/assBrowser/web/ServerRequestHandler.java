@@ -1247,20 +1247,59 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				}
 				if (addSummaryText) {
 					line = "<span class='headSection'>Summary:</span> " + line;
-					contentStrs[i] = line;
 				} else {
-					if (line.endsWith(":") && !line.endsWith("&quot;:") && !line.startsWith("see ") &&
-						!line.contains("picture ") && !line.contains("pictures up to ")) {
-						line = "<span class='headSection'>" + line + "</span>";
-						contentStrs[i] = line;
+					// if we have an enumeration...
+					if (line.startsWith("* ") || line.startsWith("&nbsp;")) {
+						if (line.startsWith("* ")) {
+							// ... then here we have the top level, with * as bullet points
+							line = "<span style='position:relative;padding-left:9pt;display:inline-block;'>" +
+								"<span style='position:absolute;left:0;top:2pt;'>*</span>" + line.substring(2) + "</span>";
+						} else {
+							// ... and here we have any deeper level, with *, -, > or >> as bullet points
+							int spaceCounter = 0;
+							while (line.startsWith("&nbsp;")) {
+								// get the correct level of indentation
+								line = line.substring(6);
+								spaceCounter++;
+							}
+							// optionally, if there are bullet points following the indentation, add bullet point and
+							// increase level of indentation so that the text flows vertically besides the bullet point
+							if (line.startsWith("* ")) {
+								line = "<span style='position:absolute;left:" + (3*spaceCounter) + "pt;top:2pt;'>*</span>" + line.substring(2);
+								spaceCounter += 3;
+							} else {
+								if (line.startsWith("- ")) {
+									line = "<span style='position:absolute;left:" + (3*spaceCounter) + "pt;'>-</span>" + line.substring(2);
+									spaceCounter += 3;
+								} else {
+									if (line.startsWith("&gt; ")) {
+										line = "<span style='position:absolute;left:" + (3*spaceCounter) + "pt;'>&gt;</span>" + line.substring(5);
+										spaceCounter += 3;
+									} else {
+										if (line.startsWith("&gt;&gt; ")) {
+											line = "<span style='position:absolute;left:" + (3*spaceCounter) + "pt;'>&gt;&gt;</span>" + line.substring(9);
+											spaceCounter += 5;
+										}
+									}
+								}
+							}
+							line = "<span style='position:relative;padding-left:" + (3*spaceCounter) + "pt;display:inline-block;'>" +
+								line + "</span>";
+						}
+					} else {
+						if (line.endsWith(":") && !line.endsWith("&quot;:") && !line.startsWith("see ") &&
+							!line.contains("picture ") && !line.contains("pictures up to ")) {
+							line = "<span class='headSection'>" + line + "</span>";
+						}
 					}
 				}
 				if ((emptyLinesSoFar > 1) && ("".equals(contentStrs[i+1]))) {
 					// if there are two empty lines following, do not apply <h2>!
 					if ((i+2 >= contentStrs.length) || (!"".equals(contentStrs[i+2]))) {
-						contentStrs[i] = "<h2>" + line + "</h2>";
+						line = "<h2>" + line + "</h2>";
 					}
 				}
+				contentStrs[i] = line;
 				emptyLinesSoFar = 0;
 			}
 		}
