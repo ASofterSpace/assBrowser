@@ -1236,6 +1236,13 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			if ("".equals(line)) {
 				emptyLinesSoFar++;
 			} else {
+				final String SPOILERLINESTR = "%SPOILERLINE%";
+				boolean applySpoilerLine = false;
+				if (line.startsWith(SPOILERLINESTR)) {
+					line = line.substring(SPOILERLINESTR.length()).trim();
+					applySpoilerLine = true;
+				}
+
 				boolean addSummaryText = false;
 				if (line.startsWith("Summary: ")) {
 					line = line.substring(9);
@@ -1245,6 +1252,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					line = line.substring(7);
 					addSummaryText = true;
 				}
+
 				if (addSummaryText) {
 					line = "<span class='headSection'>Summary:</span> " + line;
 				} else {
@@ -1293,12 +1301,18 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 						}
 					}
 				}
+
 				if ((emptyLinesSoFar > 1) && ("".equals(contentStrs[i+1]))) {
 					// if there are two empty lines following, do not apply <h2>!
 					if ((i+2 >= contentStrs.length) || (!"".equals(contentStrs[i+2]))) {
 						line = "<h2>" + line + "</h2>";
 					}
 				}
+
+				if (applySpoilerLine) {
+					line = "<span onclick='browser.unspoil(" + i + ");' id='spoiler_" + i + "' class='spoiled'>" + line + "</span>";
+				}
+
 				contentStrs[i] = line;
 				emptyLinesSoFar = 0;
 			}

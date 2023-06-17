@@ -705,6 +705,18 @@ window.browser = {
 		document.getElementById('deleteModal').style.display = 'none';
 	},
 
+	unspoil: function(which) {
+		var el = document.getElementById("spoiler_" + which);
+		if (el) {
+			var spoiledClass = 'spoiled';
+			if (el.className == spoiledClass) {
+				el.className = 'notspoiled';
+			} else {
+				el.className = spoiledClass;
+			}
+		}
+	}
+
 }
 
 
