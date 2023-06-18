@@ -1295,7 +1295,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 								line + "</span>";
 						}
 					} else {
-						if (line.endsWith(":") && !line.endsWith("&quot;:") &&
+						if ((emptyLinesSoFar > 0) && line.endsWith(":") && !line.endsWith("&quot;:") &&
 							!line.startsWith("see ") && !line.equals("see:") &&
 							!line.contains("picture ") && !line.contains("pictures up to ")) {
 							line = "<span class='headSection'>" + line + "</span>";
