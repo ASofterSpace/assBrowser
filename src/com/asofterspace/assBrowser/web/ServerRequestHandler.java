@@ -1295,9 +1295,20 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 								line + "</span>";
 						}
 					} else {
-						if (line.endsWith(":") && !line.endsWith("&quot;:") && !line.startsWith("see ") &&
+						if (line.endsWith(":") && !line.endsWith("&quot;:") &&
+							!line.startsWith("see ") && !line.equals("see:") &&
 							!line.contains("picture ") && !line.contains("pictures up to ")) {
 							line = "<span class='headSection'>" + line + "</span>";
+						} else {
+							// add folder links for folders that are just plainly on a line - so just "folder" not "folder > file"
+							if (!line.contains(" &gt; ")) {
+								if (line.length() > 3) {
+									if ((line.charAt(1) == ':') && (line.charAt(2) == '\\')) {
+										line = "<span class='a' onclick=\"browser.openFolderInOS('" + StrUtils.replaceAll(line, "\\", "\\\\") + "')\">" +
+											line + "</span>";
+									}
+								}
+							}
 						}
 					}
 				}
@@ -1378,7 +1389,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		fileHtmlStr = prepareExternalLinks(fileHtmlStr, "https://");
 		fileHtmlStr = prepareExternalLinks(fileHtmlStr, "file://");
 
-		// replace C:\... > with OS links
+		// replace C:\... > with OS links - so "folder > file", not just "folder"
 		newFileHtml = new StringBuilder();
 		start = 0;
 		fileHtmlStr += "<br>";
