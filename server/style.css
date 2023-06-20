@@ -140,6 +140,11 @@ div#fileContentContainer a, div#fileContentContainer span.a {
 	cursor: pointer;
 }
 
+div#fileButtonContainer > a {
+	color: #AACCFF;
+	font-style: normal;
+}
+
 div#fileContentContainer h1, div#fileContentContainer h2 {
 	font-weight: bold;
 	padding: 0;

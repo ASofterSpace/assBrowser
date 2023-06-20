@@ -705,6 +705,31 @@ window.browser = {
 		document.getElementById('deleteModal').style.display = 'none';
 	},
 
+	showSearchReplaceModal: function() {
+		if (this.editingMode) {
+			this.showModalBackground();
+			document.getElementById('searchReplaceModal').style.display = 'block';
+		}
+	},
+
+	doSearchReplace: function() {
+		if (this.editingMode) {
+			var searchFor = document.getElementById("searchReplaceSearchInput").value;
+			var replaceWith = document.getElementById("searchReplaceReplaceInput").value;
+			var textarea = document.getElementById("fileContentTextarea");
+			if (textarea) {
+				textarea.value = textarea.value.split(searchFor).join(replaceWith);
+				this.entryChanged();
+			}
+		}
+		this.closeSearchReplaceModal();
+	},
+
+	closeSearchReplaceModal: function() {
+		this.hideModalBackground();
+		document.getElementById('searchReplaceModal').style.display = 'none';
+	},
+
 	unspoil: function(which) {
 		var el = document.getElementById("spoiler_" + which);
 		if (el) {

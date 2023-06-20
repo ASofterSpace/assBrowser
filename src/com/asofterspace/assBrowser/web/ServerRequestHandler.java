@@ -553,6 +553,11 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			buttonHtml.append("</span>");
 			buttonHtml.append("<br>");
 
+			buttonHtml.append("<span class='button editBtnDisabled' onclick='browser.showSearchReplaceModal(); browser.closeMoreActions();'>");
+			buttonHtml.append("Search + Replace");
+			buttonHtml.append("</span>");
+			buttonHtml.append("<br>");
+
 			buttonHtml.append("<span class='button' onclick='browser.extractTLDR()'>");
 			buttonHtml.append("Extract Summary to clipboard");
 			buttonHtml.append("</span>");
@@ -712,7 +717,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					fileHtmlStr += "<img src=\"" + imgUrl + "\" style='max-width:100%; max-height:100%;' />";
 					fileHtmlStr += "</a>";
 				} else {
-					fileHtmlStr = "<div style='line-height: 2.5;text-align: center;'>" +
+					fileHtmlStr = "<div style='line-height: 2.5;text-align: center;' id='fileButtonContainer'>" +
 								  "No preview for '" + fileName + "' available.<br><br>" +
 								  getFileButtonsHtml(path, fileName, "padding: 4pt 9pt;") +
 								  "</div>";
@@ -1062,8 +1067,12 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 	private String getFileAccessUrl(String path, String fileName) {
 		if (accessFilesLocally) {
 			// works only if the browser is jury-rigged to accept localhost connecting to local files
+			String fullPath = path + "/" + fileName;
+			if (path.startsWith("/Desktop/") || path.startsWith("\\Desktop\\")) {
+				fullPath = PathCtrl.getOneUpDesktopLocation() + "/" + fullPath;
+			}
 			return "file:///" + StrUtils.replaceAll(StrUtils.replaceAll(
-				PathCtrl.getOneUpDesktopLocation() + "/" + path + "/" + fileName,
+				fullPath,
 				"\\", "/"), "//", "/");
 		}
 
@@ -1313,7 +1322,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					}
 				}
 
-				if ((emptyLinesSoFar > 1) && ("".equals(contentStrs[i+1]))) {
+				if ((emptyLinesSoFar > 1) && ("".equals(contentStrs[i+1])) &&
+					!line.contains("picture ") && !line.contains("pictures up to ")) {
 					// if there are two empty lines following, do not apply <h2>!
 					if ((i+2 >= contentStrs.length) || (!"".equals(contentStrs[i+2]))) {
 						line = "<h2>" + line + "</h2>";
