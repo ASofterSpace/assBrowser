@@ -576,6 +576,17 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		if (fileName != null) {
 			buttonHtml.append(getFileButtonsHtml(path, fileName, ""));
 			buttonHtml.append("<br>");
+
+			buttonHtml.append("<a class='button' id='exportButtonA' target='_blank'>");
+			buttonHtml.append("Print View / Export to PDF");
+			buttonHtml.append("</a>\n");
+			buttonHtml.append("<script>\n");
+			buttonHtml.append("window.setTimeout(function() {\n");
+			buttonHtml.append("  var exportButtonA = document.getElementById('exportButtonA');\n");
+			buttonHtml.append("  exportButtonA.href = window.location.href + '&export=true';\n");
+			buttonHtml.append("}, 1000);\n");
+			buttonHtml.append("</script>\n");
+			buttonHtml.append("<br>");
 		}
 
 		buttonHtml.append("<span class='button' onclick='browser.openUploadModal()'>");
@@ -728,6 +739,39 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		indexContent = StrUtils.replaceAll(indexContent, "[[FILE_CONTENT]]", fileHtmlStr);
 
 		indexContent = StrUtils.replaceAll(indexContent, "[[IMAGES]]", imagesStr);
+
+		if ("true".equals(arguments.get("export"))) {
+			indexContent += "\n"+
+				"<script>\n" +
+				"window.setTimeout(function() {\n" +
+				"  document.getElementById('imageStrip').style.display = 'none';\n" +
+				"  document.getElementById('consoleContainer').style.display = 'none';\n" +
+				"  document.getElementById('folderContainer').style.display = 'none';\n" +
+				"  var buttonBars = document.getElementsByClassName('buttonBar');\n" +
+				"  for (var i = 0; i < buttonBars.length; i++) {\n" +
+				"    buttonBars[i].style.display = 'none';\n" +
+				"  }\n" +
+				"  var sidebarItems = document.getElementsByClassName('sidebar');\n" +
+				"  for (var i = 0; i < sidebarItems.length; i++) {\n" +
+				"    sidebarItems[i].style.display = 'none';\n" +
+				"  }\n" +
+				"  var aItems = document.getElementsByTagName('a');\n" +
+				"  for (var i = 0; i < aItems.length; i++) {\n" +
+				"    aItems[i].style.color = '#555';\n" +
+				"  }\n" +
+				"  document.getElementById('fileContentContainer').style.height = 'unset';\n" +
+				"  document.getElementById('fileContentContainer').style.color = '#000';\n" +
+				"  document.getElementById('mainContent').style.height = 'unset';\n" +
+				"  document.getElementById('mainContent').style.overflow = 'unset';\n" +
+				"  document.getElementsByTagName('body')[0].style.padding = '0';\n" +
+				"  document.getElementsByTagName('body')[0].style.background = '#FFF';\n" +
+				"  document.getElementsByTagName('body')[0].style.overflowY = 'scroll';\n" +
+				"  \n" +
+				"  window.browser.exportView = true;\n" +
+				"  window.browser.onResize();\n" +
+				"}, 500);\n" +
+				"</script>";
+		}
 
 		return new WebServerAnswerInHtml(indexContent);
 	}

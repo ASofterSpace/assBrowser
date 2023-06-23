@@ -13,7 +13,9 @@ window.browser = {
 	preventFolderChangeFire: false,
 
 	COLOR_SAVE_GREEN: "rgb(0, 187, 0)",
-	COLOR_SAVE_RED: "rgb(238, 0, 34)" ,
+	COLOR_SAVE_RED: "rgb(238, 0, 34)",
+
+	exportView: false,
 
 
 	onResize: function() {
@@ -22,14 +24,22 @@ window.browser = {
 
 		var body = document.getElementById("body");
 		if (body) {
-			body.style.height = window.innerHeight + "px";
+			if (this.exportView) {
+				body.style.height = 'unset';
+			} else {
+				body.style.height = window.innerHeight + "px";
+			}
 		} else {
 			retry = true;
 		}
 
 		var mainContent = document.getElementById("mainContent");
 		if (mainContent) {
-			mainContent.style.height = (window.innerHeight - 31) + "px";
+			if (this.exportView) {
+				mainContent.style.height = 'unset';
+			} else {
+				mainContent.style.height = (window.innerHeight - 31) + "px";
+			}
 		} else {
 			retry = true;
 		}
