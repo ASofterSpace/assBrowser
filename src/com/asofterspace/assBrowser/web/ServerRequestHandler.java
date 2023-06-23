@@ -744,7 +744,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			indexContent += "\n"+
 				"<script>\n" +
 				"window.setTimeout(function() {\n" +
-				"  document.getElementById('imageStrip').style.display = 'none';\n" +
+				"  var el = document.getElementById('imageStrip');\n" +
+				"  if (el) { el.style.display = 'none'; }\n" +
 				"  document.getElementById('consoleContainer').style.display = 'none';\n" +
 				"  document.getElementById('folderContainer').style.display = 'none';\n" +
 				"  var buttonBars = document.getElementsByClassName('buttonBar');\n" +
