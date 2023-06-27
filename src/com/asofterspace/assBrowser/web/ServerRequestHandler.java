@@ -1310,44 +1310,46 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				if (addSummaryText) {
 					line = "<span class='headSection'>Summary:</span> " + line;
 				} else {
-					// if we have an enumeration...
+					// if we have an enumeration, with *, -, > or >> as bullet points...
 					if (line.startsWith("* ") || line.startsWith("&nbsp;")) {
+						// ... set level 0 by default / for the top-most level...
+						int spaceCounter = 0;
+						String lineStartIndent = "";
+						// ... and then we count the level depth
+						while (line.startsWith("&nbsp;")) {
+							line = line.substring(6);
+							lineStartIndent += "&nbsp;";
+							spaceCounter++;
+						}
+						if (!"".equals(lineStartIndent)) {
+							lineStartIndent = "<span style='position:absolute;left: 0;'>" + lineStartIndent + "</span>";
+						}
+
+						// add bullet point and increase level of indentation so that the text flows vertically besides the bullet point
+						// (oh and here we have space before and behind the enumeration sign in the <span> so that when text is copied
+						// out, it is copied correctly with the space ^^)
+
 						if (line.startsWith("* ")) {
-							// ... then here we have the top level, with * as bullet points
-							line = "<span style='position:relative;padding-left:9pt;display:inline-block;'>" +
-								"<span style='position:absolute;left:0;top:2pt;'>*</span>" + line.substring(2) + "</span>";
+							line = "<span style='position:absolute;left:" + (3*spaceCounter) + "pt;top:2pt;'>* </span>" + line.substring(2);
+							spaceCounter += 3;
 						} else {
-							// ... and here we have any deeper level, with *, -, > or >> as bullet points
-							int spaceCounter = 0;
-							while (line.startsWith("&nbsp;")) {
-								// get the correct level of indentation
-								line = line.substring(6);
-								spaceCounter++;
-							}
-							// optionally, if there are bullet points following the indentation, add bullet point and
-							// increase level of indentation so that the text flows vertically besides the bullet point
-							if (line.startsWith("* ")) {
-								line = "<span style='position:absolute;left:" + (3*spaceCounter) + "pt;top:2pt;'>*</span>" + line.substring(2);
+							if (line.startsWith("- ")) {
+								line = "<span style='position:absolute;left:" + (3*spaceCounter) + "pt;'>- </span>" + line.substring(2);
 								spaceCounter += 3;
 							} else {
-								if (line.startsWith("- ")) {
-									line = "<span style='position:absolute;left:" + (3*spaceCounter) + "pt;'>-</span>" + line.substring(2);
+								if (line.startsWith("&gt; ")) {
+									line = "<span style='position:absolute;left:" + (3*spaceCounter) + "pt;'>&gt; </span>" + line.substring(5);
 									spaceCounter += 3;
 								} else {
-									if (line.startsWith("&gt; ")) {
-										line = "<span style='position:absolute;left:" + (3*spaceCounter) + "pt;'>&gt;</span>" + line.substring(5);
-										spaceCounter += 3;
-									} else {
-										if (line.startsWith("&gt;&gt; ")) {
-											line = "<span style='position:absolute;left:" + (3*spaceCounter) + "pt;'>&gt;&gt;</span>" + line.substring(9);
-											spaceCounter += 5;
-										}
+									if (line.startsWith("&gt;&gt; ")) {
+										line = "<span style='position:absolute;left:" + (3*spaceCounter) + "pt;'>&gt;&gt; </span>" + line.substring(9);
+										spaceCounter += 5;
 									}
 								}
 							}
-							line = "<span style='position:relative;padding-left:" + (3*spaceCounter) + "pt;display:inline-block;'>" +
-								line + "</span>";
 						}
+						line = "<span style='position:relative;padding-left:" + (3*spaceCounter) + "pt;display:inline-block;'>" +
+							lineStartIndent + line + "</span>";
 					} else {
 						if ((emptyLinesSoFar > 0) && line.endsWith(":") && !line.endsWith("&quot;:") &&
 							!line.startsWith("see ") && !line.equals("see:") &&
