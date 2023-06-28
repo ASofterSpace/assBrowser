@@ -25,6 +25,8 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.Font;
@@ -135,6 +137,52 @@ public class GUI extends MainWindow {
 		consoleField.setCaretColor(fgColor.toColor());
 		consoleField.setBorder(new LineBorder(borderColor.toColor()));
 		mainPanel.add(consoleField, new Arrangement(0, 0, 1.0, 1.0));
+
+		consoleField.addKeyListener(new KeyAdapter() {
+			public void keyReleased(KeyEvent event) {
+			}
+
+			public void keyTyped(KeyEvent event) {
+			}
+
+			public void keyPressed(KeyEvent event) {
+				// [F1] to add „“
+				if (event.getKeyCode() == KeyEvent.VK_F1) {
+					insertTextForFunctionKey("„“", consoleField);
+					event.consume();
+					return;
+				}
+
+				// [F2] to add “”
+				if (event.getKeyCode() == KeyEvent.VK_F2) {
+					insertTextForFunctionKey("“”", consoleField);
+					event.consume();
+					return;
+				}
+
+				// [F3] to add ‚‘
+				if (event.getKeyCode() == KeyEvent.VK_F3) {
+					insertTextForFunctionKey("‚‘", consoleField);
+					event.consume();
+					return;
+				}
+
+				// [F4] to add ’ (as that is useful more often than ‘’)
+				if (event.getKeyCode() == KeyEvent.VK_F4) {
+					insertTextForFunctionKey("’", consoleField);
+					event.consume();
+					return;
+				}
+
+				// [F6] to add a date-time-stamp
+				if (event.getKeyCode() == KeyEvent.VK_F6) {
+					insertTextForFunctionKey(DateUtils.getCurrentDateTimeStamp(), consoleField);
+					event.consume();
+					return;
+				}
+
+			}
+		});
 
 		consoleField.addActionListener(new AbstractAction() {
 			@Override
@@ -396,6 +444,21 @@ public class GUI extends MainWindow {
 			batteryLabel.setForeground(bgColorCol);
 			batteryLabel.setBackground(errorColorCol);
 		}
+	}
+
+	private void insertTextForFunctionKey(String textToInsert, JTextField decoratedEditor) {
+		String txt = decoratedEditor.getText();
+		int selStart = decoratedEditor.getSelectionStart();
+		int selEnd = decoratedEditor.getSelectionEnd();
+
+		decoratedEditor.setText(
+			txt.substring(0, selStart) +
+			textToInsert +
+			txt.substring(selEnd)
+		);
+
+		decoratedEditor.setSelectionStart(selStart + textToInsert.length());
+		decoratedEditor.setSelectionEnd(selStart + textToInsert.length());
 	}
 
 }

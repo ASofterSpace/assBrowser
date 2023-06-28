@@ -1370,6 +1370,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				}
 
 				if ((emptyLinesSoFar > 1) && ("".equals(contentStrs[i+1])) &&
+					!line.startsWith("| ") &&
 					!line.contains("picture ") && !line.contains("pictures up to ")) {
 					// if there are two empty lines following, do not apply <h2>!
 					if ((i+2 >= contentStrs.length) || (!"".equals(contentStrs[i+2]))) {
