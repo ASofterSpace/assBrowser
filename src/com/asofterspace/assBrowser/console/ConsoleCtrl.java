@@ -7,6 +7,7 @@ package com.asofterspace.assBrowser.console;
 import com.asofterspace.assBrowser.Database;
 import com.asofterspace.assBrowser.gui.GUI;
 import com.asofterspace.assBrowser.paths.PathCtrl;
+import com.asofterspace.toolbox.gui.GuiUtils;
 import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.io.File;
 import com.asofterspace.toolbox.io.IoUtils;
@@ -309,6 +310,9 @@ public class ConsoleCtrl {
 		result = StrUtils.replaceAll(result, ",", ".");
 
 		prevMathOrgResult = result;
+
+		// automatically copy computation result to clipboard
+		GuiUtils.copyToClipboard(result);
 
 		return command.trim() + " = " + result;
 	}

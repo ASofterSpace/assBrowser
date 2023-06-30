@@ -13,6 +13,7 @@ import com.asofterspace.toolbox.coders.UrlEncoder;
 import com.asofterspace.toolbox.gui.Arrangement;
 import com.asofterspace.toolbox.gui.BarListener;
 import com.asofterspace.toolbox.gui.BarMenuItemForMainMenu;
+import com.asofterspace.toolbox.gui.GuiUtils;
 import com.asofterspace.toolbox.gui.MainWindow;
 import com.asofterspace.toolbox.images.ColorRGBA;
 import com.asofterspace.toolbox.io.IoUtils;
@@ -22,7 +23,6 @@ import com.asofterspace.toolbox.utils.StrUtils;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.StringSelection;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
@@ -255,7 +255,7 @@ public class GUI extends MainWindow {
 		quoteLabel1.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				copyToClipboard("„“”");
+				GuiUtils.copyToClipboard("„“”");
 			}
 		});
 
@@ -265,7 +265,7 @@ public class GUI extends MainWindow {
 		quoteLabel2.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				copyToClipboard("‚‘’");
+				GuiUtils.copyToClipboard("‚‘’");
 			}
 		});
 
@@ -287,7 +287,7 @@ public class GUI extends MainWindow {
 		clockLabel.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				copyToClipboard(DateUtils.getCurrentDateTimeStamp());
+				GuiUtils.copyToClipboard(DateUtils.getCurrentDateTimeStamp());
 				resetGuiLocation();
 			}
 		});
@@ -312,12 +312,6 @@ public class GUI extends MainWindow {
 
 	private void refreshTitleBar() {
 		mainFrame.setTitle(AssBrowser.PROGRAM_TITLE);
-	}
-
-	private void copyToClipboard(String toBeCopiedText) {
-		StringSelection selection = new StringSelection(toBeCopiedText);
-		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-		clipboard.setContents(selection, selection);
 	}
 
 	public void close() {

@@ -685,7 +685,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					overallBuilder.append("</div>");
 
 					overallBuilder.append("<div id='tileStripsContainer' style='display:none; overflow-y:scroll;'>");
-					overallBuilder.append("<div style='position:fixed;top:0;left:0;right:0;background:rgb(64,0,128);'>");
+					overallBuilder.append("<div style='position:fixed;top:0;left:0;right:15pt;background:rgb(64,0,128);'>");
 					overallBuilder.append("<span class='button' onclick='browser.closeView()' style='display:block; margin-top:5pt; margin-bottom:5pt;' ");
 					overallBuilder.append("id='closeTileViewBtn'>Close View</span>");
 					overallBuilder.append("</div>");
@@ -1310,59 +1310,19 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				if (addSummaryText) {
 					line = "<span class='headSection'>Summary:</span> " + line;
 				} else {
-					// if we have an enumeration, with *, -, > or >> as bullet points...
-					if (line.startsWith("* ") || line.startsWith("&nbsp;")) {
-						// ... set level 0 by default / for the top-most level...
-						int spaceCounter = 0;
-						String lineStartIndent = "";
-						// ... and then we count the level depth
-						while (line.startsWith("&nbsp;")) {
-							line = line.substring(6);
-							lineStartIndent += "&nbsp;";
-							spaceCounter++;
-						}
-						if (!"".equals(lineStartIndent)) {
-							lineStartIndent = "<span style='position:absolute;left: 0;'>" + lineStartIndent + "</span>";
-						}
+					line = HTML.prettifyLine(line);
 
-						// add bullet point and increase level of indentation so that the text flows vertically besides the bullet point
-						// (oh and here we have space before and behind the enumeration sign in the <span> so that when text is copied
-						// out, it is copied correctly with the space ^^)
-
-						if (line.startsWith("* ")) {
-							line = "<span style='position:absolute;left:" + (3*spaceCounter) + "pt;top:2pt;'>* </span>" + line.substring(2);
-							spaceCounter += 3;
-						} else {
-							if (line.startsWith("- ")) {
-								line = "<span style='position:absolute;left:" + (3*spaceCounter) + "pt;'>- </span>" + line.substring(2);
-								spaceCounter += 3;
-							} else {
-								if (line.startsWith("&gt; ")) {
-									line = "<span style='position:absolute;left:" + (3*spaceCounter) + "pt;'>&gt; </span>" + line.substring(5);
-									spaceCounter += 3;
-								} else {
-									if (line.startsWith("&gt;&gt; ")) {
-										line = "<span style='position:absolute;left:" + (3*spaceCounter) + "pt;'>&gt;&gt; </span>" + line.substring(9);
-										spaceCounter += 5;
-									}
-								}
-							}
-						}
-						line = "<span style='position:relative;padding-left:" + (3*spaceCounter) + "pt;display:inline-block;'>" +
-							lineStartIndent + line + "</span>";
+					if ((emptyLinesSoFar > 0) && line.endsWith(":") && !line.endsWith("&quot;:") &&
+						!line.startsWith("see ") && !line.equals("see:") &&
+						!line.contains("picture ") && !line.contains("pictures up to ")) {
+						line = "<span class='headSection'>" + line + "</span>";
 					} else {
-						if ((emptyLinesSoFar > 0) && line.endsWith(":") && !line.endsWith("&quot;:") &&
-							!line.startsWith("see ") && !line.equals("see:") &&
-							!line.contains("picture ") && !line.contains("pictures up to ")) {
-							line = "<span class='headSection'>" + line + "</span>";
-						} else {
-							// add folder links for folders that are just plainly on a line - so just "folder" not "folder > file"
-							if (!line.contains(" &gt; ")) {
-								if (line.length() > 3) {
-									if ((line.charAt(1) == ':') && (line.charAt(2) == '\\')) {
-										line = "<span class='a' onclick=\"browser.openFolderInOS('" + StrUtils.replaceAll(line, "\\", "\\\\") + "')\">" +
-											line + "</span>";
-									}
+						// add folder links for folders that are just plainly on a line - so just "folder" not "folder > file"
+						if (!line.contains(" &gt; ")) {
+							if (line.length() > 3) {
+								if ((line.charAt(1) == ':') && (line.charAt(2) == '\\')) {
+									line = "<span class='a' onclick=\"browser.openFolderInOS('" + StrUtils.replaceAll(line, "\\", "\\\\") + "')\">" +
+										line + "</span>";
 								}
 							}
 						}
