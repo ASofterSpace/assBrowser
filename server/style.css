@@ -165,6 +165,18 @@ div#fileContentContainer span.headSection {
 	text-decoration: underline;
 }
 
+div#fileContentContainer > div.warning_outer {
+	border: 2px solid #FFBF00;
+	margin-bottom: 8pt;
+}
+
+div#fileContentContainer > div.warning_outer > div.warning {
+	background: #FFBF00;
+	color: #000;
+	padding: 5pt 10pt;
+	border: 2px solid #000;
+}
+
 span.spoiled {
 	background-color: #408;
 	color: #408;

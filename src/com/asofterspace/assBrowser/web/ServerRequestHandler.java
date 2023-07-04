@@ -1442,6 +1442,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 	private static String addPicturesToEntryHtml(String contentStr, Directory folder, String fileName) {
 
 		List<String> pictureFileNames = new ArrayList<>();
+		List<File> pictureFiles = new ArrayList<>();
+		List<Long> pictureFileSizes = new ArrayList<>();
 		String baseFileName = fileName;
 		int index = baseFileName.lastIndexOf(".");
 		if (index >= 0) {
@@ -1455,6 +1457,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				File imageFile = new File(folder, curName);
 				if (imageFile.exists()) {
 					pictureFileNames.add(UrlEncoder.encode(curName));
+					pictureFiles.add(imageFile);
+					pictureFileSizes.add(imageFile.getSize());
 					foundOne = true;
 					break;
 				}
@@ -1469,6 +1473,39 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		if (pictureFileNames.size() < 1) {
 			return contentStr;
 		}
+
+		// check if any two pictures seem to be the same / duplicates, actually
+		StringBuilder duplicateStrBuilder = new StringBuilder();
+		duplicateStrBuilder.append("<div class='warning_outer'>");
+		duplicateStrBuilder.append("<div class='warning'>");
+		duplicateStrBuilder.append("<div class='line'>");
+		duplicateStrBuilder.append("<b>Warning!</b> Several pictures of this entry seem to have the same size, ");
+		duplicateStrBuilder.append("indicating they might be the same file!<br>");
+		duplicateStrBuilder.append("They are:");
+		duplicateStrBuilder.append("</div>");
+
+		boolean foundDuplicates = false;
+
+		for (int i = 0; i < pictureFiles.size(); i++) {
+			long iLen = pictureFileSizes.get(i);
+			for (int j = i+1; j < pictureFiles.size(); j++) {
+				long jLen = pictureFileSizes.get(j);
+				if (iLen == jLen) {
+					foundDuplicates = true;
+					duplicateStrBuilder.append("<div class='line'>");
+					duplicateStrBuilder.append(pictureFiles.get(i).getCanonicalFilename() +
+						" and " + pictureFiles.get(j).getCanonicalFilename());
+					duplicateStrBuilder.append("</div>");
+				}
+			}
+		}
+		duplicateStrBuilder.append("</div>");
+		duplicateStrBuilder.append("</div>");
+
+		if (foundDuplicates) {
+			contentStr = duplicateStrBuilder.toString() + contentStr;
+		}
+
 
 		Set<Integer> picturesAdded = new HashSet<>();
 		String picLinkBase = "file:///" + UrlEncoder.encode(folder.getCanonicalDirname()) + "/";
