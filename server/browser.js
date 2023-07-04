@@ -750,8 +750,67 @@ window.browser = {
 				el.className = spoiledClass;
 			}
 		}
-	}
+	},
 
+	findCrossReferencesSelectedText: function() {
+		var fileContentTextarea = document.getElementById('fileContentTextarea');
+		if (fileContentTextarea) {
+			var text = fileContentTextarea.value.substring(fileContentTextarea.selectionStart, fileContentTextarea.selectionEnd);
+			this.findCrossReferences(text);
+		}
+	},
+
+	findCrossReferencesEntry: function() {
+		var text = window.data.path.split("/").join("\\") + "\\" + window.data.file;
+		if (text.indexOf(".stpu") == text.length - 5) {
+			text = text.substring(0, text.length - 5);
+		}
+		this.findCrossReferences(text);
+	},
+
+	findCrossReferences: function(textToFind) {
+		if (textToFind != '') {
+			this.showCrossReferenceModal();
+			var crossRefResultArea = document.getElementById("crossRefResultArea");
+			if (crossRefResultArea) {
+				crossRefResultArea.innerHTML = "Searching for cross-references...";
+			}
+
+			var request = new XMLHttpRequest();
+			request.open("POST", "findCrossReferences", true);
+			request.setRequestHeader("Content-Type", "application/json");
+
+			var savedContent = document.getElementById("fileContentTextarea").value;
+
+			var data = {
+				path: window.data.path,
+				text: textToFind,
+			};
+
+			request.onreadystatechange = function() {
+				if (request.readyState == 4 && request.status == 200) {
+					var result = JSON.parse(request.response);
+					if (crossRefResultArea) {
+						crossRefResultArea.innerHTML = result.text;
+					}
+				}
+			}
+
+			request.send(JSON.stringify(data));
+		} else {
+			alert("No text selected!");
+		}
+	},
+
+	showCrossReferenceModal: function() {
+		this.showModalBackground();
+		document.getElementById('crossReferenceModal').style.display = 'block';
+	},
+
+	closeCrossReferenceModal: function() {
+		this.hideModalBackground();
+		document.getElementById('crossReferenceModal').style.display = 'none';
+	},
 }
 
 

@@ -134,7 +134,7 @@ textarea#folderTextarea {
 	margin-right: 1%;
 }
 
-div#fileContentContainer a, div#fileContentContainer span.a {
+div#fileContentContainer a, div#fileContentContainer span.a, div#crossRefResultArea > a {
 	color: #4488FF;
 	font-style: italic;
 	cursor: pointer;

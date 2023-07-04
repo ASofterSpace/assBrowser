@@ -107,6 +107,14 @@
 			&nbsp;
 		</div>
 
+		<div class="modal" id="crossReferenceModal" style="display: none; position: fixed; top: 2%; right: 2%; bottom: 2%; left: 2%; z-index: 1000;">
+			<div id="crossRefResultArea" style="height: 98%; overflow-y: scroll;" class="scrollable">
+			</div>
+			<div class="buttonBar modal" style="position: absolute;left: 200pt;right: 200pt;display: block;top: unset;bottom: 2pt; padding: 5pt; text-align: center;">
+				<span class="button" onclick="browser.closeCrossReferenceModal()">Done</span>
+			</div>
+		</div>
+
 		<div class="modal" id="renameModal">
 			<div id="renameText">
 				Please enter the new name for '<span id='renameTextFileName'></span>', including the file ending:

@@ -11,6 +11,7 @@ import com.asofterspace.toolbox.utils.StrUtils;
 public class PathCtrl {
 
 	public final static String DESKTOP = "\\Desktop\\";
+	public final static String DESKTOP_FORWARD = StrUtils.replaceAll(DESKTOP, "\\", "/");
 
 	private static String desktopLocation = null;
 
@@ -36,9 +37,7 @@ public class PathCtrl {
 	public static boolean startsWithDesktopPath(String path) {
 
 		path = StrUtils.replaceAll(StrUtils.replaceAll(path + "/", "\\", "/"), "//", "/");
-		String desktop = StrUtils.replaceAll(StrUtils.replaceAll(DESKTOP + "/", "\\", "/"), "//", "/");
-
-		return path.startsWith(desktop);
+		return path.startsWith(DESKTOP_FORWARD);
 	}
 
 	public static String ensurePathIsSafe(String path) {
@@ -76,8 +75,7 @@ public class PathCtrl {
 
 	public static String getDesktopLocation() {
 		if (desktopLocation == null) {
-			desktopLocation = database.getDesktopLocation();
-			desktopLocation = PathCtrl.ensurePathIsSafe(desktopLocation) + "/";
+			desktopLocation = PathCtrl.ensurePathIsSafe(database.getDesktopLocation()) + "/";
 		}
 		return desktopLocation;
 	}
@@ -89,6 +87,10 @@ public class PathCtrl {
 		return oneUpDesktopLocation;
 	}
 
+	/**
+	 * Takes a path and turns it into the form used in the operating system.
+	 * So rplaces \Desktop\foo with C:\blubb\Desktop\foo
+	 */
 	public static String resolvePath(String path) {
 
 		if (startsWithDesktopPath(path)) {
@@ -97,6 +99,20 @@ public class PathCtrl {
 				"//", "/");
 		}
 
+		return path;
+	}
+
+	/**
+	 * Takes a path and turns it into the form used within the assBrowser.
+	 * So replaces C:\blubb\Desktop\foo with \Desktop\foo
+	 */
+	public static String browserizePath(String path) {
+		String pathCompare = StrUtils.replaceAll(path, "\\", "/") + "/";
+		String desktopLocation = getDesktopLocation();
+		if (pathCompare.startsWith(desktopLocation)) {
+			pathCompare = DESKTOP + "/" + pathCompare.substring(desktopLocation.length());
+			path = ensurePathIsSafe(pathCompare);
+		}
 		return path;
 	}
 

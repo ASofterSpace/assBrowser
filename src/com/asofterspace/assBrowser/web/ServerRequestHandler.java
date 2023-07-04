@@ -166,7 +166,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				String fileName = json.getString("file");
 				String content = json.getString("content");
 				path = PathCtrl.ensurePathIsSafe(path);
-				path = resolveDesktop(path);
+				path = PathCtrl.browserizePath(path);
 				localPath = PathCtrl.resolvePath(path);
 				Directory folder = new Directory(localPath);
 				TextFile entryFile = new TextFile(folder, fileName);
@@ -200,7 +200,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				fileName = json.getString("file");
 				String newName = json.getString("newName").trim();
 				path = PathCtrl.ensurePathIsSafe(path);
-				path = resolveDesktop(path);
+				path = PathCtrl.browserizePath(path);
 				localPath = PathCtrl.resolvePath(path);
 				folder = new Directory(localPath);
 				entryFile = new TextFile(folder, fileName);
@@ -254,6 +254,65 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 						}
 					}
 				}
+				answer = new WebServerAnswerInJson(rec);
+				break;
+
+			case "/findCrossReferences":
+				path = json.getString("path");
+				String searchForText = json.getString("text");
+				localPath = PathCtrl.resolvePath(path);
+				folder = new Directory(localPath);
+				StringBuilder answerText = new StringBuilder();
+
+				Directory parentFolder = folder.getParentDirectory();
+				boolean recursively = true;
+				List<File> files = parentFolder.getAllFilesEndingWith(".stpu", recursively);
+				for (File file : files) {
+					if ("VSTPU.stpu".equals(file.getLocalFilename())) {
+						continue;
+					}
+					vstpuFile = new SimpleFile(file);
+					vstpuFile.setEncoding(TextEncoding.ISO_LATIN_1);
+					content = vstpuFile.getContent();
+					int pos = content.indexOf(searchForText);
+					while (pos >= 0) {
+						int lineBeforeEnd = content.lastIndexOf('\n', pos);
+						int lineBeforeBegin = 0;
+						if (lineBeforeEnd > 0) {
+							lineBeforeBegin = content.lastIndexOf('\n', lineBeforeEnd - 1);
+						}
+						if (lineBeforeBegin < 0) {
+							lineBeforeBegin = 0;
+						}
+						int lineEnd = content.indexOf('\n', pos);
+						if (lineEnd < 0) {
+							lineEnd = pos + searchForText.length();
+						}
+						if (lineEnd < lineBeforeBegin + 1) {
+							lineEnd = lineBeforeBegin + 1;
+						}
+						String copyEntryPart = content.substring(lineBeforeBegin + 1, lineEnd);
+						copyEntryPart = StrUtils.replaceAll(copyEntryPart, "\n", "<br>");
+						answerText.append(copyEntryPart + ":<br>");
+
+						String linkStr = PathCtrl.browserizePath(file.getCanonicalFilename());
+						if (linkStr.endsWith(".stpu")) {
+							linkStr = linkStr.substring(0, linkStr.length() - 5);
+						}
+						String encodedLinkStr = linkStr;
+						encodedLinkStr = HTML.unescapeHTMLstr(encodedLinkStr);
+						encodedLinkStr = UrlEncoder.encode(encodedLinkStr);
+						answerText.append("<a href=\"/?link=" + encodedLinkStr + "\" target=\"_blank\">%[");
+						answerText.append(StrUtils.replaceAll(linkStr, "/", "\\"));
+						answerText.append("]</a>");
+						answerText.append("<br>");
+						answerText.append("<br>");
+						pos = content.indexOf(searchForText, pos + 1);
+					}
+				}
+
+				rec = Record.emptyObject();
+				rec.setString("text", answerText.toString());
 				answer = new WebServerAnswerInJson(rec);
 				break;
 
@@ -336,7 +395,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			String path = arguments.get("path");
 			String fileName = arguments.get("file");
 			path = PathCtrl.ensurePathIsSafe(path);
-			path = resolveDesktop(path);
+			path = PathCtrl.browserizePath(path);
 			String localPath = PathCtrl.resolvePath(path);
 			Directory folder = new Directory(localPath);
 			File genericFile = new File(folder, fileName);
@@ -462,7 +521,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		indexContent = StrUtils.replaceAll(indexContent, "[[CONSOLE_VALUE]]", consoleValue);
 
-		path = resolveDesktop(path);
+		path = PathCtrl.browserizePath(path);
 
 		consoleCtrl.addPath(path);
 
@@ -586,6 +645,16 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			buttonHtml.append("  exportButtonA.href = window.location.href + '&export=true';\n");
 			buttonHtml.append("}, 1000);\n");
 			buttonHtml.append("</script>\n");
+			buttonHtml.append("<br>");
+
+			buttonHtml.append("<span class='button editBtnDisabled' onclick='browser.findCrossReferencesSelectedText()'>");
+			buttonHtml.append("Find cross-references to selected text (edit mode only)");
+			buttonHtml.append("</span>");
+			buttonHtml.append("<br>");
+
+			buttonHtml.append("<span class='button' onclick='browser.findCrossReferencesEntry()'>");
+			buttonHtml.append("Find cross-references to this entry");
+			buttonHtml.append("</span>");
 			buttonHtml.append("<br>");
 		}
 
@@ -1113,7 +1182,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		if (accessFilesLocally) {
 			// works only if the browser is jury-rigged to accept localhost connecting to local files
 			String fullPath = path + "/" + fileName;
-			if (path.startsWith("/Desktop/") || path.startsWith("\\Desktop\\")) {
+			if (fullPath.startsWith("/Desktop/") || path.startsWith("\\Desktop\\")) {
 				fullPath = PathCtrl.getOneUpDesktopLocation() + "/" + fullPath;
 			}
 			return "file:///" + StrUtils.replaceAll(StrUtils.replaceAll(
@@ -1224,19 +1293,6 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		}
 
 		return result;
-	}
-
-	/**
-	 * if path starts with the local path of the Desktop, replace it with /Desktop/
-	 */
-	private String resolveDesktop(String path) {
-		String pathCompare = path + "/";
-		String desktopLocation = PathCtrl.getDesktopLocation();
-		if (pathCompare.startsWith(desktopLocation)) {
-			pathCompare = PathCtrl.DESKTOP + "/" + pathCompare.substring(desktopLocation.length());
-			path = PathCtrl.ensurePathIsSafe(pathCompare);
-		}
-		return path;
 	}
 
 	private String loadEntryAsStr(File genericFile) {
