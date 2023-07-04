@@ -276,22 +276,25 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					content = vstpuFile.getContent();
 					int pos = content.indexOf(searchForText);
 					while (pos >= 0) {
-						int lineBeforeEnd = content.lastIndexOf('\n', pos);
-						int lineBeforeBegin = 0;
-						if (lineBeforeEnd > 0) {
-							lineBeforeBegin = content.lastIndexOf('\n', lineBeforeEnd - 1);
+						int begin = content.lastIndexOf("\n\n", pos);
+						if (begin < 0) {
+							begin = content.lastIndexOf('\n', pos);
 						}
-						if (lineBeforeBegin < 0) {
-							lineBeforeBegin = 0;
+						if (begin < 0) {
+							begin = 0;
 						}
-						int lineEnd = content.indexOf('\n', pos);
-						if (lineEnd < 0) {
-							lineEnd = pos + searchForText.length();
+
+						int end = content.indexOf("\n\n", pos);
+						if (end < 0) {
+							end = content.indexOf('\n', pos);
 						}
-						if (lineEnd < lineBeforeBegin + 1) {
-							lineEnd = lineBeforeBegin + 1;
+						if (end < 0) {
+							end = pos + searchForText.length();
 						}
-						String copyEntryPart = content.substring(lineBeforeBegin + 1, lineEnd);
+						if (end < begin) {
+							end = begin;
+						}
+						String copyEntryPart = content.substring(begin, end).trim();
 						copyEntryPart = StrUtils.replaceAll(copyEntryPart, "\n", "<br>");
 						answerText.append(copyEntryPart + ":<br>");
 
