@@ -1500,6 +1500,16 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 	private static String addPicturesToEntryHtml(String contentStr, Directory folder, String fileName) {
 
+		StringBuilder multipleStrBuilder = new StringBuilder();
+		multipleStrBuilder.append("<div class='warning_outer'>");
+		multipleStrBuilder.append("<div class='warning'>");
+		multipleStrBuilder.append("<div class='line'>");
+		multipleStrBuilder.append("<b>Warning!</b> Some pictures of this entry exist with multiple extensions!<br>");
+		multipleStrBuilder.append("They are:");
+		multipleStrBuilder.append("</div>");
+
+		boolean foundMultiples = false;
+
 		List<String> pictureFileNames = new ArrayList<>();
 		List<File> pictureFiles = new ArrayList<>();
 		List<Long> pictureFileSizes = new ArrayList<>();
@@ -1515,11 +1525,17 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				String curName = baseFileName + "_" + curImgNum + "." + curImgExt;
 				File imageFile = new File(folder, curName);
 				if (imageFile.exists()) {
-					pictureFileNames.add(UrlEncoder.encode(curName));
-					pictureFiles.add(imageFile);
-					pictureFileSizes.add(imageFile.getSize());
-					foundOne = true;
-					break;
+					if (foundOne) {
+						foundMultiples = true;
+						multipleStrBuilder.append("<div class='line'>");
+						multipleStrBuilder.append("Image number " + curImgNum + " has multiple extensions!");
+						multipleStrBuilder.append("</div>");
+					} else {
+						pictureFileNames.add(UrlEncoder.encode(curName));
+						pictureFiles.add(imageFile);
+						pictureFileSizes.add(imageFile.getSize());
+						foundOne = true;
+					}
 				}
 			}
 			if (!foundOne) {
@@ -1531,6 +1547,12 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		// if there are no pictures, then there is nothing to do...
 		if (pictureFileNames.size() < 1) {
 			return contentStr;
+		}
+
+		if (foundMultiples) {
+			multipleStrBuilder.append("</div>");
+			multipleStrBuilder.append("</div>");
+			contentStr = multipleStrBuilder.toString() + contentStr;
 		}
 
 		// check if any two pictures seem to be the same / duplicates, actually
@@ -1558,10 +1580,10 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				}
 			}
 		}
-		duplicateStrBuilder.append("</div>");
-		duplicateStrBuilder.append("</div>");
 
 		if (foundDuplicates) {
+			duplicateStrBuilder.append("</div>");
+			duplicateStrBuilder.append("</div>");
 			contentStr = duplicateStrBuilder.toString() + contentStr;
 		}
 
