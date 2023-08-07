@@ -4,8 +4,10 @@
  */
 package com.asofterspace.assBrowser.console;
 
+import com.asofterspace.assBrowser.AssBrowser;
 import com.asofterspace.assBrowser.Database;
 import com.asofterspace.assBrowser.gui.GUI;
+import com.asofterspace.assBrowser.gui.ShutdownLaterGUI;
 import com.asofterspace.assBrowser.paths.PathCtrl;
 import com.asofterspace.toolbox.gui.GuiUtils;
 import com.asofterspace.toolbox.io.Directory;
@@ -192,29 +194,67 @@ public class ConsoleCtrl {
 
 		// shutdown or reboot
 
-		if (commandLow.equals("shutdown")) {
-			// for Windows
-			IoUtils.executeAsync("shutdown -s -t 1");
-			// for Linux
-			IoUtils.executeAsync("sudo poweroff");
+		String commandLowNoSpace = StrUtils.replaceAll(commandLow, " ", "");
+		commandLowNoSpace = StrUtils.replaceAll(commandLowNoSpace, "\t", "");
+		if (commandLowNoSpace.equals("shutdown")) {
+			shutdownNow();
 			return result;
 		}
-		if (commandLow.equals("reboot")) {
-			// for Windows
-			IoUtils.executeAsync("shutdown -r -t 1");
-			// for Linux
-			IoUtils.executeAsync("sudo reboot");
+		if (commandLowNoSpace.equals("reboot")) {
+			rebootNow();
+			return result;
+		}
+		if (commandLowNoSpace.equals("shutlater") || commandLowNoSpace.equals("shutdownlater") ||
+			commandLowNoSpace.equals("timer")) {
+			if (gui != null) {
+				ShutdownLaterGUI shutdownLaterGUI = new ShutdownLaterGUI(gui, this);
+				if (commandLowNoSpace.equals("timer")) {
+					shutdownLaterGUI.show("");
+				} else {
+					shutdownLaterGUI.show("shutdown");
+				}
+			} else {
+				GuiUtils.complain("Cannot create window as GUI is null!");
+			}
 			return result;
 		}
 
 
 		// close
 
-		if (commandLow.equals("close") || commandLow.equals("exit") || commandLow.equals("quit")) {
+		if (commandLowNoSpace.equals("close") || commandLowNoSpace.equals("exit") || commandLowNoSpace.equals("quit")) {
 			if (gui != null) {
 				gui.close();
 			}
 			System.exit(0);
+			return result;
+		}
+
+
+		// help
+
+		if (commandLowNoSpace.equals("help")) {
+			String helpMessage = AssBrowser.PROGRAM_TITLE + " Help:\n" +
+				"\n" +
+				"help .. shows this help\n" +
+				"about .. shows an about message\n" +
+				"close / exit / quit .. exits the program\n" +
+				"shutdown .. shuts down the computer\n" +
+				"reboot .. reboots the computer\n" +
+				"shutdownlater / shutlater .. shuts down the computer after some time\n" +
+				"timer .. opens a generic timer GUI\n" +
+				"cd [xyz] .. navigates into a certain directory\n" +
+				"se: [xyz] .. executes [xyz] as OS shell command\n" +
+				"mo: [xyz] .. call the MathOrg for the mathematical formula [xyz]";
+			GuiUtils.notify(helpMessage);
+			return result;
+		}
+
+		if (commandLowNoSpace.equals("about")) {
+			String aboutMessage = "This is the " + AssBrowser.PROGRAM_TITLE + ".\n" +
+				"Version: " + AssBrowser.VERSION_NUMBER + " (" + AssBrowser.VERSION_DATE + ")\n" +
+				"Brought to you by: A Softer Space";
+			GuiUtils.notify(aboutMessage);
 			return result;
 		}
 
@@ -491,6 +531,20 @@ public class ConsoleCtrl {
 
 	public void setGUI(GUI gui) {
 		this.gui = gui;
+	}
+
+	public static void shutdownNow() {
+		// for Windows
+		IoUtils.executeAsync("shutdown -s -t 1");
+		// for Linux
+		IoUtils.executeAsync("sudo poweroff");
+	}
+
+	public static void rebootNow() {
+		// for Windows
+		IoUtils.executeAsync("shutdown -r -t 1");
+		// for Linux
+		IoUtils.executeAsync("sudo reboot");
 	}
 
 }
