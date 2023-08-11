@@ -666,6 +666,11 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		buttonHtml.append("</span>");
 		buttonHtml.append("<br>");
 
+		buttonHtml.append("<span class='button' onclick='browser.copyLinkToThis()'>");
+		buttonHtml.append("Copy Link to This");
+		buttonHtml.append("</span>");
+		buttonHtml.append("<br>");
+
 		buttonHtml.append("<span class='button' onclick='browser.openFolderInOS()'>");
 		buttonHtml.append("Open in OS");
 		buttonHtml.append("</span>");

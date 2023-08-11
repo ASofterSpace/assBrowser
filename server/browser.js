@@ -630,6 +630,22 @@ window.browser = {
 		this.closeMoreActions();
 	},
 
+	copyLinkToThis: function() {
+
+		var linkStr = "http://" +
+			window.location.hostname +
+			":" +
+			window.location.port +
+			"?path=" +
+			encodeURIComponent(window.data.path).split("%2F").join("/") +
+			"&file=" +
+			encodeURIComponent(window.data.file).split("%2F").join("/");
+
+		this.copyToClipboard(linkStr);
+
+		this.closeMoreActions();
+	},
+
 	copyToClipboard: function(content) {
 		var clipboardHelper = document.getElementById("clipboardHelper");
 		clipboardHelper.style.display = 'inline';
