@@ -546,6 +546,13 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		indexContent = StrUtils.replaceAll(indexContent, "[[PATH]]", path);
 
+		String fileNameShort = fileName;
+		if (fileNameShort == null) {
+			fileNameShort = "";
+		}
+		if (fileNameShort.endsWith(".stpu")) {
+			fileNameShort = fileNameShort.substring(0, fileNameShort.length() - 5);
+		}
 		if (exportingToPdf) {
 			String pathShort = path;
 			if (pathShort.startsWith(PathCtrl.DESKTOP)) {
@@ -554,12 +561,11 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			if (pathShort.startsWith(PathCtrl.DESKTOP_FORWARD)) {
 				pathShort = pathShort.substring(PathCtrl.DESKTOP_FORWARD.length() - 1);
 			}
-			String fileNameShort = fileName;
-			if (fileNameShort.endsWith(".stpu")) {
-				fileNameShort = fileNameShort.substring(0, fileNameShort.length() - 5);
-			}
-			indexContent = StrUtils.replaceAll(indexContent, "<title>Cyber System</title>",
-				"<title>Cyber System Export: " + pathShort + " :: " + fileNameShort + "</title>");
+			indexContent = StrUtils.replaceAll(indexContent, "[[TITLE]]",
+				"Cyber System Export: " + pathShort + " :: " + fileNameShort);
+		} else {
+			indexContent = StrUtils.replaceAll(indexContent, "[[TITLE]]",
+				fileNameShort + " //Cyber System//");
 		}
 
 
