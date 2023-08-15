@@ -169,8 +169,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				path = PathCtrl.browserizePath(path);
 				localPath = PathCtrl.resolvePath(path);
 				Directory folder = new Directory(localPath);
-				TextFile entryFile = new TextFile(folder, fileName);
-				entryFile.setEncoding(TextEncoding.ISO_LATIN_1);
+				TextFile entryFile = PathCtrl.getEntryFile(new File(folder, fileName));
 				// remove conditional break dashes
 				content = StrUtils.replaceAll(content, "­", "");
 				entryFile.saveContent(content);
@@ -184,8 +183,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				path = json.getString("path");
 				localPath = PathCtrl.resolvePath(path);
 				folder = new Directory(localPath);
-				SimpleFile vstpuFile = new SimpleFile(folder, "VSTPU.stpu");
-				vstpuFile.setEncoding(TextEncoding.ISO_LATIN_1);
+				SimpleFile vstpuFile = PathCtrl.getVSTPUfile(folder);
 				content = json.getString("content");
 				// remove conditional break dashes
 				content = StrUtils.replaceAll(content, "­", "");
@@ -203,7 +201,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				path = PathCtrl.browserizePath(path);
 				localPath = PathCtrl.resolvePath(path);
 				folder = new Directory(localPath);
-				entryFile = new TextFile(folder, fileName);
+				File oldEntryFile = new File(folder, fileName);
 				rec = Record.emptyObject();
 				rec.setString("path", path);
 				rec.setString("file", fileName);
@@ -211,17 +209,17 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				if (fileName.equals(newName)) {
 					rec.setString("error", "The new name is identical to the previous one!");
 				} else {
-					TextFile newEntryFile = new TextFile(folder, newName);
+					File newEntryFile = new File(folder, newName);
 					if (newEntryFile.exists()) {
 						rec.setString("error", "A file with the name '" + newName + "' already exists!");
 					} else {
-						if (!entryFile.exists() && !fileName.endsWith(".stpu")) {
+						if (!oldEntryFile.exists() && !fileName.endsWith(".stpu")) {
 							rec.setString("error", "Source file with the name '" + newName + "' does not exist!");
 						} else {
-							if (entryFile.exists()) {
+							if (oldEntryFile.exists()) {
 								try {
 									Path newPath = newEntryFile.getJavaPath();
-									Files.move(entryFile.getJavaPath(), newPath, StandardCopyOption.REPLACE_EXISTING);
+									Files.move(oldEntryFile.getJavaPath(), newPath, StandardCopyOption.REPLACE_EXISTING);
 								} catch (IOException e) {
 									rec.setString("error", "Encountered an IOException: " + e);
 								}
@@ -244,8 +242,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 									i++;
 								}
 
-								vstpuFile = new SimpleFile(folder, "VSTPU.stpu");
-								vstpuFile.setEncoding(TextEncoding.ISO_LATIN_1);
+								vstpuFile = PathCtrl.getVSTPUfile(folder);
 								content = "\n" + vstpuFile.getContent() + "\n";
 								content = StrUtils.replaceAll(content, fileBaseName, newBaseName);
 								content = content.substring(1, content.length() - 1);
@@ -268,12 +265,11 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				boolean recursively = true;
 				List<File> files = parentFolder.getAllFilesEndingWith(".stpu", recursively);
 				for (File file : files) {
-					if ("VSTPU.stpu".equals(file.getLocalFilename())) {
+					if (PathCtrl.VSTPU_STPU.equals(file.getLocalFilename())) {
 						continue;
 					}
-					vstpuFile = new SimpleFile(file);
-					vstpuFile.setEncoding(TextEncoding.ISO_LATIN_1);
-					content = vstpuFile.getContent();
+					entryFile = PathCtrl.getEntryFile(file);
+					content = entryFile.getContent();
 					int pos = content.indexOf(searchForText);
 					while (pos >= 0) {
 						int begin = content.lastIndexOf("\n\n", pos);
@@ -425,9 +421,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				boolean quickView = !"false".equals(arguments.get("quickView"));
 				folderContentStr = getFolderContentHtml(folder, path, fileName, quickView);
 			} else {
-				SimpleFile vstpuFile = new SimpleFile(folder, "VSTPU.stpu");
+				SimpleFile vstpuFile = PathCtrl.getVSTPUfile(folder);
 				if (vstpuFile.exists()) {
-					vstpuFile.setEncoding(TextEncoding.ISO_LATIN_1);
 					folderContentStr = vstpuFile.getContent();
 				} else {
 					folderContentStr = null;
@@ -837,6 +832,11 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				"  for (var i = 0; i < aItems.length; i++) {\n" +
 				"    aItems[i].style.color = '#555';\n" +
 				"  }\n" +
+				"  var inlineCodeElems = document.getElementsByClassName('inlinecodeblock');\n" +
+				"  for (var i = 0; i < inlineCodeElems.length; i++) {\n" +
+				"    inlineCodeElems[i].style.color = '#333';\n" +
+				"    inlineCodeElems[i].style.background = '#EEE';\n" +
+				"  }\n" +
 				"  document.getElementById('fileContentContainer').style.height = 'unset';\n" +
 				"  document.getElementById('fileContentContainer').style.color = '#000';\n" +
 				"  document.getElementById('mainContent').style.height = 'unset';\n" +
@@ -1065,7 +1065,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		String entryOrLink = "entry";
 		if (tryToLoad) {
-			TextFile txtFile = new TextFile(childFile);
+			TextFile txtFile = PathCtrl.getEntryFile(childFile);
 
 			// only load the file if it is small - if it is huge, it is VERY VERY likely not to be a link anyway...
 			long contentLen = txtFile.getContentLength();
@@ -1237,9 +1237,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			List<Directory> childFolders = folder.getAllDirectories(recursively);
 			List<File> childFiles = folder.getAllFiles(recursively);
 
-			SimpleFile vstpuFile = new SimpleFile(folder, "VSTPU.stpu");
+			SimpleFile vstpuFile = PathCtrl.getVSTPUfile(folder);
 			if (vstpuFile.exists()) {
-				vstpuFile.setEncoding(TextEncoding.ISO_LATIN_1);
 				List<String> entries = vstpuFile.getContents();
 
 				Map<String, Directory> directories = new HashMap<>();
@@ -1253,7 +1252,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				}
 
 				if (entries == null) {
-					addTextToHtml(folderContent, "! Unable to load VSTPU.stpu !");
+					addTextToHtml(folderContent, "! Unable to load " + PathCtrl.VSTPU_STPU + " !");
 				} else {
 
 					for (String entry : entries) {
@@ -1308,8 +1307,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		String fileHtmlStr = null;
 
 		if (genericFile.exists()) {
-			TextFile file = new TextFile(genericFile);
-			file.setEncoding(TextEncoding.ISO_LATIN_1);
+			TextFile file = PathCtrl.getEntryFile(genericFile);
 			fileHtmlStr = file.getContent();
 			fileHtmlStr = DateUtils.convertDateTimeStampsDEtoEN(fileHtmlStr);
 		} else {
@@ -1498,9 +1496,81 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		newFileHtml.append(fileHtmlStr.substring(start));
 		fileHtmlStr = newFileHtml.toString().substring(0, newFileHtml.length() - 4);
 
+		// replace _..._ with italics
+		fileHtmlStr = prepareEntryInlineMarkdown(fileHtmlStr, "_", "<i>", "</i>");
+
+		// replace **...** with boldness
+		fileHtmlStr = prepareEntryInlineMarkdown(fileHtmlStr, "**", "<b>", "</b>");
+
+		// replace`...` with code
+		fileHtmlStr = prepareEntryInlineMarkdown(fileHtmlStr, "`", "<span class='inlinecodeblock'>", "</span>");
+
+		// add inline pictures
 		fileHtmlStr = addPicturesToEntryHtml(fileHtmlStr, folder, fileName);
 
 		return fileHtmlStr;
+	}
+
+	private static String prepareEntryInlineMarkdown(String fileHtmlStr, String needle, String tagStart, String tagEnd) {
+
+		StringBuilder newFileHtml = new StringBuilder();
+		int pos1 = fileHtmlStr.indexOf(" " + needle);
+		int pos2 = fileHtmlStr.indexOf(">" + needle);
+		int posNext = -1;
+		if (pos1 >= 0) {
+			posNext = pos1 + 1;
+		}
+		if (pos2 >= 0) {
+			posNext = pos2 + 1;
+			if (pos1 >= 0) {
+				posNext = Math.min(pos1 + 1, pos2 + 1);
+			}
+		}
+
+		// shortcut in case nothing is found at all
+		if (posNext < 0) {
+			return fileHtmlStr;
+		}
+
+		int start = 0;
+		while (posNext >= 0) {
+			int end1 = fileHtmlStr.indexOf(needle + " ", posNext + needle.length());
+			int end2 = fileHtmlStr.indexOf(needle + "<", posNext + needle.length());
+			int endNext = -1;
+			if (end1 >= 0) {
+				endNext = end1;
+			}
+			if (end2 >= 0) {
+				endNext = end2;
+				if (end1 >= 0) {
+					endNext = Math.min(end1, end2);
+				}
+			}
+			if (endNext >= 0) {
+				newFileHtml.append(fileHtmlStr.substring(start, posNext));
+				String innerStr = fileHtmlStr.substring(posNext + needle.length(), endNext);
+				newFileHtml.append(tagStart);
+				newFileHtml.append(innerStr);
+				newFileHtml.append(tagEnd);
+				start = endNext + needle.length();
+				pos1 = fileHtmlStr.indexOf(" " + needle, start);
+				pos2 = fileHtmlStr.indexOf(">" + needle, start);
+				posNext = -1;
+				if (pos1 >= 0) {
+					posNext = pos1 + 1;
+				}
+				if (pos2 >= 0) {
+					posNext = pos2 + 1;
+					if (pos1 >= 0) {
+						posNext = Math.min(pos1 + 1, pos2 + 1);
+					}
+				}
+			} else {
+				break;
+			}
+		}
+		newFileHtml.append(fileHtmlStr.substring(start));
+		return newFileHtml.toString();
 	}
 
 	private static String addPicturesToEntryHtml(String contentStr, Directory folder, String fileName) {
@@ -1709,7 +1779,9 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			int end = fileHtmlStr.length();
 			int end1 = fileHtmlStr.indexOf(" ", pos);
 			int end2 = fileHtmlStr.indexOf("\t", pos);
-			int end3 = fileHtmlStr.indexOf("<br>", pos);
+			// just search for any opening angle, as at this point html-encoding has already been
+			// done, and any such is an opening or closing tag, not just a part of the link itself
+			int end3 = fileHtmlStr.indexOf("<", pos);
 			if (end1 >= start) {
 				end = Math.min(end1, end);
 			}
@@ -1731,6 +1803,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		return newFileHtml.toString();
 	}
 
+	// replaces legacy ISO nonsense on loading with actual UTF-8 characters - like in browser.js
 	private static String funkCode(String str) {
 		str = UrlEncoder.encode(str);
 		str = StrUtils.replaceAll(str, "%C2%82", "%E2%80%9A");

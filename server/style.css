@@ -418,3 +418,13 @@ div.modal {
 span.editBtnDisabled {
 	opacity: 0.5;
 }
+
+span.inlinecodeblock {
+	border-radius: 3pt;
+	padding: 1pt 4pt 1pt 4pt;
+	white-space: nowrap;
+	font-family: "Courier New";
+	font-size: 95%;
+	background: rgba(255, 180, 255, 0.15);
+	color: #CBD;
+}

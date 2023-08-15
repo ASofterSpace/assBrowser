@@ -14,8 +14,8 @@ import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.io.File;
 import com.asofterspace.toolbox.io.IoUtils;
 import com.asofterspace.toolbox.io.SimpleFile;
+import com.asofterspace.toolbox.io.TextFile;
 import com.asofterspace.toolbox.utils.StrUtils;
-import com.asofterspace.toolbox.utils.TextEncoding;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -285,8 +285,7 @@ public class ConsoleCtrl {
 			Directory osDir = new Directory(PathCtrl.resolvePath(previousPath));
 
 			// if a vstpu file exists, use that one to find priority among potential entries to be opened
-			SimpleFile vstpuFile = new SimpleFile(osDir, "VSTPU.stpu");
-			vstpuFile.setEncoding(TextEncoding.ISO_LATIN_1);
+			SimpleFile vstpuFile = PathCtrl.getVSTPUfile(osDir);
 			if (vstpuFile.exists()) {
 				List<String> vstpuLines = vstpuFile.getContents();
 				for (String vstpuLine : vstpuLines) {
@@ -497,14 +496,11 @@ public class ConsoleCtrl {
 
 	private ConsoleResult runSllFile(File sllFile, ConsoleResult result) {
 
-		SimpleFile sllSimpleFile = new SimpleFile(sllFile);
-		sllSimpleFile.setEncoding(TextEncoding.ISO_LATIN_1);
-
+		TextFile sllSimpleFile = PathCtrl.getEntryFile(sllFile);
 		String content = sllSimpleFile.getContent();
 
 		if (content.contains("%")) {
-			SimpleFile envVarsFile = new SimpleFile(sllFile.getParentDirectory(), "Umgebungsvariablen.stpu");
-			envVarsFile.setEncoding(TextEncoding.ISO_LATIN_1);
+			SimpleFile envVarsFile = PathCtrl.getSimpleEntryFile(new File(sllFile.getParentDirectory(), "Umgebungsvariablen.stpu"));
 			List<String> envVars = envVarsFile.getContents();
 			for (int i = 0; i < envVars.size(); i++) {
 				if (envVars.get(i).endsWith("%")) {

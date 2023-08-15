@@ -5,6 +5,10 @@
 package com.asofterspace.assBrowser.paths;
 
 import com.asofterspace.assBrowser.Database;
+import com.asofterspace.toolbox.io.Directory;
+import com.asofterspace.toolbox.io.File;
+import com.asofterspace.toolbox.io.SimpleFile;
+import com.asofterspace.toolbox.io.TextFile;
 import com.asofterspace.toolbox.utils.StrUtils;
 
 
@@ -12,6 +16,7 @@ public class PathCtrl {
 
 	public final static String DESKTOP = "\\Desktop\\";
 	public final static String DESKTOP_FORWARD = StrUtils.replaceAll(DESKTOP, "\\", "/");
+	public final static String VSTPU_STPU = "VSTPU.stpu";
 
 	private static String desktopLocation = null;
 
@@ -114,6 +119,24 @@ public class PathCtrl {
 			path = ensurePathIsSafe(pathCompare);
 		}
 		return path;
+	}
+
+	public static SimpleFile getVSTPUfile(Directory folder) {
+		SimpleFile vstpuFile = new SimpleFile(folder, VSTPU_STPU);
+		vstpuFile.setISOorUTFreadAndUTFwriteEncoding(true);
+		return vstpuFile;
+	}
+
+	public static TextFile getEntryFile(File file) {
+		TextFile entryFile = new TextFile(file);
+		entryFile.setISOorUTFreadAndUTFwriteEncoding(true);
+		return entryFile;
+	}
+
+	public static SimpleFile getSimpleEntryFile(File file) {
+		SimpleFile entryFile = new SimpleFile(file);
+		entryFile.setISOorUTFreadAndUTFwriteEncoding(true);
+		return entryFile;
 	}
 
 }

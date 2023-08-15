@@ -289,7 +289,7 @@ window.browser = {
 			path: window.data.path,
 			file: window.data.file,
 
-			content: browser.encodeFromTextarea(savedContent)
+			content: savedContent
 		};
 
 		request.onreadystatechange = function() {
@@ -427,7 +427,7 @@ window.browser = {
 			path: window.data.path,
 			file: window.data.file,
 
-			content: browser.encodeFromTextarea(savedContent)
+			content: savedContent
 		};
 
 		request.onreadystatechange = function() {
@@ -451,6 +451,7 @@ window.browser = {
 		request.send(JSON.stringify(data));
 	},
 
+	// replaces legacy ISO nonsense on loading with actual UTF-8 characters - like in ServerRequestHandler.java
 	decodeToTextarea: function(content) {
 		return content
 			.split("\u0080").join("€")
@@ -464,21 +465,6 @@ window.browser = {
 			.split("\u0096").join("–")
 			.split("\u0097").join("—")
 			.split("\u009A").join("š");
-	},
-
-	encodeFromTextarea: function(content) {
-		return content
-			.split("€").join("\u0080")
-			.split("‚").join("\u0082")
-			.split("„").join("\u0084")
-			.split("…").join("\u0085")
-			.split("‘").join("\u0091")
-			.split("’").join("\u0092")
-			.split("“").join("\u0093")
-			.split("”").join("\u0094")
-			.split("–").join("\u0096")
-			.split("—").join("\u0097")
-			.split("š").join("\u009A");
 	},
 
 	scrollIfNecessary: function() {

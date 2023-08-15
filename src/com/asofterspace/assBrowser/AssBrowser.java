@@ -26,8 +26,8 @@ public class AssBrowser {
 	public final static String WEB_ROOT_DIR = "deployed";
 
 	public final static String PROGRAM_TITLE = "assBrowser";
-	public final static String VERSION_NUMBER = "0.0.2.7(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
-	public final static String VERSION_DATE = "16. December 2020 - 7. August 2023";
+	public final static String VERSION_NUMBER = "0.0.2.8(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
+	public final static String VERSION_DATE = "16. December 2020 - 15. August 2023";
 
 
 	public static void main(String[] args) {
