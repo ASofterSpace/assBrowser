@@ -400,7 +400,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			File genericFile = new File(folder, fileName);
 			String fileHtmlStr = loadEntryAsStr(genericFile);
 			if ("false".equals(arguments.get("editingMode"))) {
-				fileHtmlStr = prepareEntryForDisplayInHtml(fileHtmlStr, folder, fileName);
+				fileHtmlStr = prepareEntryForDisplayInHtml(fileHtmlStr, folder, fileName, false);
 			}
 			Record rec = Record.emptyObject();
 			rec.setString("path", path);
@@ -531,6 +531,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			return new WebServerAnswerBasedOnFile(new File(folder, fileName));
 		}
 
+		boolean exportingToPdf = "true".equals(arguments.get("export"));
+
 		boolean quickView = true;
 		String folderContentStr = getFolderContentHtml(folder, path, fileName, quickView);
 		indexContent = StrUtils.replaceAll(indexContent, "[[FOLDER_CONTENT]]", folderContentStr);
@@ -543,6 +545,22 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		indexContent = StrUtils.replaceAll(indexContent, "[[DATA]]", jsonData.toString());
 
 		indexContent = StrUtils.replaceAll(indexContent, "[[PATH]]", path);
+
+		if (exportingToPdf) {
+			String pathShort = path;
+			if (pathShort.startsWith(PathCtrl.DESKTOP)) {
+				pathShort = pathShort.substring(PathCtrl.DESKTOP.length() - 1);
+			}
+			if (pathShort.startsWith(PathCtrl.DESKTOP_FORWARD)) {
+				pathShort = pathShort.substring(PathCtrl.DESKTOP_FORWARD.length() - 1);
+			}
+			String fileNameShort = fileName;
+			if (fileNameShort.endsWith(".stpu")) {
+				fileNameShort = fileNameShort.substring(0, fileNameShort.length() - 5);
+			}
+			indexContent = StrUtils.replaceAll(indexContent, "<title>Cyber System</title>",
+				"<title>Cyber System Export: " + pathShort + " :: " + fileNameShort + "</title>");
+		}
 
 
 		// buttonBar
@@ -715,7 +733,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					}
 				}
 
-				fileHtmlStr = prepareEntryForDisplayInHtml(fileHtmlStr, folder, fileName);
+				fileHtmlStr = prepareEntryForDisplayInHtml(fileHtmlStr, folder, fileName, exportingToPdf);
 
 				final int TILE_COLUMN_AMOUNT = 4;
 				List<StringBuilder> imagesColStrBuilders = new ArrayList<>();
@@ -812,7 +830,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		indexContent = StrUtils.replaceAll(indexContent, "[[IMAGES]]", imagesStr);
 
-		if ("true".equals(arguments.get("export"))) {
+		if (exportingToPdf) {
 			indexContent += "\n"+
 				"<script>\n" +
 				"window.setTimeout(function() {\n" +
@@ -829,6 +847,10 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				"    sidebarItems[i].style.display = 'none';\n" +
 				"  }\n" +
 				"  var aItems = document.getElementsByTagName('a');\n" +
+				"  for (var i = 0; i < aItems.length; i++) {\n" +
+				"    aItems[i].style.color = '#555';\n" +
+				"  }\n" +
+				"  aItems = document.getElementsByClassName('a');\n" +
 				"  for (var i = 0; i < aItems.length; i++) {\n" +
 				"    aItems[i].style.color = '#555';\n" +
 				"  }\n" +
@@ -1321,7 +1343,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		return fileHtmlStr;
 	}
 
-	private String prepareEntryForDisplayInHtml(String fileHtmlStr, Directory folder, String fileName) {
+	private String prepareEntryForDisplayInHtml(String fileHtmlStr, Directory folder, String fileName, boolean exportingToPdf) {
 
 		fileHtmlStr = prepareStrForDisplayInHtml(fileHtmlStr);
 
@@ -1375,7 +1397,11 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					line = HTML.prettifyLine(line);
 
 					if ((emptyLinesSoFar > 0) && line.endsWith(":") && !line.endsWith("&quot;:") &&
+						// do not set head section for simple see xyz: links
 						!line.startsWith("see ") && !line.equals("see:") &&
+						// do not set head section when also markdown styling is applied, as the resulting html can be garbled
+						!line.startsWith("_") && !line.startsWith("**") && !line.startsWith("`") &&
+						// do not set head section for inline picture mentionds
 						!line.contains("picture ") && !line.contains("pictures up to ")) {
 						line = "<span class='headSection'>" + line + "</span>";
 					} else {
@@ -1508,6 +1534,28 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		// add inline pictures
 		fileHtmlStr = addPicturesToEntryHtml(fileHtmlStr, folder, fileName);
 
+		if (!exportingToPdf) {
+			// add footnote up/down links for numbered footnotes such as [1], [2], [3], etc.
+			int curFootNote = 1;
+			int firstPos = fileHtmlStr.indexOf("[" + curFootNote + "]");
+			while (firstPos >= 0) {
+				int secondPos = fileHtmlStr.indexOf("[" + curFootNote + "]", firstPos + 1);
+				if (secondPos >= 0) {
+					fileHtmlStr = StrUtils.replaceFirst(fileHtmlStr, "[" + curFootNote + "]",
+						"<a id='footnote-in-text-" + curFootNote + "' href='#footnote-at-bottom-" + curFootNote +
+						"' style='font-style: normal;'>" +
+						"[" + curFootNote + " &#9660;]</a>");
+					fileHtmlStr = StrUtils.replaceLast(fileHtmlStr, "[" + curFootNote + "]",
+						"<a id='footnote-at-bottom-" + curFootNote + "' href='#footnote-in-text-" + curFootNote +
+						"' style='font-style: normal;'>" +
+						"[" + curFootNote + " &#9650;]</a>");
+				}
+
+				curFootNote++;
+				firstPos = fileHtmlStr.indexOf("[" + curFootNote + "]");
+			}
+		}
+
 		return fileHtmlStr;
 	}
 
@@ -1549,9 +1597,15 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			if (endNext >= 0) {
 				newFileHtml.append(fileHtmlStr.substring(start, posNext));
 				String innerStr = fileHtmlStr.substring(posNext + needle.length(), endNext);
-				newFileHtml.append(tagStart);
-				newFileHtml.append(innerStr);
-				newFileHtml.append(tagEnd);
+				if ("</span>".equals(tagEnd) && innerStr.contains("<br>")) {
+					newFileHtml.append(StrUtils.replaceFirst(tagStart, "span", "div"));
+					newFileHtml.append(innerStr);
+					newFileHtml.append("</div>");
+				} else {
+					newFileHtml.append(tagStart);
+					newFileHtml.append(innerStr);
+					newFileHtml.append(tagEnd);
+				}
 				start = endNext + needle.length();
 				pos1 = fileHtmlStr.indexOf(" " + needle, start);
 				pos2 = fileHtmlStr.indexOf(">" + needle, start);

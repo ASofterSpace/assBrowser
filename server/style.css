@@ -419,7 +419,7 @@ span.editBtnDisabled {
 	opacity: 0.5;
 }
 
-span.inlinecodeblock {
+span.inlinecodeblock, div.inlinecodeblock {
 	border-radius: 3pt;
 	padding: 1pt 4pt 1pt 4pt;
 	white-space: nowrap;
