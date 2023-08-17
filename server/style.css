@@ -177,14 +177,17 @@ div#fileContentContainer > div.warning_outer > div.warning {
 	border: 2px solid #000;
 }
 
-span.spoiled {
+span.spoiled, div.spoiled {
 	background-color: #408;
 	color: #408;
 	cursor: pointer;
 }
 
-span.spoiled:hover, span.notspoiled:hover {
+span.spoiled:hover, div.spoiled:hover, span.notspoiled:hover, div.notspoiled:hover {
 	background-color: #204;
+}
+
+span.spoiled:hover, div.spoiled:hover {
 	color: #204;
 }
 

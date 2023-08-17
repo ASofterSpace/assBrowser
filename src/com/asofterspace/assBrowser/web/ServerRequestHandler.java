@@ -1380,13 +1380,6 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			if ("".equals(line)) {
 				emptyLinesSoFar++;
 			} else {
-				final String SPOILERLINESTR = "%SPOILERLINE%";
-				boolean applySpoilerLine = false;
-				if (line.startsWith(SPOILERLINESTR)) {
-					line = line.substring(SPOILERLINESTR.length()).trim();
-					applySpoilerLine = true;
-				}
-
 				boolean addSummaryText = false;
 				if (line.startsWith("Summary: ")) {
 					line = line.substring(9);
@@ -1430,10 +1423,6 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					if ((i+2 >= contentStrs.length) || (!"".equals(contentStrs[i+2]))) {
 						line = "<h2>" + line + "</h2>";
 					}
-				}
-
-				if (applySpoilerLine) {
-					line = "<span onclick='browser.unspoil(" + i + ");' id='spoiler_" + i + "' class='spoiled'>" + line + "</span>";
 				}
 
 				contentStrs[i] = line;
@@ -1534,8 +1523,11 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		// replace **...** with boldness
 		fileHtmlStr = prepareEntryInlineMarkdown(fileHtmlStr, "**", "<b>", "</b>");
 
-		// replace`...` with code
+		// replace `...` with code
 		fileHtmlStr = prepareEntryInlineMarkdown(fileHtmlStr, "`", "<span class='inlinecodeblock'>", "</span>");
+
+		// replace %SPOILER%...%SPOILER% with spoiler-prevention
+		fileHtmlStr = prepareEntryInlineMarkdown(fileHtmlStr, "%SPOILER%", null, "</span>");
 
 		// add inline pictures
 		fileHtmlStr = addPicturesToEntryHtml(fileHtmlStr, folder, fileName);
@@ -1601,14 +1593,18 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				}
 			}
 			if (endNext >= 0) {
+				String tagStartCur = tagStart;
+				if (tagStartCur == null) {
+					tagStartCur = "<span onclick='browser.unspoil(" + start + ");' id='spoiler_" + start + "' class='spoiled'>";
+				}
 				newFileHtml.append(fileHtmlStr.substring(start, posNext));
 				String innerStr = fileHtmlStr.substring(posNext + needle.length(), endNext);
 				if ("</span>".equals(tagEnd) && innerStr.contains("<br>")) {
-					newFileHtml.append(StrUtils.replaceFirst(tagStart, "span", "div"));
+					newFileHtml.append(StrUtils.replaceFirst(tagStartCur, "span", "div"));
 					newFileHtml.append(innerStr);
 					newFileHtml.append("</div>");
 				} else {
-					newFileHtml.append(tagStart);
+					newFileHtml.append(tagStartCur);
 					newFileHtml.append(innerStr);
 					newFileHtml.append(tagEnd);
 				}
