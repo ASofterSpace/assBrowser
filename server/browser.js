@@ -618,14 +618,37 @@ window.browser = {
 
 	copyLinkToThis: function() {
 
-		var linkStr = "http://" +
-			window.location.hostname +
-			":" +
-			window.location.port +
-			"?path=" +
-			encodeURIComponent(window.data.path).split("%2F").join("/") +
-			"&file=" +
-			encodeURIComponent(window.data.file).split("%2F").join("/");
+		var linkStr = null;
+
+		if (window.data.file == null) {
+
+			linkStr = "http://" +
+				window.location.hostname +
+				":" +
+				window.location.port +
+				"?path=" +
+				encodeURIComponent(window.data.path).split("%2F").join("/") +
+				"\n" +
+				"%[" + window.data.path.split("/").join("\\") + "]";
+
+		} else {
+
+			var fileTitle = window.data.file;
+			if (fileTitle.endsWith(".stpu")) {
+				fileTitle = fileTitle.substring(0, fileTitle.length - 5);
+			}
+
+			linkStr = "http://" +
+				window.location.hostname +
+				":" +
+				window.location.port +
+				"?path=" +
+				encodeURIComponent(window.data.path).split("%2F").join("/") +
+				"&file=" +
+				encodeURIComponent(window.data.file).split("%2F").join("/") +
+				"\n" +
+				"%[" + window.data.path.split("/").join("\\") + "\\" + fileTitle + "]";
+		}
 
 		this.copyToClipboard(linkStr);
 

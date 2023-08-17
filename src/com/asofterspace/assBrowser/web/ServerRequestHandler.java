@@ -642,7 +642,6 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			buttonHtml.append("<span class='button' onclick='browser.extractTLDR()'>");
 			buttonHtml.append("Extract Summary to clipboard");
 			buttonHtml.append("</span>");
-			buttonHtml.append("<textarea id='clipboardHelper' style='display:none'></textarea>");
 			buttonHtml.append("<br>");
 
 			buttonHtml.append("</div>");
@@ -651,6 +650,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		buttonHtml.append("<span class='button' onclick='browser.toggleMoreActions()' id='more-actions-btn'>");
 		buttonHtml.append("Other Actions...");
 		buttonHtml.append("</span>");
+
+		buttonHtml.append("<textarea id='clipboardHelper' style='display:none'></textarea>");
 
 		buttonHtml.append("<div id='more-actions-container' style='display:none;'>");
 
