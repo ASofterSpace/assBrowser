@@ -85,6 +85,10 @@ public class ConsoleCtrl {
 			command = "cd ..";
 			commandLow = command;
 		}
+		if (commandLow.equals("cd..")) {
+			command = "cd ..";
+			commandLow = command;
+		}
 		if (commandLow.equals("...")) {
 			command = "cd ../..";
 			commandLow = command;
@@ -148,6 +152,21 @@ public class ConsoleCtrl {
 					}
 				}
 			}
+
+			// actually check if something starts with command rather than is command in full
+			// (as we add a slash in the very beginning, let's remove the trailing slash)
+			String commandStart = command;
+			while (commandStart.endsWith("/")) {
+				commandStart = commandStart.substring(0, commandStart.length() - 1);
+			}
+			if (commandStart.length() > 0) {
+				ConsoleResult res = redirectToPathIfMatchesFileOrFolder(previousPath, commandStart, result);
+				if (res != null) {
+					return res;
+				}
+			}
+
+			// even if nothing is found that starts with the command - just hardcoded go in there
 			result.setPath(previousPath + "/" + command);
 			return result;
 		}
@@ -281,30 +300,9 @@ public class ConsoleCtrl {
 
 		// only if called from the outside (not e.g. from an sll file)...
 		if (calledFromOutside) {
-			// ... interpret as beginning of the name of an article in the currently opened directory
-			Directory osDir = new Directory(PathCtrl.resolvePath(previousPath));
-
-			// if a vstpu file exists, use that one to find priority among potential entries to be opened
-			SimpleFile vstpuFile = PathCtrl.getVSTPUfile(osDir);
-			if (vstpuFile.exists()) {
-				List<String> vstpuLines = vstpuFile.getContents();
-				for (String vstpuLine : vstpuLines) {
-					if (vstpuLine.toLowerCase().startsWith(commandLow)) {
-						// found one! actually open the file...
-						result.setPath(previousPath + "/" + vstpuLine);
-						return result;
-					}
-				}
-			} else {
-				recursively = false;
-				for (File file : osDir.getAllFiles(recursively)) {
-					String locName = file.getLocalFilename();
-					if (locName.toLowerCase().startsWith(commandLow)) {
-						// found one! actually open the file...
-						result.setPath(previousPath + "/" + locName);
-						return result;
-					}
-				}
+			ConsoleResult res = redirectToPathIfMatchesFileOrFolder(previousPath, commandLow, result);
+			if (res != null) {
+				return res;
 			}
 		}
 
@@ -319,6 +317,40 @@ public class ConsoleCtrl {
 
 		history.add("ERROR: Command '" + command + "' not understood!");
 		return result;
+	}
+
+	private static ConsoleResult redirectToPathIfMatchesFileOrFolder(String previousPath, String command, ConsoleResult result) {
+
+		String commandLow = command.trim().toLowerCase();
+
+		// ... interpret as beginning of the name of an article in the currently opened directory
+		Directory osDir = new Directory(PathCtrl.resolvePath(previousPath));
+
+		// if a vstpu file exists, use that one to find priority among potential entries to be opened
+		SimpleFile vstpuFile = PathCtrl.getVSTPUfile(osDir);
+		if (vstpuFile.exists()) {
+			List<String> vstpuLines = vstpuFile.getContents();
+			for (String vstpuLine : vstpuLines) {
+				if (vstpuLine.toLowerCase().startsWith(commandLow)) {
+					// found one! actually open the file...
+					result.setPath(previousPath + "/" + vstpuLine);
+					return result;
+				}
+			}
+		} else {
+			boolean recursively = false;
+			for (File file : osDir.getAllFiles(recursively)) {
+				String locName = file.getLocalFilename();
+				if (locName.toLowerCase().startsWith(commandLow)) {
+					// found one! actually open the file...
+					result.setPath(previousPath + "/" + locName);
+					return result;
+				}
+			}
+		}
+
+		// return null if nothing is matched
+		return null;
 	}
 
 	/**
