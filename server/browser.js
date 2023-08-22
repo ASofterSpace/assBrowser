@@ -115,38 +115,48 @@ window.browser = {
 		this.closeMoreActions();
 
 		var imageStrip = document.getElementById("imageStrip");
-		imageStrip.style.position = "fixed";
-		imageStrip.style.width = "100%";
-		imageStrip.style.height = "100%";
-		imageStrip.style.zIndex = 100;
-		imageStrip.style.backgroundColor = "#FFFFFF";
-
+		var tileStripsContainer = document.getElementById("tileStripsContainer");
 		var body = document.getElementsByTagName("body")[0];
-		body.style.padding = "0px";
-		body.style.margin = "0px";
-
 		var closeComicViewBtn = document.getElementById('closeComicViewBtn');
-		closeComicViewBtn.style.display = 'block';
+
+		if (imageStrip && tileStripsContainer && body && closeComicViewBtn) {
+
+			imageStrip.style.position = "fixed";
+			imageStrip.style.width = "100%";
+			imageStrip.style.height = "100%";
+			imageStrip.style.zIndex = 100;
+			imageStrip.style.backgroundColor = "#FFFFFF";
+
+			tileStripsContainer.style.display = 'none';
+
+			body.style.padding = "0px";
+			body.style.margin = "0px";
+
+			closeComicViewBtn.style.display = 'block';
+		}
 	},
 
 	openTileView: function() {
 		this.closeMoreActions();
 
 		var imageStrip = document.getElementById("imageStrip");
-		imageStrip.style.display = 'none';
-
 		var tileStripsContainer = document.getElementById("tileStripsContainer");
-		tileStripsContainer.style.display = 'block';
-
-		tileStripsContainer.style.position = "fixed";
-		tileStripsContainer.style.width = "100%";
-		tileStripsContainer.style.height = "100%";
-		tileStripsContainer.style.zIndex = 100;
-		tileStripsContainer.style.backgroundColor = "rgb(64,0,128)";
-
 		var body = document.getElementsByTagName("body")[0];
-		body.style.padding = "0px";
-		body.style.margin = "0px";
+
+		if (imageStrip && tileStripsContainer && body) {
+			imageStrip.style.display = 'none';
+
+			tileStripsContainer.style.display = 'block';
+
+			tileStripsContainer.style.position = "fixed";
+			tileStripsContainer.style.width = "100%";
+			tileStripsContainer.style.height = "100%";
+			tileStripsContainer.style.zIndex = 100;
+			tileStripsContainer.style.backgroundColor = "rgb(64,0,128)";
+
+			body.style.padding = "0px";
+			body.style.margin = "0px";
+		}
 	},
 
 	closeView: function() {
@@ -173,8 +183,9 @@ window.browser = {
 	loadFullFolderView: function() {
 
 		var request = new XMLHttpRequest();
-		request.open("GET", "getFolder?editingMode=false&quickView=false&path=" + encodeURI(window.data.path) +
-			"&file=" + encodeURI(window.data.file), true);
+		request.open("GET", "getFolder?editingMode=false&quickView=false" +
+			"&path=" + encodeURIComponent(window.data.path) +
+			"&file=" + encodeURIComponent(window.data.file), true);
 		request.setRequestHeader("Content-Type", "application/json");
 
 		request.onreadystatechange = function() {
@@ -208,7 +219,7 @@ window.browser = {
 			document.getElementById("fileContentContainer").style.display = "none";
 			document.getElementById("fileContentTextarea").style.display = "block";
 			browser.preventEntryChangeFire = true;
-			document.getElementById("fileContentTextarea").value = "Loading for Edit...";
+			document.getElementById("fileContentTextarea").value = "Loading Entry for Edit...";
 			window.setTimeout(function() {
 				browser.preventEntryChangeFire = false;
 			}, 100);
@@ -226,7 +237,7 @@ window.browser = {
 			document.getElementById("save-btn").style.display = "none";
 			document.getElementById("fileContentContainer").style.display = "block";
 			document.getElementById("fileContentTextarea").style.display = "none";
-			document.getElementById("fileContentContainer").innerHTML = "Loading View...";
+			document.getElementById("fileContentContainer").innerHTML = "Loading Entry View...";
 			var disableEditBtns = document.getElementsByClassName("editBtnEnabled");
 			for (var i = disableEditBtns.length - 1; i >= 0; i--) {
 				disableEditBtns[i].className = 'button editBtnDisabled';
@@ -235,8 +246,8 @@ window.browser = {
 
 		var request = new XMLHttpRequest();
 		request.open("GET", "getEntry?editingMode=" + this.editingMode +
-			"&path=" + encodeURI(window.data.path) +
-			"&file=" + encodeURI(window.data.file), true);
+			"&path=" + encodeURIComponent(window.data.path) +
+			"&file=" + encodeURIComponent(window.data.file), true);
 		request.setRequestHeader("Content-Type", "application/json");
 
 		request.onreadystatechange = function() {
@@ -264,6 +275,12 @@ window.browser = {
 						document.getElementById("fileContentContainer").scrollTo(0,
 							entryScrollBefore * document.getElementById("fileContentContainer").scrollTopMax);
 					}
+				} else {
+					console.log("Canceled entry loading due to mismatch:\n" +
+						"Result path is: " + result.path + "\n" +
+						"Current path is: " + window.data.path + "\n" +
+						"Result file is: " + result.file + "\n" +
+						"Current file is: " + window.data.file);
 				}
 			}
 		}
@@ -328,7 +345,7 @@ window.browser = {
 			document.getElementById("folderContainer").style.display = "none";
 			document.getElementById("folderTextarea").style.display = "block";
 			browser.preventFolderChangeFire = true;
-			document.getElementById("folderTextarea").value = "Loading for Edit...";
+			document.getElementById("folderTextarea").value = "Loading Directory for Edit...";
 			window.setTimeout(function() {
 				browser.preventFolderChangeFire = false;
 			}, 100);
@@ -342,12 +359,13 @@ window.browser = {
 			document.getElementById("save-folder-btn").style.display = "none";
 			document.getElementById("folderContainer").style.display = "block";
 			document.getElementById("folderTextarea").style.display = "none";
-			document.getElementById("folderContainer").innerHTML = "Loading View...";
+			document.getElementById("folderContainer").innerHTML = "Loading Directory View...";
 		}
 
 		var request = new XMLHttpRequest();
 		request.open("GET", "getFolder?editingMode=" + this.folderEditingMode +
-			"&quickView=false&path=" + encodeURI(window.data.path) + "&file=" + encodeURI(window.data.file), true);
+			"&quickView=false&path=" + encodeURIComponent(window.data.path) +
+			"&file=" + encodeURIComponent(window.data.file), true);
 		request.setRequestHeader("Content-Type", "application/json");
 
 		request.onreadystatechange = function() {
@@ -380,6 +398,10 @@ window.browser = {
 								scrollBefore * document.getElementById("folderContainer").scrollTopMax);
 						}, 100);
 					}
+				} else {
+					console.log("Canceled directory loading due to mismatch:\n" +
+						"Result path is: " + result.path + "\n" +
+						"Current path is: " + window.data.path);
 				}
 			}
 		}
@@ -710,7 +732,8 @@ window.browser = {
 				if (result.error) {
 					alert(result.error);
 				} else {
-					browser.navigateTo("/?path=" + encodeURI(window.data.path) + "&file=" + encodeURI(result.newName));
+					browser.navigateTo("/?path=" + encodeURIComponent(window.data.path) +
+						"&file=" + encodeURIComponent(result.newName));
 				}
 			}
 		}

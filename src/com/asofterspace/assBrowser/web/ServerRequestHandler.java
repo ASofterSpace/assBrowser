@@ -271,6 +271,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					entryFile = PathCtrl.getEntryFile(file);
 					content = entryFile.getContent();
 					int pos = content.indexOf(searchForText);
+					boolean addedText = false;
+
 					while (pos >= 0) {
 						int begin = content.lastIndexOf("\n\n", pos);
 						if (begin < 0) {
@@ -292,7 +294,17 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 						}
 						String copyEntryPart = content.substring(begin, end).trim();
 						copyEntryPart = StrUtils.replaceAll(copyEntryPart, "\n", "<br>");
-						answerText.append(copyEntryPart + ":<br>");
+						if (addedText) {
+							answerText.append("<br>...<br>");
+						}
+						answerText.append(copyEntryPart);
+						addedText = true;
+
+						pos = content.indexOf(searchForText, Math.max(pos + 1, end));
+					}
+
+					if (addedText) {
+						answerText.append(":<br>");
 
 						String linkStr = PathCtrl.browserizePath(file.getCanonicalFilename());
 						if (linkStr.endsWith(".stpu")) {
@@ -306,7 +318,6 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 						answerText.append("]</a>");
 						answerText.append("<br>");
 						answerText.append("<br>");
-						pos = content.indexOf(searchForText, pos + 1);
 					}
 				}
 
@@ -569,6 +580,143 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		}
 
 
+		if (message == null) {
+			message = "";
+		}
+		if (!message.equals("")) {
+			message = "alert(\"" + message + "\")";
+		}
+		indexContent = StrUtils.replaceAll(indexContent, "[[EXTRA_MESSAGE]]", message);
+
+
+		String fileHtmlStr = "";
+		String imagesStr = "";
+		int amountOfImages = 0;
+
+		if (fileName != null) {
+			File genericFile = new File(folder, fileName);
+			String lowCaseFileName = fileName.toLowerCase();
+			if (lowCaseFileName.endsWith(".stpu") || lowCaseFileName.endsWith(".sll") ||
+				lowCaseFileName.endsWith(".txt") || lowCaseFileName.endsWith(".ini") ||
+				lowCaseFileName.endsWith(".srt")) {
+
+				fileHtmlStr = loadEntryAsStr(genericFile);
+
+				// follow link automatically
+				if (fileHtmlStr.startsWith("%[") && fileHtmlStr.contains("]")) {
+					String newLink = fileHtmlStr.substring(2, fileHtmlStr.indexOf("]"));
+					if (newLink.startsWith("se:")) {
+						// actually, this is no link but a request to execute something - so do so,
+						// before continuing to just show the content as usual!
+						IoUtils.executeAsync(newLink.substring(3).trim());
+					} else {
+						Map<String, String> newArgs = new HashMap<>();
+						newArgs.put("link", newLink);
+						return generateAnswerToMainGetRequest(newArgs, message);
+					}
+				}
+
+				fileHtmlStr = prepareEntryForDisplayInHtml(fileHtmlStr, folder, fileName, exportingToPdf);
+
+				final int TILE_COLUMN_AMOUNT = 4;
+				List<StringBuilder> imagesColStrBuilders = new ArrayList<>();
+				for (int i = 0; i < TILE_COLUMN_AMOUNT; i++) {
+					imagesColStrBuilders.add(new StringBuilder());
+				}
+
+				StringBuilder imagesStrBuilder = new StringBuilder();
+				String baseName = fileName.substring(0, fileName.lastIndexOf("."));
+				int imgNum = 1;
+				while (true) {
+					String imgExtFound = null;
+					for (String curImgExt : IMAGE_EXTENSIONS) {
+						File imgFile = new File(folder, baseName + "_" + imgNum + "." + curImgExt);
+						if (imgFile.exists()) {
+							imgExtFound = curImgExt;
+						}
+					}
+					if (imgExtFound == null) {
+						break;
+					}
+					String imgUrl = getFileAccessUrl(path, baseName + "_" + imgNum + "." + imgExtFound);
+					imagesStrBuilder.append("<a target=\"_blank\" href=\"" + imgUrl + "\">");
+					imagesStrBuilder.append("<img src=\"" + imgUrl + "\">");
+					imagesStrBuilder.append("</a>");
+					imagesColStrBuilders.get((imgNum - 1) % 4).append("<a target=\"_blank\" href=\"" + imgUrl + "\">");
+					imagesColStrBuilders.get((imgNum - 1) % 4).append("<img src=\"" + imgUrl + "\">");
+					imagesColStrBuilders.get((imgNum - 1) % 4).append("</a>");
+					imgNum++;
+				}
+
+				amountOfImages = imgNum - 1;
+
+				if (amountOfImages > 0) {
+					StringBuilder overallBuilder = new StringBuilder();
+					overallBuilder.append("<div id='imageStrip' class='imageStrip'>");
+					overallBuilder.append("<span style='position:fixed;top:2pt;right:15pt;background:rgba(64,0,128,0.8);border-radius: 6pt;padding: 0pt 3pt;'>");
+					overallBuilder.append("<span class='button' onclick='browser.closeView()' style='display:none; margin-top:5pt; margin-bottom:5pt;' ");
+					overallBuilder.append("id='closeComicViewBtn'>Close View</span>");
+					overallBuilder.append("</span>");
+					overallBuilder.append(imagesStrBuilder);
+					overallBuilder.append("</div>");
+
+					overallBuilder.append("<div id='tileStripsContainer' style='display:none; overflow-y:scroll;'>");
+					overallBuilder.append("<div style='position:fixed;top:0;left:0;right:15pt;background:rgb(64,0,128);'>");
+					overallBuilder.append("<span class='button' onclick='browser.closeView()' style='display:block; margin-top:5pt; margin-bottom:5pt;' ");
+					overallBuilder.append("id='closeTileViewBtn'>Close View</span>");
+					overallBuilder.append("</div>");
+					overallBuilder.append("<div style='padding-top:25pt;'>");
+
+					for (int i = 0; i < TILE_COLUMN_AMOUNT; i++) {
+						overallBuilder.append("<div class='imageStrip imageStripColumn'>");
+						overallBuilder.append(imagesColStrBuilders.get(i));
+						overallBuilder.append("</div>");
+					}
+
+					overallBuilder.append("</div>");
+					overallBuilder.append("</div>");
+
+					imagesStr = overallBuilder.toString();
+				}
+
+			// only now check if the file even exists - as we allow for STPU files which do not exist,
+			// e.g. if they only have pictures but no contents
+			} else if (!genericFile.exists()) {
+				fileHtmlStr = "The file '" + fileName + "' does not exist!";
+
+			} else if (lowCaseFileName.endsWith(".json") || lowCaseFileName.endsWith(".java") ||
+				lowCaseFileName.endsWith(".bat") || lowCaseFileName.endsWith(".sh") ||
+				lowCaseFileName.endsWith(".md")) {
+				TextFile file = new TextFile(folder, fileName);
+				fileHtmlStr = file.getContent();
+				fileHtmlStr = prepareStrForDisplayInHtml(fileHtmlStr);
+			} else {
+				boolean isImageFile = false;
+				for (String curImgExt : IMAGE_EXTENSIONS) {
+					if (lowCaseFileName.endsWith("." + curImgExt)) {
+						isImageFile = true;
+						break;
+					}
+				}
+				if (isImageFile) {
+					String imgUrl = getFileAccessUrl(path, fileName);
+					fileHtmlStr = "<a target=\"_blank\" href=\"" + imgUrl + "\" style='max-width:99%; max-height:99%;' />";
+					fileHtmlStr += "<img src=\"" + imgUrl + "\" style='max-width:100%; max-height:100%;' />";
+					fileHtmlStr += "</a>";
+				} else {
+					fileHtmlStr = "<div style='line-height: 2.5;text-align: center;' id='fileButtonContainer'>" +
+								  "No preview for '" + fileName + "' available.<br><br>" +
+								  getFileButtonsHtml(path, fileName, "padding: 4pt 9pt;") +
+								  "</div>";
+				}
+			}
+		}
+
+		indexContent = StrUtils.replaceAll(indexContent, "[[FILE_CONTENT]]", fileHtmlStr);
+
+		indexContent = StrUtils.replaceAll(indexContent, "[[IMAGES]]", imagesStr);
+
+
 		// buttonBar
 		StringBuilder buttonHtml = new StringBuilder();
 
@@ -598,13 +746,15 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			buttonHtml.append("</span>");
 		}
 
-		buttonHtml.append("<span class='button' onclick='browser.openTileView()'>");
-		buttonHtml.append("&#x25A6; Tile");
-		buttonHtml.append("</span>");
+		if (amountOfImages > 0) {
+			buttonHtml.append("<span class='button' onclick='browser.openTileView()'>");
+			buttonHtml.append("&#x25A6; Tile");
+			buttonHtml.append("</span>");
 
-		buttonHtml.append("<span class='button' onclick='browser.openComicView()'>");
-		buttonHtml.append("&#x25AF; Comic");
-		buttonHtml.append("</span>");
+			buttonHtml.append("<span class='button' onclick='browser.openComicView()'>");
+			buttonHtml.append("&#x25AF; Comic");
+			buttonHtml.append("</span>");
+		}
 
 		if (fileName != null) {
 
@@ -704,138 +854,6 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		indexContent = StrUtils.replaceAll(indexContent, "[[BUTTONS]]", buttonHtml.toString());
 
-
-		if (message == null) {
-			message = "";
-		}
-		if (!message.equals("")) {
-			message = "alert(\"" + message + "\")";
-		}
-		indexContent = StrUtils.replaceAll(indexContent, "[[EXTRA_MESSAGE]]", message);
-
-
-		String fileHtmlStr = "";
-		String imagesStr = "";
-
-		if (fileName != null) {
-			File genericFile = new File(folder, fileName);
-			String lowCaseFileName = fileName.toLowerCase();
-			if (lowCaseFileName.endsWith(".stpu") || lowCaseFileName.endsWith(".sll") ||
-				lowCaseFileName.endsWith(".txt") || lowCaseFileName.endsWith(".ini") ||
-				lowCaseFileName.endsWith(".srt")) {
-
-				fileHtmlStr = loadEntryAsStr(genericFile);
-
-				// follow link automatically
-				if (fileHtmlStr.startsWith("%[") && fileHtmlStr.contains("]")) {
-					String newLink = fileHtmlStr.substring(2, fileHtmlStr.indexOf("]"));
-					if (newLink.startsWith("se:")) {
-						// actually, this is no link but a request to execute something - so do so,
-						// before continuing to just show the content as usual!
-						IoUtils.executeAsync(newLink.substring(3).trim());
-					} else {
-						Map<String, String> newArgs = new HashMap<>();
-						newArgs.put("link", newLink);
-						return generateAnswerToMainGetRequest(newArgs, message);
-					}
-				}
-
-				fileHtmlStr = prepareEntryForDisplayInHtml(fileHtmlStr, folder, fileName, exportingToPdf);
-
-				final int TILE_COLUMN_AMOUNT = 4;
-				List<StringBuilder> imagesColStrBuilders = new ArrayList<>();
-				for (int i = 0; i < TILE_COLUMN_AMOUNT; i++) {
-					imagesColStrBuilders.add(new StringBuilder());
-				}
-
-				StringBuilder imagesStrBuilder = new StringBuilder();
-				String baseName = fileName.substring(0, fileName.lastIndexOf("."));
-				int imgNum = 1;
-				while (true) {
-					String imgExtFound = null;
-					for (String curImgExt : IMAGE_EXTENSIONS) {
-						File imgFile = new File(folder, baseName + "_" + imgNum + "." + curImgExt);
-						if (imgFile.exists()) {
-							imgExtFound = curImgExt;
-						}
-					}
-					if (imgExtFound == null) {
-						break;
-					}
-					String imgUrl = getFileAccessUrl(path, baseName + "_" + imgNum + "." + imgExtFound);
-					imagesStrBuilder.append("<a target=\"_blank\" href=\"" + imgUrl + "\">");
-					imagesStrBuilder.append("<img src=\"" + imgUrl + "\">");
-					imagesStrBuilder.append("</a>");
-					imagesColStrBuilders.get((imgNum - 1) % 4).append("<a target=\"_blank\" href=\"" + imgUrl + "\">");
-					imagesColStrBuilders.get((imgNum - 1) % 4).append("<img src=\"" + imgUrl + "\">");
-					imagesColStrBuilders.get((imgNum - 1) % 4).append("</a>");
-					imgNum++;
-				}
-				if (imgNum > 1) {
-					StringBuilder overallBuilder = new StringBuilder();
-					overallBuilder.append("<div id='imageStrip' class='imageStrip'>");
-					overallBuilder.append("<span style='position:fixed;top:2pt;right:15pt;background:rgba(64,0,128,0.8);border-radius: 6pt;padding: 0pt 3pt;'>");
-					overallBuilder.append("<span class='button' onclick='browser.closeView()' style='display:none; margin-top:5pt; margin-bottom:5pt;' ");
-					overallBuilder.append("id='closeComicViewBtn'>Close View</span>");
-					overallBuilder.append("</span>");
-					overallBuilder.append(imagesStrBuilder);
-					overallBuilder.append("</div>");
-
-					overallBuilder.append("<div id='tileStripsContainer' style='display:none; overflow-y:scroll;'>");
-					overallBuilder.append("<div style='position:fixed;top:0;left:0;right:15pt;background:rgb(64,0,128);'>");
-					overallBuilder.append("<span class='button' onclick='browser.closeView()' style='display:block; margin-top:5pt; margin-bottom:5pt;' ");
-					overallBuilder.append("id='closeTileViewBtn'>Close View</span>");
-					overallBuilder.append("</div>");
-					overallBuilder.append("<div style='padding-top:25pt;'>");
-
-					for (int i = 0; i < TILE_COLUMN_AMOUNT; i++) {
-						overallBuilder.append("<div class='imageStrip imageStripColumn'>");
-						overallBuilder.append(imagesColStrBuilders.get(i));
-						overallBuilder.append("</div>");
-					}
-
-					overallBuilder.append("</div>");
-					overallBuilder.append("</div>");
-
-					imagesStr = overallBuilder.toString();
-				}
-
-			// only now check if the file even exists - as we allow for STPU files which do not exist,
-			// e.g. if they only have pictures but no contents
-			} else if (!genericFile.exists()) {
-				fileHtmlStr = "The file '" + fileName + "' does not exist!";
-
-			} else if (lowCaseFileName.endsWith(".json") || lowCaseFileName.endsWith(".java") ||
-				lowCaseFileName.endsWith(".bat") || lowCaseFileName.endsWith(".sh") ||
-				lowCaseFileName.endsWith(".md")) {
-				TextFile file = new TextFile(folder, fileName);
-				fileHtmlStr = file.getContent();
-				fileHtmlStr = prepareStrForDisplayInHtml(fileHtmlStr);
-			} else {
-				boolean isImageFile = false;
-				for (String curImgExt : IMAGE_EXTENSIONS) {
-					if (lowCaseFileName.endsWith("." + curImgExt)) {
-						isImageFile = true;
-						break;
-					}
-				}
-				if (isImageFile) {
-					String imgUrl = getFileAccessUrl(path, fileName);
-					fileHtmlStr = "<a target=\"_blank\" href=\"" + imgUrl + "\" style='max-width:99%; max-height:99%;' />";
-					fileHtmlStr += "<img src=\"" + imgUrl + "\" style='max-width:100%; max-height:100%;' />";
-					fileHtmlStr += "</a>";
-				} else {
-					fileHtmlStr = "<div style='line-height: 2.5;text-align: center;' id='fileButtonContainer'>" +
-								  "No preview for '" + fileName + "' available.<br><br>" +
-								  getFileButtonsHtml(path, fileName, "padding: 4pt 9pt;") +
-								  "</div>";
-				}
-			}
-		}
-
-		indexContent = StrUtils.replaceAll(indexContent, "[[FILE_CONTENT]]", fileHtmlStr);
-
-		indexContent = StrUtils.replaceAll(indexContent, "[[IMAGES]]", imagesStr);
 
 		if (exportingToPdf) {
 			indexContent += "\n"+
