@@ -1658,7 +1658,16 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		multipleStrBuilder.append("They are:");
 		multipleStrBuilder.append("</div>");
 
+		StringBuilder missingStrBuilder = new StringBuilder();
+		missingStrBuilder.append("<div class='warning_outer'>");
+		missingStrBuilder.append("<div class='warning'>");
+		missingStrBuilder.append("<div class='line'>");
+		missingStrBuilder.append("<b>Warning!</b> Some pictures of this entry are missing!<br>");
+		missingStrBuilder.append("The first one is:");
+		missingStrBuilder.append("</div>");
+
 		boolean foundMultiples = false;
+		boolean foundMissing = false;
 
 		List<String> pictureFileNames = new ArrayList<>();
 		List<File> pictureFiles = new ArrayList<>();
@@ -1689,6 +1698,18 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				}
 			}
 			if (!foundOne) {
+				for (String curImgExt : IMAGE_EXTENSIONS) {
+					String curName = baseFileName + "_" + (curImgNum+1) + "." + curImgExt;
+					File imageFile = new File(folder, curName);
+					if (imageFile.exists()) {
+						foundMissing = true;
+						missingStrBuilder.append("<div class='line'>");
+						missingStrBuilder.append("Image number " + curImgNum + " is missing, even though image " +
+							(curImgNum+1) + " exists!");
+						missingStrBuilder.append("</div>");
+						break;
+					}
+				}
 				break;
 			}
 			curImgNum++;
@@ -1703,6 +1724,12 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			multipleStrBuilder.append("</div>");
 			multipleStrBuilder.append("</div>");
 			contentStr = multipleStrBuilder.toString() + contentStr;
+		}
+
+		if (foundMissing) {
+			missingStrBuilder.append("</div>");
+			missingStrBuilder.append("</div>");
+			contentStr = missingStrBuilder.toString() + contentStr;
 		}
 
 		// check if any two pictures seem to be the same / duplicates, actually
