@@ -70,6 +70,7 @@ public class GUI extends MainWindow {
 	private final static ColorRGBA fgColorMain = new ColorRGBA(255, 255, 255);
 	private final static ColorRGBA fgColor = new ColorRGBA(167, 62, 249);
 	private final static Color fgColorCol = fgColor.toColor();
+	private final static ColorRGBA highlightColor = new ColorRGBA(240, 150, 255);
 	private final static ColorRGBA errorColor = new ColorRGBA(255, 0, 64);
 	private final static Color errorColorCol = errorColor.toColor();
 
@@ -241,6 +242,7 @@ public class GUI extends MainWindow {
 		counterLabel.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
+				clickHighlight(counterLabel);
 				int num = StrUtils.strToInt(counterLabel.getText().trim()) + 1;
 				if (SwingUtilities.isRightMouseButton(e)) {
 					num = 0;
@@ -256,6 +258,7 @@ public class GUI extends MainWindow {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				GuiUtils.copyToClipboard("„“”");
+				clickHighlight(quoteLabel1);
 			}
 		});
 
@@ -266,6 +269,7 @@ public class GUI extends MainWindow {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				GuiUtils.copyToClipboard("‚‘’");
+				clickHighlight(quoteLabel2);
 			}
 		});
 
@@ -278,6 +282,7 @@ public class GUI extends MainWindow {
 			public void mouseClicked(MouseEvent e) {
 				checkBatteryStatus();
 				resetGuiLocation();
+				clickHighlight(batteryLabel);
 			}
 		});
 
@@ -287,6 +292,7 @@ public class GUI extends MainWindow {
 		clockLabel.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
+				clickHighlight(clockLabel);
 				GuiUtils.copyToClipboard(DateUtils.getCurrentDateTimeStamp());
 				resetGuiLocation();
 			}
@@ -347,6 +353,21 @@ public class GUI extends MainWindow {
 			}
 		};
 		timerThread.start();
+	}
+
+	private void clickHighlight(JLabel labelThatIsHighlit) {
+		int CLICK_WAIT_TIME = 800;
+		labelThatIsHighlit.setForeground(highlightColor.toColor());
+		Thread miniThread = new Thread() {
+			public void run() {
+				try {
+					Thread.sleep(CLICK_WAIT_TIME);
+				} catch (InterruptedException e) {
+				}
+				labelThatIsHighlit.setForeground(fgColor.toColor());
+			}
+		};
+		miniThread.start();
 	}
 
 	private JLabel createLabel(String text, ColorRGBA bgColor, ColorRGBA fgColor) {
