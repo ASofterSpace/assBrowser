@@ -59,6 +59,7 @@ public class GUI extends MainWindow {
 	private JLabel counterLabel;
 	private JLabel quoteLabel1;
 	private JLabel quoteLabel2;
+	private JLabel newlineLabel;
 	private JLabel batteryLabel;
 	private JLabel clockLabel;
 
@@ -273,9 +274,20 @@ public class GUI extends MainWindow {
 			}
 		});
 
+		newlineLabel = createLabel("\\n ", bgColor, fgColor);
+		mainPanel.add(newlineLabel, new Arrangement(5, 0, 0.0, 1.0));
+
+		newlineLabel.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				GuiUtils.copyToClipboard("\n");
+				clickHighlight(newlineLabel);
+			}
+		});
+
 		batteryLabel = createLabel("BATTERY STATE UNINITIALIZED ", bgColor, errorColor);
 		batteryLabel.setOpaque(true);
-		mainPanel.add(batteryLabel, new Arrangement(5, 0, 0.0, 1.0));
+		mainPanel.add(batteryLabel, new Arrangement(6, 0, 0.0, 1.0));
 
 		batteryLabel.addMouseListener(new MouseAdapter() {
 			@Override
@@ -287,7 +299,7 @@ public class GUI extends MainWindow {
 		});
 
 		clockLabel = createLabel("00:00 ", bgColor, fgColor);
-		mainPanel.add(clockLabel, new Arrangement(6, 0, 0.0, 1.0));
+		mainPanel.add(clockLabel, new Arrangement(7, 0, 0.0, 1.0));
 
 		clockLabel.addMouseListener(new MouseAdapter() {
 			@Override
