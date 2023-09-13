@@ -1617,7 +1617,16 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					tagStartCur = "<span onclick='browser.unspoil(" + start + ");' id='spoiler_" + start + "' class='spoiled'>";
 				}
 				newFileHtml.append(fileHtmlStr.substring(start, posNext));
+
 				String innerStr = fileHtmlStr.substring(posNext + needle.length(), endNext);
+
+				if (innerStr.startsWith("<br>")) {
+					innerStr = innerStr.substring(4);
+				}
+				if (innerStr.endsWith("<br>")) {
+					innerStr = innerStr.substring(0, innerStr.length() - 4);
+				}
+
 				if ("</span>".equals(tagEnd) && innerStr.contains("<br>")) {
 					newFileHtml.append(StrUtils.replaceFirst(tagStartCur, "span", "div"));
 					newFileHtml.append(innerStr);
