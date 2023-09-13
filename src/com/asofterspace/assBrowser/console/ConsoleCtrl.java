@@ -250,6 +250,15 @@ public class ConsoleCtrl {
 		}
 
 
+		// min
+		if (commandLowNoSpace.equals("min")) {
+			if (gui != null) {
+				gui.minimize();
+			}
+			return result;
+		}
+
+
 		// help
 
 		if (commandLowNoSpace.equals("help")) {
@@ -258,6 +267,7 @@ public class ConsoleCtrl {
 				"help .. shows this help\n" +
 				"about .. shows an about message\n" +
 				"close / exit / quit .. exits the program\n" +
+				"min .. minimizes the GUI to a 1px high bar at the top\n" +
 				"shutdown .. shuts down the computer\n" +
 				"reboot .. reboots the computer\n" +
 				"shutdownlater / shutlater .. shuts down the computer after some time\n" +

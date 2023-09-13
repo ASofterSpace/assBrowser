@@ -56,6 +56,8 @@ public class GUI extends MainWindow {
 
 	private ConsoleCtrl consoleCtrl;
 
+	private JTextField consoleField;
+	private BarMenuItemForMainMenu volumeItem;
 	private JLabel counterLabel;
 	private JLabel quoteLabel1;
 	private JLabel quoteLabel2;
@@ -78,13 +80,23 @@ public class GUI extends MainWindow {
 	private final static int left = 0;
 	private final static int top = 0;
 	private final static int width = (int) Toolkit.getDefaultToolkit().getScreenSize().getWidth();
-	private final static int height = 22;
+	private final static int INIT_HEIGHT = 22;
+	private static int height = INIT_HEIGHT;
 
 	private int batteryDisplayCounter = 0;
 	// private long lastVolumeTime = 0;
 	private String nircmdPath;
 
 	private Font sharedFont = null;
+
+	private MouseAdapter mouseListenerToMaximize = new MouseAdapter() {
+		@Override
+		public void mouseEntered(MouseEvent e) {
+			if (height < INIT_HEIGHT) {
+				maximize();
+			}
+		}
+	};
 
 
 	public GUI(Database database, ConsoleCtrl consoleCtrl) {
@@ -115,6 +127,9 @@ public class GUI extends MainWindow {
 				// Stage everything to be shown
 				mainFrame.pack();
 
+				// Request to always be on top as this replaces the main OS shell
+				mainFrame.setAlwaysOnTop(true);
+
 				// Actually display the whole jazz
 				mainFrame.setVisible(true);
 
@@ -132,8 +147,9 @@ public class GUI extends MainWindow {
 		mainPanel.setPreferredSize(new Dimension(800, 500));
 		GridBagLayout mainPanelLayout = new GridBagLayout();
 		mainPanel.setLayout(mainPanelLayout);
+		mainPanel.addMouseListener(mouseListenerToMaximize);
 
-		JTextField consoleField = new JTextField();
+		consoleField = new JTextField();
 		consoleField.setBackground(bgColorCol);
 		consoleField.setForeground(fgColorMain.toColor());
 		consoleField.setCaretColor(fgColor.toColor());
@@ -209,10 +225,12 @@ public class GUI extends MainWindow {
 			}
 		});
 
+		consoleField.addMouseListener(mouseListenerToMaximize);
+
 		IoUtils.executeAsync(this.nircmdPath + " setsysvolume 0");
 		IoUtils.executeAsync(this.nircmdPath + " mutesysvolume 0");
 
-		BarMenuItemForMainMenu volumeItem = new BarMenuItemForMainMenu();
+		volumeItem = new BarMenuItemForMainMenu();
 		volumeItem.setBackground(bgColorCol);
 		volumeItem.setForeground(fgColor.toColor());
 		volumeItem.setBarPosition(null, false);
@@ -235,6 +253,7 @@ public class GUI extends MainWindow {
 				*/
 			}
 		});
+		volumeItem.addMouseListener(mouseListenerToMaximize);
 		mainPanel.add(volumeItem, new Arrangement(1, 0, 0.0, 1.0));
 
 		counterLabel = createLabel(" 0 ", bgColor, fgColor);
@@ -486,6 +505,33 @@ public class GUI extends MainWindow {
 
 		decoratedEditor.setSelectionStart(selStart + textToInsert.length());
 		decoratedEditor.setSelectionEnd(selStart + textToInsert.length());
+	}
+
+	public void minimize() {
+		height = 1;
+		resetGuiLocation();
+
+		// remove everything to have just black line at the top, nothing else
+		setElementVisibility(false);
+	}
+
+	public void maximize() {
+		height = INIT_HEIGHT;
+		resetGuiLocation();
+
+		// reset everything to visible
+		setElementVisibility(true);
+	}
+
+	private void setElementVisibility(boolean visible) {
+		consoleField.setVisible(visible);
+		volumeItem.setVisible(visible);
+		counterLabel.setVisible(visible);
+		quoteLabel1.setVisible(visible);
+		quoteLabel2.setVisible(visible);
+		newlineLabel.setVisible(visible);
+		batteryLabel.setVisible(visible);
+		clockLabel.setVisible(visible);
 	}
 
 }
