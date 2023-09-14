@@ -62,6 +62,7 @@ public class GUI extends MainWindow {
 	private JLabel quoteLabel1;
 	private JLabel quoteLabel2;
 	private JLabel newlineLabel;
+	private JLabel heartLabel;
 	private JLabel batteryLabel;
 	private JLabel clockLabel;
 
@@ -76,6 +77,8 @@ public class GUI extends MainWindow {
 	private final static ColorRGBA highlightColor = new ColorRGBA(240, 150, 255);
 	private final static ColorRGBA errorColor = new ColorRGBA(255, 0, 64);
 	private final static Color errorColorCol = errorColor.toColor();
+
+	private final static String PURPLE_HEART = new String(Character.toChars(0x1F49C));
 
 	private final static int left = 0;
 	private final static int top = 0;
@@ -301,9 +304,20 @@ public class GUI extends MainWindow {
 			}
 		});
 
+		heartLabel = createLabel(PURPLE_HEART + " ", bgColor, fgColor);
+		mainPanel.add(heartLabel, new Arrangement(6, 0, 0.0, 1.0));
+
+		heartLabel.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				GuiUtils.copyToClipboard(PURPLE_HEART);
+				clickHighlight(heartLabel);
+			}
+		});
+
 		batteryLabel = createLabel("BATTERY STATE UNINITIALIZED ", bgColor, errorColor);
 		batteryLabel.setOpaque(true);
-		mainPanel.add(batteryLabel, new Arrangement(6, 0, 0.0, 1.0));
+		mainPanel.add(batteryLabel, new Arrangement(7, 0, 0.0, 1.0));
 
 		batteryLabel.addMouseListener(new MouseAdapter() {
 			@Override
@@ -315,7 +329,7 @@ public class GUI extends MainWindow {
 		});
 
 		clockLabel = createLabel("00:00 ", bgColor, fgColor);
-		mainPanel.add(clockLabel, new Arrangement(7, 0, 0.0, 1.0));
+		mainPanel.add(clockLabel, new Arrangement(8, 0, 0.0, 1.0));
 
 		clockLabel.addMouseListener(new MouseAdapter() {
 			@Override
@@ -527,6 +541,7 @@ public class GUI extends MainWindow {
 		quoteLabel1.setVisible(visible);
 		quoteLabel2.setVisible(visible);
 		newlineLabel.setVisible(visible);
+		heartLabel.setVisible(visible);
 		batteryLabel.setVisible(visible);
 		clockLabel.setVisible(visible);
 	}
