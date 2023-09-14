@@ -225,8 +225,6 @@ public class GUI extends MainWindow {
 			}
 		});
 
-		consoleField.addMouseListener(mouseListenerToMaximize);
-
 		IoUtils.executeAsync(this.nircmdPath + " setsysvolume 0");
 		IoUtils.executeAsync(this.nircmdPath + " mutesysvolume 0");
 
@@ -253,7 +251,6 @@ public class GUI extends MainWindow {
 				*/
 			}
 		});
-		volumeItem.addMouseListener(mouseListenerToMaximize);
 		mainPanel.add(volumeItem, new Arrangement(1, 0, 0.0, 1.0));
 
 		counterLabel = createLabel(" 0 ", bgColor, fgColor);
