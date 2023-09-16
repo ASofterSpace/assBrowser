@@ -852,8 +852,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		buttonHtml.append("</div>");
 
-		buttonHtml.append("<div style='position: relative; display: inline-block; width: 80pt; font-size: 75%;'>");
-		buttonHtml.append("<div style='position: absolute; top: -10pt; left: 0; width:60pt; text-align:center; cursor: pointer;' ");
+		buttonHtml.append("<div style='display: inline-block; font-size: 75%;'>");
+		buttonHtml.append("<div style='position: absolute; top: 5pt; right: 0; width:60pt; text-align:center; cursor: pointer;' ");
 		buttonHtml.append("id='sel-edit-links' onclick='browser.clickEditLinks();' ");
 		if (!"true".equals(arguments.get("editLinks"))) {
 			buttonHtml.append("class='nonselected'>");
@@ -863,7 +863,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			buttonHtml.append("✔ Edit Links");
 		}
 		buttonHtml.append("</div>");
-		buttonHtml.append("<div style='position: absolute; top: 5pt; left: 0; width:60pt; text-align:center; cursor: pointer;' ");
+		buttonHtml.append("<div style='position: absolute; top: 20pt; right: 0; width:60pt; text-align:center; cursor: pointer;' ");
 		buttonHtml.append("id='sel-follow-links' onclick='browser.clickFollowLinks();' ");
 		if (!"false".equals(arguments.get("followLinks"))) {
 			buttonHtml.append("class='selected'>");
