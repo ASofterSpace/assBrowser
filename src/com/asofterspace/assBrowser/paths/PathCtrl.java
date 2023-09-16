@@ -94,7 +94,7 @@ public class PathCtrl {
 
 	/**
 	 * Takes a path and turns it into the form used in the operating system.
-	 * So rplaces \Desktop\foo with C:\blubb\Desktop\foo
+	 * So replaces \Desktop\foo with C:\blubb\Desktop\foo
 	 */
 	public static String resolvePath(String path) {
 

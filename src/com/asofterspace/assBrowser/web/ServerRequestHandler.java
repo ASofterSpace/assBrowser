@@ -19,6 +19,7 @@ import com.asofterspace.toolbox.io.JsonParseException;
 import com.asofterspace.toolbox.io.SimpleFile;
 import com.asofterspace.toolbox.io.TextFile;
 import com.asofterspace.toolbox.utils.DateUtils;
+import com.asofterspace.toolbox.utils.Pair;
 import com.asofterspace.toolbox.utils.Record;
 import com.asofterspace.toolbox.utils.StrUtils;
 import com.asofterspace.toolbox.utils.TextEncoding;
@@ -500,32 +501,9 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		}
 
 		if (link != null) {
-			String localLink = PathCtrl.resolvePath(link);
-			Directory localLinkDir = new Directory(localLink);
-			// if a directory exists with the specified name, go for that immediately
-			if (localLinkDir.exists()) {
-				path = link;
-				fileName = null;
-			} else {
-				// otherwise, go one up and check for a file with the name that the link ends in
-				link = StrUtils.replaceAll(link, "\\", "/");
-				int pos = link.lastIndexOf("/");
-				if (pos >= 0) {
-					path = link.substring(0, pos);
-					Directory pathDir = new Directory(path);
-					// if a file exists with that exact name, go for it!
-					File notStpuFile = new File(pathDir, link.substring(pos + 1));
-					if (notStpuFile.exists()) {
-						fileName = link.substring(pos + 1);
-					} else {
-						// otherwise, assume an stpu file is meant
-						fileName = link.substring(pos + 1) + ".stpu";
-					}
-				} else {
-					path = link;
-					fileName = null;
-				}
-			}
+			Pair<String, String> pathFile = resolveLink(link);
+			path = pathFile.getLeft();
+			fileName = pathFile.getRight();
 		}
 
 		indexContent = StrUtils.replaceAll(indexContent, "[[CONSOLE_VALUE]]", consoleValue);
@@ -602,17 +580,39 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 				fileHtmlStr = loadEntryAsStr(genericFile);
 
-				// follow link automatically
-				if (fileHtmlStr.startsWith("%[") && fileHtmlStr.contains("]")) {
-					String newLink = fileHtmlStr.substring(2, fileHtmlStr.indexOf("]"));
-					if (newLink.startsWith("se:")) {
-						// actually, this is no link but a request to execute something - so do so,
-						// before continuing to just show the content as usual!
-						IoUtils.executeAsync(newLink.substring(3).trim());
-					} else {
-						Map<String, String> newArgs = new HashMap<>();
-						newArgs.put("link", newLink);
-						return generateAnswerToMainGetRequest(newArgs, message);
+				if (!"true".equals(arguments.get("editLinks"))) {
+					// follow link automatically
+					if (fileHtmlStr.startsWith("%[") && fileHtmlStr.contains("]")) {
+						String newLink = fileHtmlStr.substring(2, fileHtmlStr.indexOf("]"));
+						if (newLink.startsWith("se:")) {
+							// actually, this is no link but a request to execute something - so do so,
+							// before continuing to just show the content as usual!
+							IoUtils.executeAsync(newLink.substring(3).trim());
+						} else {
+							if ("false".equals(arguments.get("followLinks"))) {
+								// to not follow links here means that we want to respond with the content of the link,
+								// but stay in the current folder - not change it to a different location...
+								// and we do this in a while loop so that we can follow links to links to links,
+								// and just get the innermost file in the end
+								// TODO :: somehow also get it to load pictures etc. in this mode
+								while (fileHtmlStr.startsWith("%[") && !fileHtmlStr.startsWith("%[se:") && fileHtmlStr.contains("]")) {
+									newLink = fileHtmlStr.substring(2, fileHtmlStr.indexOf("]"));
+									Pair<String, String> pathFile = resolveLink(newLink);
+									if (pathFile.getRight() == null) {
+										break;
+									}
+									fileHtmlStr = loadEntryAsStr(new File(
+										new Directory(PathCtrl.resolvePath(pathFile.getLeft())),
+										pathFile.getRight())
+									);
+								}
+
+							} else {
+								Map<String, String> newArgs = new HashMap<>();
+								newArgs.put("link", newLink);
+								return generateAnswerToMainGetRequest(newArgs, message);
+							}
+						}
 					}
 				}
 
@@ -850,6 +850,30 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		buttonHtml.append("Expand Console");
 		buttonHtml.append("</span>");
 
+		buttonHtml.append("</div>");
+
+		buttonHtml.append("<div style='position: relative; display: inline-block; width: 80pt; font-size: 75%;'>");
+		buttonHtml.append("<div style='position: absolute; top: -10pt; left: 0; width:60pt; text-align:center; cursor: pointer;' ");
+		buttonHtml.append("id='sel-edit-links' onclick='browser.clickEditLinks();' ");
+		if (!"true".equals(arguments.get("editLinks"))) {
+			buttonHtml.append("class='nonselected'>");
+			buttonHtml.append("✘ Edit Links");
+		} else {
+			buttonHtml.append("class='selected'>");
+			buttonHtml.append("✔ Edit Links");
+		}
+		buttonHtml.append("</div>");
+		buttonHtml.append("<div style='position: absolute; top: 5pt; left: 0; width:60pt; text-align:center; cursor: pointer;' ");
+		buttonHtml.append("id='sel-follow-links' onclick='browser.clickFollowLinks();' ");
+		if (!"false".equals(arguments.get("followLinks"))) {
+			buttonHtml.append("class='selected'>");
+			buttonHtml.append("✔ Follow Links");
+		} else {
+			buttonHtml.append("class='nonselected'>");
+			buttonHtml.append("✘ Follow Links");
+		}
+		buttonHtml.append("</div>");
+		buttonHtml.append("&nbsp;");
 		buttonHtml.append("</div>");
 
 		indexContent = StrUtils.replaceAll(indexContent, "[[BUTTONS]]", buttonHtml.toString());
@@ -1119,21 +1143,9 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			if (contentLen < 255) {
 				boolean complainIfMissing = false;
 				String txt = txtFile.getContent(complainIfMissing);
-				if ((txt != null) && txt.startsWith("%[")) {
-					boolean haveLink = false;
-					int endind = txt.indexOf("]\r\n");
-					if (endind >= 0) {
-						haveLink = endind < txt.indexOf("\r\n");
-					} else {
-						endind = txt.indexOf("]\n");
-						if (endind >= 0) {
-							haveLink = endind < txt.indexOf("\n");
-						}
-					}
-					if (haveLink) {
-						// we have not just a file, but the file is a link!
-						entryOrLink = "link";
-					}
+				if ((txt != null) && txt.startsWith("%[") && txt.contains("]")) {
+					// we have not just a file, but the file is a link!
+					entryOrLink = "link";
 				}
 			}
 		}
@@ -1912,6 +1924,37 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		}
 		newFileHtml.append(fileHtmlStr.substring(start));
 		return newFileHtml.toString();
+	}
+
+	private Pair<String, String> resolveLink(String link) {
+
+		String path = link;
+		String fileName = null;
+
+		String localLink = PathCtrl.resolvePath(link);
+		Directory localLinkDir = new Directory(localLink);
+		// if a directory exists with the specified name, just stick to that immediately
+		if (!localLinkDir.exists()) {
+			// otherwise, go one up and check for a file with the name that the link ends in
+			link = StrUtils.replaceAll(link, "\\", "/");
+			int pos = link.lastIndexOf("/");
+			if (pos >= 0) {
+				path = link.substring(0, pos);
+				Directory pathDir = new Directory(path);
+				// if a file exists with that exact name, go for it!
+				File notStpuFile = new File(pathDir, link.substring(pos + 1));
+				if (notStpuFile.exists()) {
+					fileName = link.substring(pos + 1);
+				} else {
+					// otherwise, assume an stpu file is meant
+					fileName = link.substring(pos + 1) + ".stpu";
+				}
+			} else {
+				path = link;
+				fileName = null;
+			}
+		}
+		return new Pair<>(path, fileName);
 	}
 
 	// replaces legacy ISO nonsense on loading with actual UTF-8 characters - like in browser.js

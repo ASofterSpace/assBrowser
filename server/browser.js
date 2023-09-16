@@ -520,7 +520,17 @@ window.browser = {
 		}
 
 		if (el.scrollTopMax > 0) {
-			newUrl = newUrl + "&scroll=" + (el.scrollTop / el.scrollTopMax);
+			newUrl += "&scroll=" + (el.scrollTop / el.scrollTopMax);
+		}
+
+		var selEditLinks = document.getElementById('sel-edit-links');
+		if (selEditLinks.className == 'selected') {
+			newUrl += "&editLinks=true";
+		}
+
+		var selFollowLinks = document.getElementById('sel-follow-links');
+		if (selFollowLinks.className == 'nonselected') {
+			newUrl += "&followLinks=false";
 		}
 
 		window.location = newUrl;
@@ -858,6 +868,34 @@ window.browser = {
 	closeCrossReferenceModal: function() {
 		this.hideModalBackground();
 		document.getElementById('crossReferenceModal').style.display = 'none';
+	},
+
+	clickEditLinks: function() {
+		var selEditLinks = document.getElementById('sel-edit-links');
+		var selFollowLinks = document.getElementById('sel-follow-links');
+		if (selEditLinks.className == 'nonselected') {
+			selEditLinks.className = 'selected';
+			selEditLinks.innerText = "✔ Edit Links";
+			selFollowLinks.className = 'nonselected';
+			selFollowLinks.innerText = "✘ Follow Links";
+		} else {
+			selEditLinks.className = 'nonselected';
+			selEditLinks.innerText = "✘ Edit Links";
+		}
+	},
+
+	clickFollowLinks: function() {
+		var selEditLinks = document.getElementById('sel-edit-links');
+		var selFollowLinks = document.getElementById('sel-follow-links');
+		if (selFollowLinks.className == 'nonselected') {
+			selFollowLinks.className = 'selected';
+			selFollowLinks.innerText = "✔ Follow Links";
+			selEditLinks.className = 'nonselected';
+			selEditLinks.innerText = "✘ Edit Links";
+		} else {
+			selFollowLinks.className = 'nonselected';
+			selFollowLinks.innerText = "✘ Follow Links";
+		}
 	},
 }
 
