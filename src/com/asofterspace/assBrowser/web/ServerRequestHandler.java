@@ -720,13 +720,15 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		// buttonBar
 		StringBuilder buttonHtml = new StringBuilder();
 
-		buttonHtml.append("<span id='save-folder-btn' class='button' onclick='browser.saveFolder()' style='display:none;position:absolute;left:5%;bottom:0;'>");
+		buttonHtml.append("<span id='save-folder-btn' class='button' onclick='browser.saveFolder()' style='display:none;position:absolute;left:5%;bottom:0;padding:2pt 10pt;'>");
 		buttonHtml.append("Save");
 		buttonHtml.append("</span>");
 
-		buttonHtml.append("<span id='edit-folder-btn' class='button' onclick='browser.toggleEditFolder()' style='position:absolute;left:10%;bottom:0;'>");
+		buttonHtml.append("<span id='edit-folder-btn' class='button' onclick='browser.toggleEditFolder()' style='position:absolute;left:10%;bottom:0;padding:2pt 10pt;'>");
 		buttonHtml.append("Edit");
 		buttonHtml.append("</span>");
+
+		buttonHtml.append("<div style='height: 1%; padding-top: 7pt; position: relative;' class='buttonBar'>");
 
 		buttonHtml.append("<a href=\"/?path=" + path);
 		if (fileName != null) {
@@ -874,6 +876,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		}
 		buttonHtml.append("</div>");
 		buttonHtml.append("&nbsp;");
+		buttonHtml.append("</div>");
+
 		buttonHtml.append("</div>");
 
 		indexContent = StrUtils.replaceAll(indexContent, "[[BUTTONS]]", buttonHtml.toString());
