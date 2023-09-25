@@ -12,6 +12,7 @@ import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.io.JSON;
 import com.asofterspace.toolbox.io.JsonFile;
 import com.asofterspace.toolbox.io.JsonParseException;
+import com.asofterspace.toolbox.io.TextFile;
 import com.asofterspace.toolbox.Utils;
 import com.asofterspace.toolbox.web.WebTemplateEngine;
 
@@ -28,6 +29,9 @@ public class AssBrowser {
 	public final static String PROGRAM_TITLE = "assBrowser";
 	public final static String VERSION_NUMBER = "0.0.3.2(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
 	public final static String VERSION_DATE = "16. December 2020 - 16. September 2023";
+
+	// synchronize with BackupGenerator
+	public static TextFile BACKUP_RUN_FILE = new TextFile("C:\\home\\BACKUP.TXT");
 
 
 	public static void main(String[] args) {

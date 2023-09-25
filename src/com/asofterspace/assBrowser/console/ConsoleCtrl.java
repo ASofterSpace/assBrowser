@@ -572,6 +572,12 @@ public class ConsoleCtrl {
 	}
 
 	public static void shutdownNow() {
+		if (AssBrowser.BACKUP_RUN_FILE.exists()) {
+			GuiUtils.notify("Backup run in progress, shutdown aborted.\n" +
+				"(" + AssBrowser.BACKUP_RUN_FILE.getCanonicalFilename() + " exists.)");
+			return;
+		}
+
 		// for Windows
 		IoUtils.executeAsync("shutdown -s -t 1");
 		// for Linux
@@ -579,6 +585,12 @@ public class ConsoleCtrl {
 	}
 
 	public static void rebootNow() {
+		if (AssBrowser.BACKUP_RUN_FILE.exists()) {
+			GuiUtils.notify("Backup run in progress, reboot aborted.\n" +
+				"(" + AssBrowser.BACKUP_RUN_FILE.getCanonicalFilename() + " exists.)");
+			return;
+		}
+
 		// for Windows
 		IoUtils.executeAsync("shutdown -r -t 1");
 		// for Linux
