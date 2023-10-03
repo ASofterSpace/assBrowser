@@ -274,7 +274,13 @@ public class ConsoleCtrl {
 				"timer .. opens a generic timer GUI\n" +
 				"cd [xyz] .. navigates into a certain directory\n" +
 				"se: [xyz] .. executes [xyz] as OS shell command\n" +
-				"mo: [xyz] .. call the MathOrg for the mathematical formula [xyz]";
+				"mo: [xyz] .. call the MathOrg for the mathematical formula [xyz]\n" +
+				"\n" +
+				"Block commands in entries:\n" +
+				"_, **, ` .. italic style, bold style, code style\n" +
+				"%SPOILER% .. spoiler block\n" +
+				"%WORDCOUNT% .. count words in block\n" +
+				"picture X, pictures up to X .. inline pictures\n";
 			GuiUtils.notify(helpMessage);
 			return result;
 		}

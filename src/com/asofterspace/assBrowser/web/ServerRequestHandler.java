@@ -1564,6 +1564,9 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		// replace %SPOILER%...%SPOILER% with spoiler-prevention
 		fileHtmlStr = prepareEntryInlineMarkdown(fileHtmlStr, "%SPOILER%", null, "</span>");
 
+		// replace %WORDCOUNT%...%WORDCOUNT% with word-counted area
+		fileHtmlStr = prepareEntryInlineMarkdown(fileHtmlStr, "%WORDCOUNT%", "", "[WORDCOUNT]");
+
 		// add inline pictures
 		fileHtmlStr = addPicturesToEntryHtml(fileHtmlStr, folder, fileName);
 
@@ -1650,7 +1653,13 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				} else {
 					newFileHtml.append(tagStartCur);
 					newFileHtml.append(innerStr);
-					newFileHtml.append(tagEnd);
+					if ("[WORDCOUNT]".equals(tagEnd)) {
+						newFileHtml.append("<br><i>Word count :: " + StrUtils.getWordAmount(innerStr) + " words</i>");
+						newFileHtml.append("<br><i>Estimated reading time :: " + StrUtils.getReadingTimeStr(innerStr) + "</i>");
+						newFileHtml.append("<br>");
+					} else {
+						newFileHtml.append(tagEnd);
+					}
 				}
 				start = endNext + needle.length();
 				pos1 = fileHtmlStr.indexOf(" " + needle, start);
