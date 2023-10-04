@@ -891,6 +891,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				"  if (el) { el.style.display = 'none'; }\n" +
 				"  document.getElementById('consoleContainer').style.display = 'none';\n" +
 				"  document.getElementById('folderContainer').style.display = 'none';\n" +
+				"  document.getElementById('edit-folder-btn').style.display = 'none';\n" +
 				"  var buttonBars = document.getElementsByClassName('buttonBar');\n" +
 				"  for (var i = 0; i < buttonBars.length; i++) {\n" +
 				"    buttonBars[i].style.display = 'none';\n" +
@@ -1568,7 +1569,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		fileHtmlStr = prepareEntryInlineMarkdown(fileHtmlStr, "%WORDCOUNT%", "", "[WORDCOUNT]");
 
 		// add inline pictures
-		fileHtmlStr = addPicturesToEntryHtml(fileHtmlStr, folder, fileName);
+		fileHtmlStr = addPicturesToEntryHtml(fileHtmlStr, folder, fileName, exportingToPdf);
 
 		if (!exportingToPdf) {
 			// add footnote up/down links for numbered footnotes such as [1], [2], [3], etc.
@@ -1682,7 +1683,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		return newFileHtml.toString();
 	}
 
-	private static String addPicturesToEntryHtml(String contentStr, Directory folder, String fileName) {
+	private static String addPicturesToEntryHtml(String contentStr, Directory folder, String fileName, boolean exportingToPdf) {
 
 		StringBuilder multipleStrBuilder = new StringBuilder();
 		multipleStrBuilder.append("<div class='warning_outer'>");
@@ -1829,7 +1830,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			contentStr = StrUtils.addAfterLinesContaining(
 				contentStr,
 				replaceWith,
-				picToHtml(picLinkBase, pictureFileNames.get(i)),
+				picToHtml(picLinkBase, pictureFileNames.get(i), exportingToPdf),
 				"<br>"
 			);
 
@@ -1858,7 +1859,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				contentStr,
 				replaceWith,
 				"[[LOGPIC-UP-TO-" + i + "]]" +
-				picToHtml(picLinkBase, pictureFileNames.get(i)),
+				picToHtml(picLinkBase, pictureFileNames.get(i), exportingToPdf),
 				"<br>"
 			);
 
@@ -1877,7 +1878,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				} else {
 					contentStr = StrUtils.replaceAll(contentStr, token,
 						"[[LOGPIC-UP-TO-" + nextPic + "]]" +
-						picToHtml(picLinkBase, pictureFileNames.get(nextPic))
+						picToHtml(picLinkBase, pictureFileNames.get(nextPic), exportingToPdf)
 					);
 					picturesAdded.add(nextPic);
 				}
@@ -1894,15 +1895,20 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		}
 
 		for (int i = highestPicShown + 1; i < pictureFileNames.size(); i++) {
-			contentStr += picToHtml(picLinkBase, pictureFileNames.get(i));
+			contentStr += picToHtml(picLinkBase, pictureFileNames.get(i), exportingToPdf);
 		}
 		*/
 
 		return contentStr;
 	}
 
-	private static String picToHtml(String picLinkBase, String picFileName) {
+	private static String picToHtml(String picLinkBase, String picFileName, boolean exportingToPdf) {
+		String aStyle = "";
+		if (exportingToPdf) {
+			aStyle = " style='text-align: center; width: 100%; display: inline-block;' ";
+		}
 		return "<a href='" + picLinkBase + picFileName + "' " +
+				aStyle +
 				"target='_blank'>" +
 				"<img src='" + picLinkBase + picFileName + "' style='padding-top: 4pt; max-width: 100%;' /></a><br>";
 	}
