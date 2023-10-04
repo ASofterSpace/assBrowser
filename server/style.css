@@ -443,3 +443,15 @@ div.nonselected {
 div.selected, div.nonselected {
 	border: 1px solid rgba(100, 0, 180, 0.8);
 }
+
+span.entry_warning_button {
+	border-radius: 6pt;
+	border: 1px solid #000;
+	background-color: rgba(0, 0, 0, 0.1);
+	cursor: pointer;
+	padding: 0 4pt;
+}
+
+span.entry_warning_button:hover {
+	background-color: rgba(0, 0, 0, 0);
+}

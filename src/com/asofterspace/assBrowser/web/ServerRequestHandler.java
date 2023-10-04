@@ -70,6 +70,12 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 	// the link to the video that is played next (the first entry on the list of other videos)
 	private String nextVidLink = null;
 
+	private static final String WARN_BASE = "warning_id_";
+	private static final String ID_MULT = "mult";
+	private static final String ID_MISS = "miss";
+	private static final String ID_PICS = "pics";
+	private static final String ID_ENCO = "enco";
+
 
 	public ServerRequestHandler(WebServer server, Socket request, Directory webRoot, Directory serverDir,
 		Database database, ConsoleCtrl consoleCtrl) {
@@ -1428,6 +1434,10 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 				if (addSummaryText) {
 					line = "<span class='headSection'>Summary:</span> " + line;
+					if (exportingToPdf) {
+						line = "<span onclick='document.getElementById(\"summary_container\").style.display = \"none\";' " +
+							"id='summary_container' style='cursor: not-allowed;'>" + line + "</span>";
+					}
 				} else {
 					line = HTML.prettifyLine(line);
 
@@ -1685,24 +1695,42 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 	private static String addPicturesToEntryHtml(String contentStr, Directory folder, String fileName, boolean exportingToPdf) {
 
-		StringBuilder multipleStrBuilder = new StringBuilder();
-		multipleStrBuilder.append("<div class='warning_outer'>");
-		multipleStrBuilder.append("<div class='warning'>");
-		multipleStrBuilder.append("<div class='line'>");
-		multipleStrBuilder.append("<b>Warning!</b> Some pictures of this entry exist with multiple extensions!<br>");
-		multipleStrBuilder.append("They are:");
-		multipleStrBuilder.append("</div>");
-
-		StringBuilder missingStrBuilder = new StringBuilder();
-		missingStrBuilder.append("<div class='warning_outer'>");
-		missingStrBuilder.append("<div class='warning'>");
-		missingStrBuilder.append("<div class='line'>");
-		missingStrBuilder.append("<b>Warning!</b> Some pictures of this entry are missing!<br>");
-		missingStrBuilder.append("The first one is:");
-		missingStrBuilder.append("</div>");
-
 		boolean foundMultiples = false;
 		boolean foundMissing = false;
+		boolean foundWonkyEncoding = false;
+
+		StringBuilder multipleStrBuilder = new StringBuilder();
+		appendWarningStart(multipleStrBuilder, "Some pictures of this entry exist with multiple extensions!<br>They are:", ID_MULT);
+
+		StringBuilder missingStrBuilder = new StringBuilder();
+		appendWarningStart(missingStrBuilder, "Some pictures of this entry are missing!<br>The first one is:", ID_MISS);
+
+		StringBuilder wonkyEncodingStrBuilding = new StringBuilder();
+		appendWarningStart(wonkyEncodingStrBuilding, "The encoding of the file seems wonky or even broken!<br>See e.g.:", ID_ENCO);
+
+		int pos = contentStr.indexOf("?");
+		while (pos >= 0) {
+			// check if there is something like M?ori instead of the proper unicode characters - and complain for it to be fixed!
+			if (pos + 1 < contentStr.length()) {
+				if (Character.isLetter(contentStr.charAt(pos+1))) {
+					foundWonkyEncoding = true;
+					wonkyEncodingStrBuilding.append("<div class='line'>");
+					int from = Math.max(pos - 13, 0);
+					int to = Math.min(from + 26, contentStr.length());
+					String inner = contentStr.substring(from, to);
+					inner = StrUtils.replaceAll(inner, "<", "&lt;");
+					inner = StrUtils.replaceAll(inner, ">", "&gt;");
+					wonkyEncodingStrBuilding.append("... '" + inner + "' ...");
+					wonkyEncodingStrBuilding.append("</div>");
+				}
+			}
+			pos = contentStr.indexOf("?", pos+1);
+		}
+
+		if (foundWonkyEncoding) {
+			appendWarningEnd(wonkyEncodingStrBuilding, ID_ENCO);
+			contentStr = wonkyEncodingStrBuilding.toString() + contentStr;
+		}
 
 		List<String> pictureFileNames = new ArrayList<>();
 		List<File> pictureFiles = new ArrayList<>();
@@ -1756,26 +1784,19 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		}
 
 		if (foundMultiples) {
-			multipleStrBuilder.append("</div>");
-			multipleStrBuilder.append("</div>");
+			appendWarningEnd(multipleStrBuilder, ID_MULT);
 			contentStr = multipleStrBuilder.toString() + contentStr;
 		}
 
 		if (foundMissing) {
-			missingStrBuilder.append("</div>");
-			missingStrBuilder.append("</div>");
+			appendWarningEnd(missingStrBuilder, ID_MISS);
 			contentStr = missingStrBuilder.toString() + contentStr;
 		}
 
 		// check if any two pictures seem to be the same / duplicates, actually
 		StringBuilder duplicateStrBuilder = new StringBuilder();
-		duplicateStrBuilder.append("<div class='warning_outer'>");
-		duplicateStrBuilder.append("<div class='warning'>");
-		duplicateStrBuilder.append("<div class='line'>");
-		duplicateStrBuilder.append("<b>Warning!</b> Several pictures of this entry seem to have the same size, ");
-		duplicateStrBuilder.append("indicating they might be the same file!<br>");
-		duplicateStrBuilder.append("They are:");
-		duplicateStrBuilder.append("</div>");
+		appendWarningStart(duplicateStrBuilder, "Several pictures of this entry seem to have the same size, " +
+			"indicating they might be the same file!<br>They are:", ID_PICS);
 
 		boolean foundDuplicates = false;
 
@@ -1794,8 +1815,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		}
 
 		if (foundDuplicates) {
-			duplicateStrBuilder.append("</div>");
-			duplicateStrBuilder.append("</div>");
+			appendWarningEnd(duplicateStrBuilder, ID_PICS);
 			contentStr = duplicateStrBuilder.toString() + contentStr;
 		}
 
@@ -1900,6 +1920,27 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		*/
 
 		return contentStr;
+	}
+
+	private static void appendWarningStart(StringBuilder builder, String warningText, String identifier) {
+		builder.append("<div class='warning_outer' id='" + WARN_BASE + identifier + "'>");
+		builder.append("<div class='warning'>");
+		builder.append("<div class='line'>");
+		builder.append("<b>Warning!</b> ");
+		builder.append(warningText);
+		builder.append("</div>");
+	}
+
+	private static void appendWarningEnd(StringBuilder builder, String identifier) {
+		builder.append("<div style='text-align: right;'>");
+		builder.append("<span class='entry_warning_button' ");
+		builder.append("onclick='document.getElementById(\"" + WARN_BASE + identifier + "\").style.display = \"none\";'>");
+		builder.append("Dismiss");
+		builder.append("</span>");
+		builder.append("</div>");
+
+		builder.append("</div>");
+		builder.append("</div>");
 	}
 
 	private static String picToHtml(String picLinkBase, String picFileName, boolean exportingToPdf) {
