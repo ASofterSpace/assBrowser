@@ -734,7 +734,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		buttonHtml.append("Edit");
 		buttonHtml.append("</span>");
 
-		buttonHtml.append("<div style='height: 1%; padding-top: 7pt; position: relative;' class='buttonBar'>");
+		buttonHtml.append("<div style='height: 1%; padding-top: 7pt; position: relative; margin-left: 25%;' class='buttonBar'>");
 
 		buttonHtml.append("<a href=\"/?path=" + path);
 		if (fileName != null) {
@@ -1719,15 +1719,22 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					// or if R > L, so either L == -1 or not, does not matter (outside of a link)
 					// then complain - but do not complain inside of a link or other html entity thingy!
 					if (posRbefore >= posLbefore) {
-						foundWonkyEncoding = true;
-						wonkyEncodingStrBuilding.append("<div class='line'>");
-						int from = Math.max(pos - 13, 0);
-						int to = Math.min(from + 26, contentStr.length());
-						String inner = contentStr.substring(from, to);
-						inner = StrUtils.replaceAll(inner, "<", "&lt;");
-						inner = StrUtils.replaceAll(inner, ">", "&gt;");
-						wonkyEncodingStrBuilding.append("... '" + inner + "' ...");
-						wonkyEncodingStrBuilding.append("</div>");
+
+						// however, it could still be that we are not inside an HTML entity,
+						// but in the xyz of <a ...>xyz</a> - sooo let's guard against that as well...
+						int posNextL = contentStr.indexOf("<", pos);
+						int posNextLSAR = contentStr.indexOf("</a>", pos);
+						if ((posNextLSAR < 0) || (posNextLSAR > posNextL)) {
+							foundWonkyEncoding = true;
+							wonkyEncodingStrBuilding.append("<div class='line'>");
+							int from = Math.max(pos - 13, 0);
+							int to = Math.min(from + 26, contentStr.length());
+							String inner = contentStr.substring(from, to);
+							inner = StrUtils.replaceAll(inner, "<", "&lt;");
+							inner = StrUtils.replaceAll(inner, ">", "&gt;");
+							wonkyEncodingStrBuilding.append("... '" + inner + "' ...");
+							wonkyEncodingStrBuilding.append("</div>");
+						}
 					}
 				}
 			}
