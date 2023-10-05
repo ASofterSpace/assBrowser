@@ -567,7 +567,8 @@ window.browser = {
 			if (textActionsBtn) {
 				textActionsBtn.innerText = 'Close Actions...';
 				textActionsBtn.className = 'button activeInBackground';
-				container.style.left = (13 + textActionsBtn.offsetLeft + (textActionsBtn.offsetWidth / 2) -
+				container.style.left = (13 + textActionsBtn.offsetLeft + textActionsBtn.parentElement.offsetLeft +
+					(textActionsBtn.offsetWidth / 2) -
 					(container.clientWidth / 2)) + "px";
 			}
 		} else {
@@ -584,7 +585,8 @@ window.browser = {
 			if (moreActionsBtn) {
 				moreActionsBtn.innerText = 'Close Actions...';
 				moreActionsBtn.className = 'button activeInBackground';
-				container.style.left = (13 + moreActionsBtn.offsetLeft + (moreActionsBtn.offsetWidth / 2) -
+				container.style.left = (13 + moreActionsBtn.offsetLeft + moreActionsBtn.parentElement.offsetLeft +
+					(moreActionsBtn.offsetWidth / 2) -
 					(container.clientWidth / 2)) + "px";
 			}
 		} else {
