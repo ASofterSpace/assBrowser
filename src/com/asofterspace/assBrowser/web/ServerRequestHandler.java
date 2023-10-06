@@ -1167,7 +1167,16 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		folderContent.append(entryOrLink + "' ");
 		String link = "/?path=" + funkCode(path) + "&file=" + funkCode(childFile.getLocalFilename());
 		link = StrUtils.replaceAll(link, "'", "\\'");
-		folderContent.append("onclick=\"browser.navigateTo('" + link + "')\">");
+		folderContent.append("onclick=\"browser.navigateTo('" + link + "')\"");
+		if (filename.startsWith("   ")) {
+			folderContent.append(" style=\"text-align:center;\"");
+			int pos = 0;
+			while ((pos < filename.length()) && (filename.charAt(pos) == ' ')) {
+				pos++;
+			}
+			filename = filename.substring(pos);
+		}
+		folderContent.append(">");
 		folderContent.append(HTML.escapeHTMLstrNbsp(filename));
 		folderContent.append("</div>");
 	}
@@ -1326,7 +1335,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				} else {
 
 					for (String entry : entries) {
-						if ("".equals(entry)) {
+						if ("".equals(entry.trim())) {
 							addTextToHtml(folderContent, entry);
 						} else {
 							Directory curDir = directories.get(entry.toLowerCase());
