@@ -1274,11 +1274,11 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			}
 			return "file:///" + StrUtils.replaceAll(StrUtils.replaceAll(
 				fullPath,
-				"\\", "/"), "//", "/");
+				"\\", "/"), "//", "/").replace("#", "%23");
 		}
 
 		// works in any browser, but is more effort - linking through this server:
-		return "/?path=" + path + "&file=" + fileName + "&action=download";
+		return "/?path=" + path + "&file=" + fileName.replace("#", "%23") + "&action=download";
 	}
 
 	private String getFolderContentHtml(Directory folder, String path, String compareToFileName, boolean quickView) {
