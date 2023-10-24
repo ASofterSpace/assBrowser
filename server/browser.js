@@ -981,8 +981,21 @@ window.onkeydown = function(event) {
 			}
 		}
 
-		// [F4] to add ’ (as that is useful more often than ‘’)
+		// [F4] to add ‘’
 		if (event.keyCode == 111 + 4) {
+			var fileContentTextarea = document.getElementById("fileContentTextarea");
+			if (fileContentTextarea && browser.editingMode) {
+				toolbox.utils.StrUtils.insertText(fileContentTextarea, "‘’", event);
+			} else {
+				var folderTextarea = document.getElementById("folderTextarea");
+				if (folderTextarea && browser.folderEditingMode) {
+					toolbox.utils.StrUtils.insertText(folderTextarea, "‘’", event);
+				}
+			}
+		}
+
+		// [F5] to add ’ (as that is useful more often than ‘’)
+		if (event.keyCode == 111 + 5) {
 			var fileContentTextarea = document.getElementById("fileContentTextarea");
 			if (fileContentTextarea && browser.editingMode) {
 				toolbox.utils.StrUtils.insertText(fileContentTextarea, "’", event);
