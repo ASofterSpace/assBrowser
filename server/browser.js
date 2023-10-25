@@ -616,18 +616,26 @@ window.browser = {
 		content = content.split("\n");
 		var entryName = content[0];
 
-		result += "Entry: " + entryName + "\n";
+		result += "Entry: **" + entryName + "**\n";
 
 		var crossLinks = "";
-		for (var i = 0; i < content.length; i++) {
+		for (var i = 0; i < content.length - 1; i++) {
 			const SEE_ALSO_FOR = "see also for ";
-			if (content[i].startsWith(SEE_ALSO_FOR)) {
-				var cur = content[i+1].split("/").join("\\");
-				if (cur.endsWith("]")) {
-					cur = cur.substring(0, cur.length - 1);
-				}
+			if (content[i].startsWith(SEE_ALSO_FOR) && content[i].endsWith(":") &&
+				content[i+1].startsWith("%[") && content[i+1].endsWith("]")) {
+
+				var cur = content[i+1]
+				cur = cur.substring(2);
+				cur = cur.substring(0, cur.length - 1);
+				cur = cur.split("/").join("\\");;
 				cur = cur.split("\\");
-				crossLinks += "  " + cur[cur.length - 2] + " > " + cur[cur.length - 1] + "\n";
+				var curTopic = cur[cur.length - 2];
+				var curEntry = cur[cur.length - 1];
+				crossLinks += "  " + cur[cur.length - 2];
+				if (curEntry.length > 0) {
+					crossLinks += " > " + cur[cur.length - 1];
+				}
+				crossLinks += "\n";
 			}
 		}
 		if (crossLinks.length > 0) {
