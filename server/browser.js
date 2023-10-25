@@ -603,6 +603,50 @@ window.browser = {
 		return document.getElementById("fileContentContainer").innerText;
 	},
 
+	extractCyberMetaInfo: function() {
+		var content = this.getCurrentEntryText();
+
+		var topicName = window.data.path;
+		topicName = topicName.split("/").join("\\");
+		topicName = topicName.split("\\");
+		topicName = topicName[topicName.length - 1];
+
+		var result = "Topic: " + topicName + "\n";
+
+		content = content.split("\n");
+		var entryName = content[0];
+
+		result += "Entry: " + entryName + "\n";
+
+		var crossLinks = "";
+		for (var i = 0; i < content.length; i++) {
+			const SEE_ALSO_FOR = "see also for ";
+			if (content[i].startsWith(SEE_ALSO_FOR)) {
+				var cur = content[i+1].split("/").join("\\");
+				if (cur.endsWith("]")) {
+					cur = cur.substring(0, cur.length - 1);
+				}
+				cur = cur.split("\\");
+				crossLinks += "  " + cur[cur.length - 2] + " > " + cur[cur.length - 1] + "\n";
+			}
+		}
+		if (crossLinks.length > 0) {
+			result += "Cross-linked to:\n" + crossLinks;
+		}
+
+		var fileName = window.data.file;
+		if (fileName.endsWith(".stpu")) {
+			fileName = fileName.substring(0, fileName.length - 5);
+		}
+
+		result += "Location: " + window.data.path.split("/").join("\\") + "\\" + fileName + "\n";
+		result += "Cyber System Version: " + window.data.version;
+
+		this.copyToClipboard(result);
+
+		this.closeMoreActions();
+	},
+
 	extractTLDR: function() {
 		var content = this.getCurrentEntryText();
 		var commentText = "";

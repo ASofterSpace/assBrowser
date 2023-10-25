@@ -4,6 +4,7 @@
  */
 package com.asofterspace.assBrowser.web;
 
+import com.asofterspace.assBrowser.AssBrowser;
 import com.asofterspace.assBrowser.console.ConsoleCtrl;
 import com.asofterspace.assBrowser.console.ConsoleResult;
 import com.asofterspace.assBrowser.Database;
@@ -537,6 +538,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		JSON jsonData = new JSON(Record.emptyObject());
 		jsonData.set("path", path);
 		jsonData.set("file", fileName);
+		jsonData.set("version", AssBrowser.VERSION_NUMBER);
 		indexContent = StrUtils.replaceAll(indexContent, "[[DATA]]", jsonData.toString());
 
 		indexContent = StrUtils.replaceAll(indexContent, "[[PATH]]", path);
@@ -797,8 +799,13 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			buttonHtml.append("</span>");
 			buttonHtml.append("<br>");
 
+			buttonHtml.append("<span class='button' onclick='browser.extractCyberMetaInfo()'>");
+			buttonHtml.append("Cyber System Meta Info to clipboard");
+			buttonHtml.append("</span>");
+			buttonHtml.append("<br>");
+
 			buttonHtml.append("<span class='button' onclick='browser.extractTLDR()'>");
-			buttonHtml.append("Extract Summary to clipboard");
+			buttonHtml.append("Extract Summary / Link to clipboard");
 			buttonHtml.append("</span>");
 			buttonHtml.append("<br>");
 
