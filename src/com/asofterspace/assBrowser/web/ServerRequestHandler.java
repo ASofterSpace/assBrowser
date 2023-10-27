@@ -1673,10 +1673,18 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					innerStr = innerStr.substring(0, innerStr.length() - 4);
 				}
 
+				start = endNext + needle.length();
+
 				if ("</span>".equals(tagEnd) && innerStr.contains("<br>")) {
 					newFileHtml.append(StrUtils.replaceFirst(tagStartCur, "span", "div"));
 					newFileHtml.append(innerStr);
 					newFileHtml.append("</div>");
+
+					// as we replace a span with a div, we need to ensure that if we are followed by <br>s, we remove one of them...
+					if (fileHtmlStr.indexOf("<br>", start) == start) {
+						start += 4;
+					}
+
 				} else {
 					newFileHtml.append(tagStartCur);
 					newFileHtml.append(innerStr);
@@ -1688,7 +1696,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 						newFileHtml.append(tagEnd);
 					}
 				}
-				start = endNext + needle.length();
+
 				pos1 = fileHtmlStr.indexOf(" " + needle, start);
 				pos2 = fileHtmlStr.indexOf(">" + needle, start);
 				posNext = -1;
