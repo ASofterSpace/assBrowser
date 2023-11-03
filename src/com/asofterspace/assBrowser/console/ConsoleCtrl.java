@@ -275,6 +275,7 @@ public class ConsoleCtrl {
 				"cd [xyz] .. navigates into a certain directory\n" +
 				"se: [xyz] .. executes [xyz] as OS shell command\n" +
 				"mo: [xyz] .. call the MathOrg for the mathematical formula [xyz]\n" +
+				"grep / sed / find .. shows syntax of common commandline calls\n" +
 				"\n" +
 				"Block commands in entries:\n" +
 				"_, **, ` .. italic style, bold style, code style\n" +
@@ -284,6 +285,32 @@ public class ConsoleCtrl {
 			GuiUtils.notify(helpMessage);
 			return result;
 		}
+
+
+		// commandline syntax reminders
+
+		String syntaxReminder = null;
+		switch (commandLow) {
+			case "grep":
+				syntaxReminder = "grep -rni \"needle\" --include \\*.txt '/drives/c/home/a softer space/'";
+				break;
+			case "find":
+				syntaxReminder = "find . -name '*.txt'";
+				break;
+			case "sed":
+				syntaxReminder = "sed -i \"s.origStr.newStr.g\" file.txt";
+				break;
+			default:
+				break;
+		}
+		if (syntaxReminder != null) {
+			result.setCommand(syntaxReminder);
+			if (history.size() > 0) {
+				history.set(history.size() - 1, origHistoryLine + " > " + result.getCommand());
+			}
+			return result;
+		}
+
 
 		if (commandLowNoSpace.equals("about")) {
 			String aboutMessage = "This is the " + AssBrowser.PROGRAM_TITLE + ".\n" +
