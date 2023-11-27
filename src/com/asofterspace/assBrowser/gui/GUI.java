@@ -61,6 +61,10 @@ public class GUI extends MainWindow {
 	private JLabel counterLabel;
 	private JLabel quoteLabel1;
 	private JLabel quoteLabel2;
+	private JLabel quoteLabel3;
+	private JLabel quoteLabel4;
+	private JLabel quoteLabel5;
+	private JLabel quoteLabel6;
 	private JLabel newlineLabel;
 	private JLabel heartLabel;
 	private JLabel batteryLabel;
@@ -271,30 +275,82 @@ public class GUI extends MainWindow {
 			}
 		});
 
-		quoteLabel1 = createLabel("„“”", bgColor, fgColor);
+		quoteLabel1 = createLabel("„", bgColor, fgColor);
 		mainPanel.add(quoteLabel1, new Arrangement(3, 0, 0.0, 1.0));
 
 		quoteLabel1.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				GuiUtils.copyToClipboard("„“”");
+				GuiUtils.copyToClipboard("„“");
 				clickHighlight(quoteLabel1);
+				clickHighlight(quoteLabel2);
 			}
 		});
 
-		quoteLabel2 = createLabel("‚‘’ ", bgColor, fgColor);
+		quoteLabel2 = createLabel("“", bgColor, fgColor);
 		mainPanel.add(quoteLabel2, new Arrangement(4, 0, 0.0, 1.0));
 
 		quoteLabel2.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				GuiUtils.copyToClipboard("‚‘’");
+				GuiUtils.copyToClipboard("„“”");
+				clickHighlight(quoteLabel1);
 				clickHighlight(quoteLabel2);
+				clickHighlight(quoteLabel3);
+			}
+		});
+
+		quoteLabel3 = createLabel("” ", bgColor, fgColor);
+		mainPanel.add(quoteLabel3, new Arrangement(5, 0, 0.0, 1.0));
+
+		quoteLabel3.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				GuiUtils.copyToClipboard("“”");
+				clickHighlight(quoteLabel2);
+				clickHighlight(quoteLabel3);
+			}
+		});
+
+		quoteLabel4 = createLabel("‚", bgColor, fgColor);
+		mainPanel.add(quoteLabel4, new Arrangement(6, 0, 0.0, 1.0));
+
+		quoteLabel4.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				GuiUtils.copyToClipboard("‚‘");
+				clickHighlight(quoteLabel4);
+				clickHighlight(quoteLabel5);
+			}
+		});
+
+		quoteLabel5 = createLabel("‘", bgColor, fgColor);
+		mainPanel.add(quoteLabel5, new Arrangement(7, 0, 0.0, 1.0));
+
+		quoteLabel5.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				GuiUtils.copyToClipboard("‚‘’");
+				clickHighlight(quoteLabel4);
+				clickHighlight(quoteLabel5);
+				clickHighlight(quoteLabel6);
+			}
+		});
+
+		quoteLabel6 = createLabel("’ ", bgColor, fgColor);
+		mainPanel.add(quoteLabel6, new Arrangement(8, 0, 0.0, 1.0));
+
+		quoteLabel6.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				GuiUtils.copyToClipboard("‘’");
+				clickHighlight(quoteLabel5);
+				clickHighlight(quoteLabel6);
 			}
 		});
 
 		newlineLabel = createLabel("\\n ", bgColor, fgColor);
-		mainPanel.add(newlineLabel, new Arrangement(5, 0, 0.0, 1.0));
+		mainPanel.add(newlineLabel, new Arrangement(9, 0, 0.0, 1.0));
 
 		newlineLabel.addMouseListener(new MouseAdapter() {
 			@Override
@@ -305,7 +361,7 @@ public class GUI extends MainWindow {
 		});
 
 		heartLabel = createLabel(PURPLE_HEART + " ", bgColor, fgColor);
-		mainPanel.add(heartLabel, new Arrangement(6, 0, 0.0, 1.0));
+		mainPanel.add(heartLabel, new Arrangement(10, 0, 0.0, 1.0));
 
 		heartLabel.addMouseListener(new MouseAdapter() {
 			@Override
@@ -317,7 +373,7 @@ public class GUI extends MainWindow {
 
 		batteryLabel = createLabel("BATTERY STATE UNINITIALIZED ", bgColor, errorColor);
 		batteryLabel.setOpaque(true);
-		mainPanel.add(batteryLabel, new Arrangement(7, 0, 0.0, 1.0));
+		mainPanel.add(batteryLabel, new Arrangement(11, 0, 0.0, 1.0));
 
 		batteryLabel.addMouseListener(new MouseAdapter() {
 			@Override
@@ -329,7 +385,7 @@ public class GUI extends MainWindow {
 		});
 
 		clockLabel = createLabel("00:00 ", bgColor, fgColor);
-		mainPanel.add(clockLabel, new Arrangement(8, 0, 0.0, 1.0));
+		mainPanel.add(clockLabel, new Arrangement(12, 0, 0.0, 1.0));
 
 		clockLabel.addMouseListener(new MouseAdapter() {
 			@Override
@@ -540,6 +596,10 @@ public class GUI extends MainWindow {
 		counterLabel.setVisible(visible);
 		quoteLabel1.setVisible(visible);
 		quoteLabel2.setVisible(visible);
+		quoteLabel3.setVisible(visible);
+		quoteLabel4.setVisible(visible);
+		quoteLabel5.setVisible(visible);
+		quoteLabel6.setVisible(visible);
 		newlineLabel.setVisible(visible);
 		heartLabel.setVisible(visible);
 		batteryLabel.setVisible(visible);
