@@ -1604,14 +1604,16 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			while (firstPos >= 0) {
 				int secondPos = fileHtmlStr.indexOf("[" + curFootNote + "]", firstPos + 1);
 				if (secondPos >= 0) {
-					fileHtmlStr = StrUtils.replaceFirst(fileHtmlStr, "[" + curFootNote + "]",
-						"<a id='footnote-in-text-" + curFootNote + "' href='#footnote-at-bottom-" + curFootNote +
-						"' style='font-style: normal;'>" +
-						"[" + curFootNote + " &#9660;]</a>");
+					// jump *to* the last one
 					fileHtmlStr = StrUtils.replaceLast(fileHtmlStr, "[" + curFootNote + "]",
 						"<a id='footnote-at-bottom-" + curFootNote + "' href='#footnote-in-text-" + curFootNote +
 						"' style='font-style: normal;'>" +
 						"[" + curFootNote + " &#9650;]</a>");
+					// jump *from* all others - so the first, and if it exists, the second, and third, and so on...
+					fileHtmlStr = StrUtils.replaceAll(fileHtmlStr, "[" + curFootNote + "]",
+						"<a id='footnote-in-text-" + curFootNote + "' href='#footnote-at-bottom-" + curFootNote +
+						"' style='font-style: normal;'>" +
+						"[" + curFootNote + " &#9660;]</a>");
 				}
 
 				curFootNote++;
