@@ -72,17 +72,17 @@ public class GUI extends MainWindow {
 
 	private boolean timerRunning = false;
 
-	private final static ColorRGBA bgColor = new ColorRGBA(0, 0, 0);
-	private final static Color bgColorCol = bgColor.toColor();
+	final static ColorRGBA bgColor = new ColorRGBA(0, 0, 0);
+	final static Color bgColorCol = bgColor.toColor();
 	private final static ColorRGBA borderColor = new ColorRGBA(96, 0, 192);
 	private final static ColorRGBA fgColorMain = new ColorRGBA(255, 255, 255);
-	private final static ColorRGBA fgColor = new ColorRGBA(167, 62, 249);
-	private final static Color fgColorCol = fgColor.toColor();
+	final static ColorRGBA fgColor = new ColorRGBA(167, 62, 249);
+	final static Color fgColorCol = fgColor.toColor();
 	private final static ColorRGBA highlightColor = new ColorRGBA(240, 150, 255);
 	private final static ColorRGBA errorColor = new ColorRGBA(255, 0, 64);
 	private final static Color errorColorCol = errorColor.toColor();
 
-	private final static String PURPLE_HEART = new String(Character.toChars(0x1F49C));
+	private EmojiSelectorGUI emojiSelectorGUI = null;
 
 	private final static int left = 0;
 	private final static int top = 0;
@@ -94,7 +94,7 @@ public class GUI extends MainWindow {
 	// private long lastVolumeTime = 0;
 	private String nircmdPath;
 
-	private Font sharedFont = null;
+	Font sharedFont = null;
 
 	private MouseAdapter mouseListenerToMaximize = new MouseAdapter() {
 		@Override
@@ -129,6 +129,8 @@ public class GUI extends MainWindow {
 		// position...)
 		// super.show();
 
+		GUI outerThis = this;
+
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				// Stage everything to be shown
@@ -143,6 +145,8 @@ public class GUI extends MainWindow {
 				resetGuiLocation();
 
 				startTimerThread();
+
+				emojiSelectorGUI = new EmojiSelectorGUI(outerThis);
 			}
 		});
 	}
@@ -260,7 +264,7 @@ public class GUI extends MainWindow {
 		});
 		mainPanel.add(volumeItem, new Arrangement(1, 0, 0.0, 1.0));
 
-		counterLabel = createLabel(" 0 ", bgColor, fgColor);
+		counterLabel = createLabel(" 0 ");
 		mainPanel.add(counterLabel, new Arrangement(2, 0, 0.0, 1.0));
 
 		counterLabel.addMouseListener(new MouseAdapter() {
@@ -275,7 +279,7 @@ public class GUI extends MainWindow {
 			}
 		});
 
-		quoteLabel1 = createLabel("„", bgColor, fgColor);
+		quoteLabel1 = createLabel("„");
 		mainPanel.add(quoteLabel1, new Arrangement(3, 0, 0.0, 1.0));
 
 		quoteLabel1.addMouseListener(new MouseAdapter() {
@@ -287,7 +291,7 @@ public class GUI extends MainWindow {
 			}
 		});
 
-		quoteLabel2 = createLabel("“", bgColor, fgColor);
+		quoteLabel2 = createLabel("“");
 		mainPanel.add(quoteLabel2, new Arrangement(4, 0, 0.0, 1.0));
 
 		quoteLabel2.addMouseListener(new MouseAdapter() {
@@ -300,7 +304,7 @@ public class GUI extends MainWindow {
 			}
 		});
 
-		quoteLabel3 = createLabel("” ", bgColor, fgColor);
+		quoteLabel3 = createLabel("” ");
 		mainPanel.add(quoteLabel3, new Arrangement(5, 0, 0.0, 1.0));
 
 		quoteLabel3.addMouseListener(new MouseAdapter() {
@@ -312,7 +316,7 @@ public class GUI extends MainWindow {
 			}
 		});
 
-		quoteLabel4 = createLabel("‚", bgColor, fgColor);
+		quoteLabel4 = createLabel("‚");
 		mainPanel.add(quoteLabel4, new Arrangement(6, 0, 0.0, 1.0));
 
 		quoteLabel4.addMouseListener(new MouseAdapter() {
@@ -324,7 +328,7 @@ public class GUI extends MainWindow {
 			}
 		});
 
-		quoteLabel5 = createLabel("‘", bgColor, fgColor);
+		quoteLabel5 = createLabel("‘");
 		mainPanel.add(quoteLabel5, new Arrangement(7, 0, 0.0, 1.0));
 
 		quoteLabel5.addMouseListener(new MouseAdapter() {
@@ -337,7 +341,7 @@ public class GUI extends MainWindow {
 			}
 		});
 
-		quoteLabel6 = createLabel("’ ", bgColor, fgColor);
+		quoteLabel6 = createLabel("’ ");
 		mainPanel.add(quoteLabel6, new Arrangement(8, 0, 0.0, 1.0));
 
 		quoteLabel6.addMouseListener(new MouseAdapter() {
@@ -349,7 +353,7 @@ public class GUI extends MainWindow {
 			}
 		});
 
-		newlineLabel = createLabel("\\n ", bgColor, fgColor);
+		newlineLabel = createLabel("\\n ");
 		mainPanel.add(newlineLabel, new Arrangement(9, 0, 0.0, 1.0));
 
 		newlineLabel.addMouseListener(new MouseAdapter() {
@@ -360,19 +364,24 @@ public class GUI extends MainWindow {
 			}
 		});
 
-		heartLabel = createLabel(PURPLE_HEART + " ", bgColor, fgColor);
+		heartLabel = createLabel(EmojiSelectorGUI.PURPLE_HEART + " ");
 		mainPanel.add(heartLabel, new Arrangement(10, 0, 0.0, 1.0));
 
 		heartLabel.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				GuiUtils.copyToClipboard(PURPLE_HEART);
+				GuiUtils.copyToClipboard(EmojiSelectorGUI.PURPLE_HEART);
 				clickHighlight(heartLabel);
+
+				if (emojiSelectorGUI != null) {
+					emojiSelectorGUI.toggle();
+				}
 			}
 		});
 
-		batteryLabel = createLabel("BATTERY STATE UNINITIALIZED ", bgColor, errorColor);
+		batteryLabel = createLabel("BATTERY STATE UNINITIALIZED ");
 		batteryLabel.setOpaque(true);
+		batteryLabel.setForeground(errorColor.toColor());
 		mainPanel.add(batteryLabel, new Arrangement(11, 0, 0.0, 1.0));
 
 		batteryLabel.addMouseListener(new MouseAdapter() {
@@ -384,7 +393,7 @@ public class GUI extends MainWindow {
 			}
 		});
 
-		clockLabel = createLabel("00:00 ", bgColor, fgColor);
+		clockLabel = createLabel("00:00 ");
 		mainPanel.add(clockLabel, new Arrangement(12, 0, 0.0, 1.0));
 
 		clockLabel.addMouseListener(new MouseAdapter() {
@@ -468,10 +477,10 @@ public class GUI extends MainWindow {
 		miniThread.start();
 	}
 
-	private JLabel createLabel(String text, ColorRGBA bgColor, ColorRGBA fgColor) {
+	private JLabel createLabel(String text) {
 		JLabel result = new JLabel(text);
 		result.setBackground(bgColorCol);
-		result.setForeground(fgColor.toColor());
+		result.setForeground(fgColorCol);
 		if (sharedFont == null) {
 			sharedFont = result.getFont();
 			sharedFont = new Font(sharedFont.getName(), sharedFont.getStyle(), (sharedFont.getSize() * 13) / 10);
