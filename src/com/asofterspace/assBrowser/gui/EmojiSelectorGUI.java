@@ -38,9 +38,12 @@ public class EmojiSelectorGUI {
 	final static String FROG = new String(Character.toChars(0x1F438));
 	final static String TADA = new String(Character.toChars(0x1F389));
 	final static String RAINBOW = new String(Character.toChars(0x1F308));
+	final static String SPARKLES = new String(Character.toChars(0x2728));
 
 	final static Color colorYellow = new ColorRGBA(255, 255, 0).toColor();
 	final static Color colorGreen = new ColorRGBA(0, 196, 0).toColor();
+	final static Color colorRed = new ColorRGBA(255, 0, 0).toColor();
+	final static Color colorWhite = new ColorRGBA(255, 255, 255).toColor();
 
 	private int labelCounter = 0;
 
@@ -68,8 +71,9 @@ public class EmojiSelectorGUI {
 		addLabel(THUMBS_UP, colorYellow);
 		addLabel(THUMBS_DOWN, colorYellow);
 		addLabel(FROG, colorGreen);
-		addLabel(TADA);
-		addLabel(RAINBOW);
+		addLabel(TADA, colorRed);
+		addLabel(RAINBOW, colorWhite);
+		addLabel(SPARKLES, colorYellow);
 
 
 		// remove title bar
