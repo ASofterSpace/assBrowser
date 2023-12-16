@@ -45,7 +45,8 @@ public class EmojiSelectorGUI {
 	final static Color colorRed = new ColorRGBA(255, 0, 0).toColor();
 	final static Color colorWhite = new ColorRGBA(255, 255, 255).toColor();
 
-	private int labelCounter = 0;
+	private int colCounter = 0;
+	private int rowCounter = 0;
 
 
 	public EmojiSelectorGUI(GUI gui) {
@@ -64,7 +65,11 @@ public class EmojiSelectorGUI {
 		dialogWindow.setLayout(dialogWindowLayout);
 		dialogWindow.getRootPane().setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
 		dialogWindow.setBackground(GUI.bgColorCol);
+		dialogWindow.getContentPane().setBackground(GUI.bgColorCol);
 
+
+		colCounter = 0;
+		rowCounter = 0;
 
 		addLabel(PURPLE_HEART);
 		addLabel(SCREAM, colorYellow);
@@ -75,6 +80,47 @@ public class EmojiSelectorGUI {
 		addLabel(RAINBOW, colorWhite);
 		addLabel(SPARKLES, colorYellow);
 
+		colCounter = 0;
+		rowCounter = 1;
+
+		addLabel("·");
+		addLabel("•");
+		addLabel("—");
+		addLabel("–");
+		addLabel("˜");
+		addLabel("±");
+		addLabel("½");
+		addLabel("¼");
+		addLabel("¾");
+		addLabel("¿");
+		addLabel("¡");
+		addLabel("×");
+		addLabel("÷");
+		addLabel("ø");
+		addLabel("Ø");
+		addLabel("¬");
+
+		colCounter = 0;
+		rowCounter = 2;
+
+		addLabel("ä");
+		addLabel("Ä");
+		addLabel("ö");
+		addLabel("Ö");
+		addLabel("ü");
+		addLabel("Ü");
+		addLabel("ß");
+		addLabel("æ");
+		addLabel("Æ");
+		addLabel("ð");
+		addLabel("Ð");
+		addLabel("þ");
+		addLabel("Þ");
+		addLabel("ï");
+		addLabel("ç");
+		addLabel("ñ");
+		addLabel("å");
+		addLabel("Å");
 
 		// remove title bar
 		dialogWindow.setUndecorated(true);
@@ -95,7 +141,7 @@ public class EmojiSelectorGUI {
 			label.setFont(gui.sharedFont);
 		}
 
-		dialogWindow.add(label, new Arrangement(labelCounter++, 0, 0.0, 0.0));
+		dialogWindow.add(label, new Arrangement(colCounter++, rowCounter, 0.0, 0.0));
 
 		label.addMouseListener(new MouseAdapter() {
 			@Override
@@ -119,7 +165,7 @@ public class EmojiSelectorGUI {
 				// Actually display the whole jazz
 				dialogWindow.setVisible(true);
 
-				dialogWindow.setLocation(new Point(width - 200, 20));
+				dialogWindow.setLocation(new Point(width - 350, 20));
 			}
 		});
 
