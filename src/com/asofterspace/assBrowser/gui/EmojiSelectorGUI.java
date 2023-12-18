@@ -39,10 +39,12 @@ public class EmojiSelectorGUI {
 	final static String TADA = new String(Character.toChars(0x1F389));
 	final static String RAINBOW = new String(Character.toChars(0x1F308));
 	final static String SPARKLES = new String(Character.toChars(0x2728));
+	final static String FIRE = new String(Character.toChars(0x1F525));
 
 	final static Color colorYellow = new ColorRGBA(255, 255, 0).toColor();
 	final static Color colorGreen = new ColorRGBA(0, 196, 0).toColor();
 	final static Color colorRed = new ColorRGBA(255, 0, 0).toColor();
+	final static Color colorOrange = new ColorRGBA(255, 128, 0).toColor();
 	final static Color colorWhite = new ColorRGBA(255, 255, 255).toColor();
 
 	private int colCounter = 0;
@@ -68,7 +70,8 @@ public class EmojiSelectorGUI {
 		dialogWindow.getContentPane().setBackground(GUI.bgColorCol);
 
 
-		colCounter = 0;
+		// slight offset to center it
+		colCounter = 5;
 		rowCounter = 0;
 
 		addLabel(PURPLE_HEART);
@@ -79,6 +82,7 @@ public class EmojiSelectorGUI {
 		addLabel(TADA, colorRed);
 		addLabel(RAINBOW, colorWhite);
 		addLabel(SPARKLES, colorYellow);
+		addLabel(FIRE, colorOrange);
 
 		colCounter = 0;
 		rowCounter = 1;
@@ -88,6 +92,8 @@ public class EmojiSelectorGUI {
 		addLabel("—");
 		addLabel("–");
 		addLabel("˜");
+		addLabel("†");
+		addLabel("‡");
 		addLabel("±");
 		addLabel("½");
 		addLabel("¼");
