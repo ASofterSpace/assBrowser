@@ -175,6 +175,8 @@ public class GUI extends MainWindow {
 			}
 
 			public void keyPressed(KeyEvent event) {
+				hideEmojiSelector();
+
 				// [F1] to add „“
 				if (event.getKeyCode() == KeyEvent.VK_F1) {
 					insertTextForFunctionKey("„“", consoleField);
@@ -217,6 +219,8 @@ public class GUI extends MainWindow {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 
+				hideEmojiSelector();
+
 				String command = consoleField.getText();
 				String previousPath = PathCtrl.DESKTOP;
 				previousPath = PathCtrl.ensurePathIsSafe(previousPath);
@@ -236,6 +240,13 @@ public class GUI extends MainWindow {
 			}
 		});
 
+		consoleField.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				hideEmojiSelector();
+			}
+		});
+
 		IoUtils.executeAsync(this.nircmdPath + " setsysvolume 0");
 		IoUtils.executeAsync(this.nircmdPath + " mutesysvolume 0");
 
@@ -249,6 +260,7 @@ public class GUI extends MainWindow {
 			@Override
 			public void onBarMove(Integer position) {
 				adjustVolume(position);
+				hideEmojiSelector();
 			}
 
 			@Override
@@ -276,6 +288,8 @@ public class GUI extends MainWindow {
 					num = 0;
 				}
 				counterLabel.setText(" " + num + " ");
+
+				hideEmojiSelector();
 			}
 		});
 
@@ -288,6 +302,8 @@ public class GUI extends MainWindow {
 				GuiUtils.copyToClipboard("„“");
 				clickHighlight(quoteLabel1);
 				clickHighlight(quoteLabel2);
+
+				hideEmojiSelector();
 			}
 		});
 
@@ -301,6 +317,8 @@ public class GUI extends MainWindow {
 				clickHighlight(quoteLabel1);
 				clickHighlight(quoteLabel2);
 				clickHighlight(quoteLabel3);
+
+				hideEmojiSelector();
 			}
 		});
 
@@ -313,6 +331,8 @@ public class GUI extends MainWindow {
 				GuiUtils.copyToClipboard("“”");
 				clickHighlight(quoteLabel2);
 				clickHighlight(quoteLabel3);
+
+				hideEmojiSelector();
 			}
 		});
 
@@ -325,6 +345,8 @@ public class GUI extends MainWindow {
 				GuiUtils.copyToClipboard("‚‘");
 				clickHighlight(quoteLabel4);
 				clickHighlight(quoteLabel5);
+
+				hideEmojiSelector();
 			}
 		});
 
@@ -338,6 +360,8 @@ public class GUI extends MainWindow {
 				clickHighlight(quoteLabel4);
 				clickHighlight(quoteLabel5);
 				clickHighlight(quoteLabel6);
+
+				hideEmojiSelector();
 			}
 		});
 
@@ -350,6 +374,8 @@ public class GUI extends MainWindow {
 				GuiUtils.copyToClipboard("‘’");
 				clickHighlight(quoteLabel5);
 				clickHighlight(quoteLabel6);
+
+				hideEmojiSelector();
 			}
 		});
 
@@ -361,6 +387,8 @@ public class GUI extends MainWindow {
 			public void mouseClicked(MouseEvent e) {
 				GuiUtils.copyToClipboard("\n");
 				clickHighlight(newlineLabel);
+
+				hideEmojiSelector();
 			}
 		});
 
@@ -390,6 +418,8 @@ public class GUI extends MainWindow {
 				checkBatteryStatus();
 				resetGuiLocation();
 				clickHighlight(batteryLabel);
+
+				hideEmojiSelector();
 			}
 		});
 
@@ -402,6 +432,8 @@ public class GUI extends MainWindow {
 				clickHighlight(clockLabel);
 				GuiUtils.copyToClipboard(DateUtils.getCurrentDateTimeStamp());
 				resetGuiLocation();
+
+				hideEmojiSelector();
 			}
 		});
 
@@ -613,6 +645,12 @@ public class GUI extends MainWindow {
 		heartLabel.setVisible(visible);
 		batteryLabel.setVisible(visible);
 		clockLabel.setVisible(visible);
+	}
+
+	private void hideEmojiSelector() {
+		if (emojiSelectorGUI != null) {
+			emojiSelectorGUI.hide();
+		}
 	}
 
 }

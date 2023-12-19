@@ -49,6 +49,7 @@ public class EmojiSelectorGUI {
 
 	private int colCounter = 0;
 	private int rowCounter = 0;
+	private int currentThreadLevel = 0;
 
 
 	public EmojiSelectorGUI(GUI gui) {
@@ -176,6 +177,29 @@ public class EmojiSelectorGUI {
 		});
 
 		currentlyVisible = true;
+
+		currentThreadLevel++;
+
+		Thread hideLaterThread = new Thread() {
+
+			public void run() {
+
+				int threadLevel = currentThreadLevel;
+
+				try {
+					// wait for nine seconds
+					Thread.sleep(9 * 1000);
+				} catch (InterruptedException e) {
+					// well, done a bit early ;)
+				}
+
+				// aaaand auto-hide! (unless another thread was already started...)
+				if (threadLevel == currentThreadLevel) {
+					hide();
+				}
+			}
+		};
+		hideLaterThread.start();
 	}
 
 	public void hide() {
@@ -186,6 +210,12 @@ public class EmojiSelectorGUI {
 		});
 
 		currentlyVisible = false;
+	}
+
+	public void hideIfVisible() {
+		if (currentlyVisible) {
+			hide();
+		}
 	}
 
 	public void toggle() {
