@@ -232,14 +232,14 @@ public class ShutdownLaterGUI {
 						long remainingTime = executeShutdownAt - System.currentTimeMillis();
 						displayRemainingTime(remainingTime);
 						if (remainingTime < 0) {
+							stopTimerThread();
+							dialogWindow.dispose();
 							if (!"".equals(executionTargetEdit.getText())) {
 								String command = executionTargetEdit.getText();
 								String previousPath = ".";
 								boolean calledFromOutside = true;
 								consoleCtrl.interpretCommand(command, previousPath, calledFromOutside);
 							}
-							stopTimerThread();
-							dialogWindow.dispose();
 						}
 
 						Thread.sleep(1000);

@@ -211,7 +211,24 @@ public class ConsoleCtrl {
 		}
 
 
-		// shutdown or reboot
+		// alert
+
+		if (commandLow.startsWith("alert(") && commandLow.endsWith(")")) {
+			command = command.substring(6);
+			command = command.substring(0, command.length() - 1);
+			command = command.trim();
+			if (command.startsWith("\"") || command.startsWith("'")) {
+				command = command.substring(1);
+			}
+			if (command.endsWith("\"") || command.endsWith("'")) {
+				command = command.substring(0, command.length() - 1);
+			}
+			GuiUtils.notify(command);
+			return result;
+		}
+
+
+		// shutdown / reboot / timer
 
 		String commandLowNoSpace = StrUtils.replaceAll(commandLow, " ", "");
 		commandLowNoSpace = StrUtils.replaceAll(commandLowNoSpace, "\t", "");
@@ -228,7 +245,7 @@ public class ConsoleCtrl {
 			if (gui != null) {
 				ShutdownLaterGUI shutdownLaterGUI = new ShutdownLaterGUI(gui, this);
 				if (commandLowNoSpace.equals("timer")) {
-					shutdownLaterGUI.show("");
+					shutdownLaterGUI.show("alert(\"Time is up!\")");
 				} else {
 					shutdownLaterGUI.show("shutdown");
 				}
@@ -272,6 +289,7 @@ public class ConsoleCtrl {
 				"reboot .. reboots the computer\n" +
 				"shutdownlater / shutlater .. shuts down the computer after some time\n" +
 				"timer .. opens a generic timer GUI\n" +
+				"alert([xyz]) .. shows an alert message popup\n" +
 				"cd [xyz] .. navigates into a certain directory\n" +
 				"se: [xyz] .. executes [xyz] as OS shell command\n" +
 				"mo: [xyz] .. call the MathOrg for the mathematical formula [xyz]\n" +
