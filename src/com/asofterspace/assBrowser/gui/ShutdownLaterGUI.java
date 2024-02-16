@@ -88,42 +88,74 @@ public class ShutdownLaterGUI {
 
 		// Button Row to change timer
 		JPanel buttonRowTimerChange = new JPanel();
-		GridLayout buttonRowTimeChangeLayout = new GridLayout(1, 2);
+		GridLayout buttonRowTimeChangeLayout = new GridLayout(2, 4);
 		buttonRowTimeChangeLayout.setHgap(8);
 		buttonRowTimerChange.setLayout(buttonRowTimeChangeLayout);
 		dialogWindow.add(buttonRowTimerChange, new Arrangement(0, 2, 1.0, 0.0));
 
-		JButton minus1hourButton = new JButton("- 1 hour");
-		minus1hourButton.addActionListener(new ActionListener() {
+		JButton curButton = new JButton("- 1 hour");
+		curButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				executeShutdownAt -= 1000 * 60 * 60;
 			}
 		});
-		buttonRowTimerChange.add(minus1hourButton);
+		buttonRowTimerChange.add(curButton);
 
-		JButton minus15minButton = new JButton("- 15 min");
-		minus15minButton.addActionListener(new ActionListener() {
+		curButton = new JButton("- 15 min");
+		curButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				executeShutdownAt -= 1000 * 60 * 15;
 			}
 		});
-		buttonRowTimerChange.add(minus15minButton);
+		buttonRowTimerChange.add(curButton);
 
-		JButton plus15minButton = new JButton("+ 15 min");
-		plus15minButton.addActionListener(new ActionListener() {
+		curButton = new JButton("+ 15 min");
+		curButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				executeShutdownAt += 1000 * 60 * 15;
 			}
 		});
-		buttonRowTimerChange.add(plus15minButton);
+		buttonRowTimerChange.add(curButton);
 
-		JButton plus1hourButton = new JButton("+ 1 hours");
-		plus1hourButton.addActionListener(new ActionListener() {
+		curButton = new JButton("+ 1 hours");
+		curButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				executeShutdownAt += 1000 * 60 * 60;
 			}
 		});
-		buttonRowTimerChange.add(plus1hourButton);
+		buttonRowTimerChange.add(curButton);
+
+		curButton = new JButton("- 5 min");
+		curButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				executeShutdownAt -= 1000 * 60 * 5;
+			}
+		});
+		buttonRowTimerChange.add(curButton);
+
+		curButton = new JButton("- 1 min");
+		curButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				executeShutdownAt -= 1000 * 60 * 1;
+			}
+		});
+		buttonRowTimerChange.add(curButton);
+
+		curButton = new JButton("+ 1 min");
+		curButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				executeShutdownAt += 1000 * 60 * 1;
+			}
+		});
+		buttonRowTimerChange.add(curButton);
+
+		curButton = new JButton("+ 5 min");
+		curButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				executeShutdownAt += 1000 * 60 * 5;
+			}
+		});
+		buttonRowTimerChange.add(curButton);
 
 
 		// Button Row to Pause / Cancel

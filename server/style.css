@@ -118,6 +118,10 @@ div.line.text {
 	/* just default styling */
 }
 
+div#fileContentContainer {
+	overflow-x: hidden;
+}
+
 div#fileContentContainer, textarea#fileContentTextarea, div.imageStrip {
 	overflow-y: auto;
 	height: 90%;
