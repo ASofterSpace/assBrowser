@@ -37,6 +37,7 @@ public class EmojiSelectorGUI {
 	final static String THUMBS_DOWN = new String(Character.toChars(0x1F44E));
 	final static String FROG = new String(Character.toChars(0x1F438));
 	final static String TADA = new String(Character.toChars(0x1F389));
+	final static String SHARK = new String(Character.toChars(0x1F988));
 	final static String RAINBOW = new String(Character.toChars(0x1F308));
 	final static String SPARKLES = new String(Character.toChars(0x2728));
 	final static String FIRE = new String(Character.toChars(0x1F525));
@@ -45,6 +46,7 @@ public class EmojiSelectorGUI {
 	final static Color colorGreen = new ColorRGBA(0, 196, 0).toColor();
 	final static Color colorRed = new ColorRGBA(255, 0, 0).toColor();
 	final static Color colorOrange = new ColorRGBA(255, 128, 0).toColor();
+	final static Color colorBlue = new ColorRGBA(0, 128, 255).toColor();
 	final static Color colorWhite = new ColorRGBA(255, 255, 255).toColor();
 
 	private int colCounter = 0;
@@ -81,6 +83,7 @@ public class EmojiSelectorGUI {
 		addLabel(THUMBS_DOWN, colorYellow);
 		addLabel(FROG, colorGreen);
 		addLabel(TADA, colorRed);
+		addLabel(SHARK, colorBlue);
 		addLabel(RAINBOW, colorWhite);
 		addLabel(SPARKLES, colorYellow);
 		addLabel(FIRE, colorOrange);
