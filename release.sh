@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 echo "Re-building with target Java 7 (such that the compiled .class files will be compatible with as many JVMs as possible)..."
 
