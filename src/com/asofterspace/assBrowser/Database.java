@@ -69,7 +69,7 @@ public class Database {
 		try {
 			this.root = dbFile.getAllContents();
 		} catch (JsonParseException e) {
-			System.err.println("Oh no!");
+			System.err.println("Oh no, the file " + this.dbFile.getCanonicalFilename() + " could not be loaded!");
 			e.printStackTrace(System.err);
 			System.exit(1);
 		}
