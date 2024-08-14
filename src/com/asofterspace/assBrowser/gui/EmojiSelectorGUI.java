@@ -41,11 +41,15 @@ public class EmojiSelectorGUI {
 	final static String RAINBOW = new String(Character.toChars(0x1F308));
 	final static String SPARKLES = new String(Character.toChars(0x2728));
 	final static String FIRE = new String(Character.toChars(0x1F525));
+	final static char[] MUSHROOM_BROWN_CHARS = new char[] {Character.toChars(0x1F344)[0], Character.toChars(0x200D)[0], Character.toChars(0x1F7EB)[0]};
+	final static String MUSHROOM_BROWN = new String(MUSHROOM_BROWN_CHARS);
+	final static String MUSHROOM_RED = new String(Character.toChars(0x1F344));
 
 	final static Color colorYellow = new ColorRGBA(255, 255, 0).toColor();
 	final static Color colorGreen = new ColorRGBA(0, 196, 0).toColor();
 	final static Color colorRed = new ColorRGBA(255, 0, 0).toColor();
 	final static Color colorOrange = new ColorRGBA(255, 128, 0).toColor();
+	final static Color colorBrown = new ColorRGBA(255, 128, 0).toColor();
 	final static Color colorBlue = new ColorRGBA(0, 128, 255).toColor();
 	final static Color colorWhite = new ColorRGBA(255, 255, 255).toColor();
 
@@ -87,6 +91,8 @@ public class EmojiSelectorGUI {
 		addLabel(RAINBOW, colorWhite);
 		addLabel(SPARKLES, colorYellow);
 		addLabel(FIRE, colorOrange);
+		addLabel(MUSHROOM_RED, MUSHROOM_BROWN, colorBrown);
+		addLabel(MUSHROOM_RED, colorRed);
 
 		colCounter = 0;
 		rowCounter = 1;
@@ -143,6 +149,10 @@ public class EmojiSelectorGUI {
 	}
 
 	private void addLabel(String text, Color fgColorCol) {
+		addLabel(text, text, fgColorCol);
+	}
+
+	private void addLabel(String text, String textToCopy, Color fgColorCol) {
 		JLabel label = new JLabel(text + " ");
 		label.setBackground(GUI.bgColorCol);
 		label.setForeground(fgColorCol);
@@ -156,7 +166,7 @@ public class EmojiSelectorGUI {
 		label.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				GuiUtils.copyToClipboard(text);
+				GuiUtils.copyToClipboard(textToCopy);
 				hide();
 			}
 		});
