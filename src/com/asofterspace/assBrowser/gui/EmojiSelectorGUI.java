@@ -32,13 +32,16 @@ public class EmojiSelectorGUI {
 	private boolean currentlyVisible = false;
 
 	final static String PURPLE_HEART = new String(Character.toChars(0x1F49C));
+	final static String HUG = new String(Character.toChars(0x1F917));
 	final static String SCREAM = new String(Character.toChars(0x1F631));
 	final static String THUMBS_UP = new String(Character.toChars(0x1F44D));
 	final static String THUMBS_DOWN = new String(Character.toChars(0x1F44E));
+	final static String CAT = new String(Character.toChars(0x1F431));
 	final static String FROG = new String(Character.toChars(0x1F438));
 	final static String TADA = new String(Character.toChars(0x1F389));
 	final static String SHARK = new String(Character.toChars(0x1F988));
 	final static String RAINBOW = new String(Character.toChars(0x1F308));
+	final static String TRAIN = new String(Character.toChars(0x1F682));
 	final static String SPARKLES = new String(Character.toChars(0x2728));
 	final static String FIRE = new String(Character.toChars(0x1F525));
 	final static char[] MUSHROOM_BROWN_CHARS = new char[] {Character.toChars(0x1F344)[0], Character.toChars(0x200D)[0], Character.toChars(0x1F7EB)[0]};
@@ -78,17 +81,20 @@ public class EmojiSelectorGUI {
 
 
 		// slight offset to center it
-		colCounter = 5;
+		colCounter = 2;
 		rowCounter = 0;
 
 		addLabel(PURPLE_HEART);
+		addLabel(HUG, colorYellow);
 		addLabel(SCREAM, colorYellow);
 		addLabel(THUMBS_UP, colorYellow);
 		addLabel(THUMBS_DOWN, colorYellow);
+		addLabel(CAT, colorYellow);
 		addLabel(FROG, colorGreen);
 		addLabel(TADA, colorRed);
 		addLabel(SHARK, colorBlue);
 		addLabel(RAINBOW, colorWhite);
+		addLabel(TRAIN, colorBrown);
 		addLabel(SPARKLES, colorYellow);
 		addLabel(FIRE, colorOrange);
 		addLabel(MUSHROOM_RED, MUSHROOM_BROWN, colorBrown);
