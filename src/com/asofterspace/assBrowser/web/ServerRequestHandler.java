@@ -1478,13 +1478,21 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					}
 				}
 
-				if ((emptyLinesSoFar > 1) && ("".equals(contentStrs[i+1])) &&
+				boolean nextLineEmpty = true;
+				if (i + 1 < contentStrs.length) {
+					nextLineEmpty = "".equals(contentStrs[i+1]);
+				}
+				boolean doubleNextLineEmpty = true;
+				if (i + 2 < contentStrs.length) {
+					doubleNextLineEmpty = "".equals(contentStrs[i+2]);
+				}
+
+				if ((emptyLinesSoFar > 1) && nextLineEmpty &&
 					!line.startsWith("| ") &&
-					!line.contains("picture ") && !line.contains("pictures up to ")) {
+					!line.contains("picture ") && !line.contains("pictures up to ") &&
 					// if there are two empty lines following, do not apply <h2>!
-					if ((i+2 >= contentStrs.length) || (!"".equals(contentStrs[i+2]))) {
-						line = "<h2>" + line + "</h2>";
-					}
+					!doubleNextLineEmpty) {
+					line = "<h2>" + line + "</h2>";
 				}
 
 				contentStrs[i] = line;
