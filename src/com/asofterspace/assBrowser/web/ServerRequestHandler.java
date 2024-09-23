@@ -1433,7 +1433,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		// iterate over the lines and specially highlight headlines
 		String[] contentStrs = fileHtmlStr.split("<br>");
 		int emptyLinesSoFar = 0;
-		for (int i = 0; i < contentStrs.length - 1; i++) {
+		for (int i = 0; i < contentStrs.length; i++) {
 			String line = contentStrs[i];
 			if ("".equals(line)) {
 				emptyLinesSoFar++;
