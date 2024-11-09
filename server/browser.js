@@ -111,15 +111,15 @@ window.browser = {
 		document.getElementById("uploadFileModal").style.display = "none";
 	},
 
-	openComicView: function() {
+	openScrollView: function() {
 		this.closeMoreActions();
 
 		var imageStrip = document.getElementById("imageStrip");
 		var tileStripsContainer = document.getElementById("tileStripsContainer");
 		var body = document.getElementsByTagName("body")[0];
-		var closeComicViewBtn = document.getElementById('closeComicViewBtn');
+		var closeScrollViewBtn = document.getElementById('closeScrollViewBtn');
 
-		if (imageStrip && tileStripsContainer && body && closeComicViewBtn) {
+		if (imageStrip && tileStripsContainer && body && closeScrollViewBtn) {
 
 			imageStrip.style.position = "fixed";
 			imageStrip.style.width = "100%";
@@ -132,7 +132,93 @@ window.browser = {
 			body.style.padding = "0px";
 			body.style.margin = "0px";
 
-			closeComicViewBtn.style.display = 'block';
+			closeScrollViewBtn.style.display = 'block';
+			closeScrollViewBtn.innerText = "Close View";
+		}
+	},
+
+	openComicView: function() {
+		this.closeMoreActions();
+		this.curComicViewPage = 1;
+
+		var imageStrip = document.getElementById("imageStrip");
+		var tileStripsContainer = document.getElementById("tileStripsContainer");
+		var body = document.getElementsByTagName("body")[0];
+		var closeScrollViewBtn = document.getElementById('closeScrollViewBtn');
+		var leftComicViewBtn = document.getElementById('leftComicViewBtn');
+		var rightComicViewBtn = document.getElementById('rightComicViewBtn');
+
+		if (imageStrip && tileStripsContainer && body && closeScrollViewBtn) {
+
+			imageStrip.style.position = "fixed";
+			imageStrip.style.width = "100%";
+			imageStrip.style.height = "100%";
+			imageStrip.style.zIndex = 100;
+			imageStrip.style.backgroundColor = "#FFFFFF";
+			imageStrip.style.overflowY = "hidden";
+
+			tileStripsContainer.style.display = 'none';
+
+			body.style.padding = "0px";
+			body.style.margin = "0px";
+
+			closeScrollViewBtn.style.display = 'block';
+			closeScrollViewBtn.innerText = "X";
+
+			leftComicViewBtn.style.display = 'block';
+
+			rightComicViewBtn.style.display = 'block';
+
+			window.setTimeout(function() {
+				var picWidth = imageStrip.clientHeight;
+				var picHeight = imageStrip.clientWidth;
+
+				var i = 1;
+				while (true) {
+					var pic = document.getElementById("pic_" + i);
+					if (!pic) {
+						break;
+					}
+					pic.style.position = "absolute";
+					pic.style.transform = "rotateZ(90deg)";
+					pic.style.transformOrigin = "center";
+					pic.style.top = "0px";
+					pic.style.left = "200pt";
+					pic.style.right = "0px";
+					pic.style.bottom = "0px";
+					pic.style.maxWidth = picWidth + "px";
+					pic.style.maxHeight = picHeight + "px";
+					pic.style.marginLeft = "auto";
+					pic.style.marginRight = "auto";
+					if (i > 1) {
+						pic.style.display = "none";
+					} else {
+						pic.style.display = "inline";
+					}
+					pic.childNodes[0].style.width = "1000%";
+					pic.childNodes[0].style.maxWidth = picWidth + "px";
+					pic.childNodes[0].style.maxHeight = picHeight + "px";
+					i = i + 1;
+				}
+			}, 500);
+		}
+	},
+
+	comicViewPrevPage: function() {
+		var newPage = document.getElementById("pic_" + (this.curComicViewPage - 1));
+		if (newPage) {
+			document.getElementById("pic_" + this.curComicViewPage).style.display = "none";
+			newPage.style.display = "inline";
+			this.curComicViewPage = this.curComicViewPage - 1;
+		}
+	},
+
+	comicViewNextPage: function() {
+		var newPage = document.getElementById("pic_" + (this.curComicViewPage + 1));
+		if (newPage) {
+			document.getElementById("pic_" + this.curComicViewPage).style.display = "none";
+			newPage.style.display = "inline";
+			this.curComicViewPage = this.curComicViewPage + 1;
 		}
 	},
 
@@ -171,13 +257,40 @@ window.browser = {
 		imageStrip.style.width = "15%";
 		imageStrip.style.height = "90%";
 		imageStrip.style.backgroundColor = "unset";
+		imageStrip.style.overflowY = "scroll";
 
 		var body = document.getElementsByTagName("body")[0];
 		body.style.padding = "0pt 60pt 0pt 4pt";
 		body.style.margin = "8px";
 
-		var closeComicViewBtn = document.getElementById('closeComicViewBtn');
-		closeComicViewBtn.style.display = 'none';
+		var closeScrollViewBtn = document.getElementById('closeScrollViewBtn');
+		closeScrollViewBtn.style.display = 'none';
+
+		var leftComicViewBtn = document.getElementById('leftComicViewBtn');
+		leftComicViewBtn.style.display = 'none';
+
+		var rightComicViewBtn = document.getElementById('rightComicViewBtn');
+		rightComicViewBtn.style.display = 'none';
+
+		var i = 1;
+		while (true) {
+			var pic = document.getElementById("pic_" + i);
+			if (!pic) {
+				break;
+			}
+			pic.style.position = "unset";
+			pic.style.transform = "unset";
+			pic.style.transformOrigin = "unset";
+			pic.style.maxWidth = "unset";
+			pic.style.maxHeight = "unset";
+			pic.style.marginLeft = "unset";
+			pic.style.marginRight = "unset";
+			pic.style.display = "inline";
+			pic.childNodes[0].style.width = "100%";
+			pic.childNodes[0].style.maxWidth = "unset";
+			pic.childNodes[0].style.maxHeight = "unset";
+			i = i + 1;
+		}
 	},
 
 	loadFullFolderView: function() {

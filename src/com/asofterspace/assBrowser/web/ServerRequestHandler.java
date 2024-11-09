@@ -647,7 +647,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 						break;
 					}
 					String imgUrl = getFileAccessUrl(path, baseName + "_" + imgNum + "." + imgExtFound);
-					imagesStrBuilder.append("<a target=\"_blank\" href=\"" + imgUrl + "\">");
+					imagesStrBuilder.append("<a id=\"pic_" + imgNum + "\" target=\"_blank\" href=\"" + imgUrl + "\">");
 					imagesStrBuilder.append("<img src=\"" + imgUrl + "\">");
 					imagesStrBuilder.append("</a>");
 					imagesColStrBuilders.get((imgNum - 1) % 4).append("<a target=\"_blank\" href=\"" + imgUrl + "\">");
@@ -663,7 +663,15 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					overallBuilder.append("<div id='imageStrip' class='imageStrip'>");
 					overallBuilder.append("<span style='position:fixed;top:2pt;right:15pt;background:rgba(64,0,128,0.8);border-radius: 6pt;padding: 0pt 3pt;'>");
 					overallBuilder.append("<span class='button' onclick='browser.closeView()' style='display:none; margin-top:5pt; margin-bottom:5pt;' ");
-					overallBuilder.append("id='closeComicViewBtn'>Close View</span>");
+					overallBuilder.append("id='closeScrollViewBtn'>Close View</span>");
+					overallBuilder.append("</span>");
+					overallBuilder.append("<span style='position:fixed;top:30pt;right:15pt;background:rgba(64,0,128,0.8);border-radius: 6pt;padding: 0pt 3pt;'>");
+					overallBuilder.append("<span class='button' onclick='browser.comicViewPrevPage()' style='display:none; margin-top:5pt; margin-bottom:5pt;' ");
+					overallBuilder.append("id='leftComicViewBtn'>/\\</span>");
+					overallBuilder.append("</span>");
+					overallBuilder.append("<span style='position:fixed;top:48pt;right:15pt;background:rgba(64,0,128,0.8);border-radius: 6pt;padding: 0pt 3pt;'>");
+					overallBuilder.append("<span class='button' onclick='browser.comicViewNextPage()' style='display:none; margin-top:5pt; margin-bottom:5pt;' ");
+					overallBuilder.append("id='rightComicViewBtn'>\\/</span>");
 					overallBuilder.append("</span>");
 					overallBuilder.append(imagesStrBuilder);
 					overallBuilder.append("</div>");
@@ -761,8 +769,12 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			buttonHtml.append("&#x25A6; Tile");
 			buttonHtml.append("</span>");
 
+			buttonHtml.append("<span class='button' onclick='browser.openScrollView()'>");
+			buttonHtml.append("&#x25AF; Scroll");
+			buttonHtml.append("</span>");
+
 			buttonHtml.append("<span class='button' onclick='browser.openComicView()'>");
-			buttonHtml.append("&#x25AF; Comic");
+			buttonHtml.append("&#x25AD; Comic");
 			buttonHtml.append("</span>");
 		}
 
