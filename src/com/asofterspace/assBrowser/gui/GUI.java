@@ -56,7 +56,9 @@ public class GUI extends MainWindow {
 
 	private ConsoleCtrl consoleCtrl;
 
-	private JTextField consoleField;
+	private JTextField consoleField1;
+	private JTextField consoleField2;
+	private JTextField consoleField3;
 	private BarMenuItemForMainMenu volumeItem;
 	private JLabel counterLabel;
 	private JLabel quoteLabel1;
@@ -160,12 +162,213 @@ public class GUI extends MainWindow {
 		mainPanel.setLayout(mainPanelLayout);
 		mainPanel.addMouseListener(mouseListenerToMaximize);
 
-		consoleField = new JTextField();
+		consoleField1 = addConsoleField(mainPanel, 0);
+		consoleField2 = addConsoleField(mainPanel, 1);
+		consoleField3 = addConsoleField(mainPanel, 2);
+
+		IoUtils.executeAsync(this.nircmdPath + " setsysvolume 0");
+		IoUtils.executeAsync(this.nircmdPath + " mutesysvolume 0");
+
+		volumeItem = new BarMenuItemForMainMenu();
+		volumeItem.setBackground(bgColorCol);
+		volumeItem.setForeground(fgColor.toColor());
+		volumeItem.setBarPosition(null, false);
+		volumeItem.setMaximum(100);
+		volumeItem.setSendUpdateOnMousePress(true);
+		volumeItem.addBarListener(new BarListener() {
+			@Override
+			public void onBarMove(Integer position) {
+				adjustVolume(position);
+				hideEmojiSelector();
+			}
+
+			@Override
+			public void onBarDisplay(Integer position) {
+				/*
+				long curTime = System.currentTimeMillis();
+				// send updates every 500 ms on draw
+				if (curTime - lastVolumeTime > 500) {
+					adjustVolume(position);
+				}
+				*/
+			}
+		});
+		mainPanel.add(volumeItem, new Arrangement(3, 0, 0.0, 1.0));
+
+		counterLabel = createLabel(" 0 ");
+		mainPanel.add(counterLabel, new Arrangement(4, 0, 0.0, 1.0));
+
+		counterLabel.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				clickHighlight(counterLabel);
+				int num = StrUtils.strToInt(counterLabel.getText().trim()) + 1;
+				if (SwingUtilities.isRightMouseButton(e)) {
+					num = 0;
+				}
+				counterLabel.setText(" " + num + " ");
+
+				hideEmojiSelector();
+			}
+		});
+
+		quoteLabel1 = createLabel("„");
+		mainPanel.add(quoteLabel1, new Arrangement(5, 0, 0.0, 1.0));
+
+		quoteLabel1.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				GuiUtils.copyToClipboard("„“");
+				clickHighlight(quoteLabel1);
+				clickHighlight(quoteLabel2);
+
+				hideEmojiSelector();
+			}
+		});
+
+		quoteLabel2 = createLabel("“");
+		mainPanel.add(quoteLabel2, new Arrangement(6, 0, 0.0, 1.0));
+
+		quoteLabel2.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				GuiUtils.copyToClipboard("„“”");
+				clickHighlight(quoteLabel1);
+				clickHighlight(quoteLabel2);
+				clickHighlight(quoteLabel3);
+
+				hideEmojiSelector();
+			}
+		});
+
+		quoteLabel3 = createLabel("” ");
+		mainPanel.add(quoteLabel3, new Arrangement(7, 0, 0.0, 1.0));
+
+		quoteLabel3.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				GuiUtils.copyToClipboard("“”");
+				clickHighlight(quoteLabel2);
+				clickHighlight(quoteLabel3);
+
+				hideEmojiSelector();
+			}
+		});
+
+		quoteLabel4 = createLabel("‚");
+		mainPanel.add(quoteLabel4, new Arrangement(8, 0, 0.0, 1.0));
+
+		quoteLabel4.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				GuiUtils.copyToClipboard("‚‘");
+				clickHighlight(quoteLabel4);
+				clickHighlight(quoteLabel5);
+
+				hideEmojiSelector();
+			}
+		});
+
+		quoteLabel5 = createLabel("‘");
+		mainPanel.add(quoteLabel5, new Arrangement(9, 0, 0.0, 1.0));
+
+		quoteLabel5.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				GuiUtils.copyToClipboard("‚‘’");
+				clickHighlight(quoteLabel4);
+				clickHighlight(quoteLabel5);
+				clickHighlight(quoteLabel6);
+
+				hideEmojiSelector();
+			}
+		});
+
+		quoteLabel6 = createLabel("’ ");
+		mainPanel.add(quoteLabel6, new Arrangement(10, 0, 0.0, 1.0));
+
+		quoteLabel6.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				GuiUtils.copyToClipboard("‘’");
+				clickHighlight(quoteLabel5);
+				clickHighlight(quoteLabel6);
+
+				hideEmojiSelector();
+			}
+		});
+
+		newlineLabel = createLabel("\\n ");
+		mainPanel.add(newlineLabel, new Arrangement(11, 0, 0.0, 1.0));
+
+		newlineLabel.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				GuiUtils.copyToClipboard("\n");
+				clickHighlight(newlineLabel);
+
+				hideEmojiSelector();
+			}
+		});
+
+		heartLabel = createLabel(EmojiSelectorGUI.PURPLE_HEART + " ");
+		mainPanel.add(heartLabel, new Arrangement(12, 0, 0.0, 1.0));
+
+		heartLabel.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				GuiUtils.copyToClipboard(EmojiSelectorGUI.PURPLE_HEART);
+				clickHighlight(heartLabel);
+
+				if (emojiSelectorGUI != null) {
+					emojiSelectorGUI.toggle();
+				}
+			}
+		});
+
+		batteryLabel = createLabel("BATTERY STATE UNINITIALIZED ");
+		batteryLabel.setOpaque(true);
+		batteryLabel.setForeground(errorColor.toColor());
+		mainPanel.add(batteryLabel, new Arrangement(13, 0, 0.0, 1.0));
+
+		batteryLabel.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				checkBatteryStatus();
+				resetGuiLocation();
+				clickHighlight(batteryLabel);
+
+				hideEmojiSelector();
+			}
+		});
+
+		clockLabel = createLabel("00:00 ");
+		mainPanel.add(clockLabel, new Arrangement(14, 0, 0.0, 1.0));
+
+		clockLabel.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				clickHighlight(clockLabel);
+				GuiUtils.copyToClipboard(DateUtils.getCurrentDateTimeStamp());
+				resetGuiLocation();
+
+				hideEmojiSelector();
+			}
+		});
+
+
+		parent.add(mainPanel, BorderLayout.CENTER);
+
+		return mainPanel;
+	}
+
+	private JTextField addConsoleField(JPanel mainPanel, int num) {
+		JTextField consoleField = new JTextField();
 		consoleField.setBackground(bgColorCol);
 		consoleField.setForeground(fgColorMain.toColor());
 		consoleField.setCaretColor(fgColor.toColor());
 		consoleField.setBorder(new LineBorder(borderColor.toColor()));
-		mainPanel.add(consoleField, new Arrangement(0, 0, 1.0, 1.0));
+		mainPanel.add(consoleField, new Arrangement(num, 0, 1.0, 1.0));
 
 		consoleField.addKeyListener(new KeyAdapter() {
 			public void keyReleased(KeyEvent event) {
@@ -247,200 +450,7 @@ public class GUI extends MainWindow {
 			}
 		});
 
-		IoUtils.executeAsync(this.nircmdPath + " setsysvolume 0");
-		IoUtils.executeAsync(this.nircmdPath + " mutesysvolume 0");
-
-		volumeItem = new BarMenuItemForMainMenu();
-		volumeItem.setBackground(bgColorCol);
-		volumeItem.setForeground(fgColor.toColor());
-		volumeItem.setBarPosition(null, false);
-		volumeItem.setMaximum(100);
-		volumeItem.setSendUpdateOnMousePress(true);
-		volumeItem.addBarListener(new BarListener() {
-			@Override
-			public void onBarMove(Integer position) {
-				adjustVolume(position);
-				hideEmojiSelector();
-			}
-
-			@Override
-			public void onBarDisplay(Integer position) {
-				/*
-				long curTime = System.currentTimeMillis();
-				// send updates every 500 ms on draw
-				if (curTime - lastVolumeTime > 500) {
-					adjustVolume(position);
-				}
-				*/
-			}
-		});
-		mainPanel.add(volumeItem, new Arrangement(1, 0, 0.0, 1.0));
-
-		counterLabel = createLabel(" 0 ");
-		mainPanel.add(counterLabel, new Arrangement(2, 0, 0.0, 1.0));
-
-		counterLabel.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				clickHighlight(counterLabel);
-				int num = StrUtils.strToInt(counterLabel.getText().trim()) + 1;
-				if (SwingUtilities.isRightMouseButton(e)) {
-					num = 0;
-				}
-				counterLabel.setText(" " + num + " ");
-
-				hideEmojiSelector();
-			}
-		});
-
-		quoteLabel1 = createLabel("„");
-		mainPanel.add(quoteLabel1, new Arrangement(3, 0, 0.0, 1.0));
-
-		quoteLabel1.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				GuiUtils.copyToClipboard("„“");
-				clickHighlight(quoteLabel1);
-				clickHighlight(quoteLabel2);
-
-				hideEmojiSelector();
-			}
-		});
-
-		quoteLabel2 = createLabel("“");
-		mainPanel.add(quoteLabel2, new Arrangement(4, 0, 0.0, 1.0));
-
-		quoteLabel2.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				GuiUtils.copyToClipboard("„“”");
-				clickHighlight(quoteLabel1);
-				clickHighlight(quoteLabel2);
-				clickHighlight(quoteLabel3);
-
-				hideEmojiSelector();
-			}
-		});
-
-		quoteLabel3 = createLabel("” ");
-		mainPanel.add(quoteLabel3, new Arrangement(5, 0, 0.0, 1.0));
-
-		quoteLabel3.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				GuiUtils.copyToClipboard("“”");
-				clickHighlight(quoteLabel2);
-				clickHighlight(quoteLabel3);
-
-				hideEmojiSelector();
-			}
-		});
-
-		quoteLabel4 = createLabel("‚");
-		mainPanel.add(quoteLabel4, new Arrangement(6, 0, 0.0, 1.0));
-
-		quoteLabel4.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				GuiUtils.copyToClipboard("‚‘");
-				clickHighlight(quoteLabel4);
-				clickHighlight(quoteLabel5);
-
-				hideEmojiSelector();
-			}
-		});
-
-		quoteLabel5 = createLabel("‘");
-		mainPanel.add(quoteLabel5, new Arrangement(7, 0, 0.0, 1.0));
-
-		quoteLabel5.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				GuiUtils.copyToClipboard("‚‘’");
-				clickHighlight(quoteLabel4);
-				clickHighlight(quoteLabel5);
-				clickHighlight(quoteLabel6);
-
-				hideEmojiSelector();
-			}
-		});
-
-		quoteLabel6 = createLabel("’ ");
-		mainPanel.add(quoteLabel6, new Arrangement(8, 0, 0.0, 1.0));
-
-		quoteLabel6.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				GuiUtils.copyToClipboard("‘’");
-				clickHighlight(quoteLabel5);
-				clickHighlight(quoteLabel6);
-
-				hideEmojiSelector();
-			}
-		});
-
-		newlineLabel = createLabel("\\n ");
-		mainPanel.add(newlineLabel, new Arrangement(9, 0, 0.0, 1.0));
-
-		newlineLabel.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				GuiUtils.copyToClipboard("\n");
-				clickHighlight(newlineLabel);
-
-				hideEmojiSelector();
-			}
-		});
-
-		heartLabel = createLabel(EmojiSelectorGUI.PURPLE_HEART + " ");
-		mainPanel.add(heartLabel, new Arrangement(10, 0, 0.0, 1.0));
-
-		heartLabel.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				GuiUtils.copyToClipboard(EmojiSelectorGUI.PURPLE_HEART);
-				clickHighlight(heartLabel);
-
-				if (emojiSelectorGUI != null) {
-					emojiSelectorGUI.toggle();
-				}
-			}
-		});
-
-		batteryLabel = createLabel("BATTERY STATE UNINITIALIZED ");
-		batteryLabel.setOpaque(true);
-		batteryLabel.setForeground(errorColor.toColor());
-		mainPanel.add(batteryLabel, new Arrangement(11, 0, 0.0, 1.0));
-
-		batteryLabel.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				checkBatteryStatus();
-				resetGuiLocation();
-				clickHighlight(batteryLabel);
-
-				hideEmojiSelector();
-			}
-		});
-
-		clockLabel = createLabel("00:00 ");
-		mainPanel.add(clockLabel, new Arrangement(12, 0, 0.0, 1.0));
-
-		clockLabel.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				clickHighlight(clockLabel);
-				GuiUtils.copyToClipboard(DateUtils.getCurrentDateTimeStamp());
-				resetGuiLocation();
-
-				hideEmojiSelector();
-			}
-		});
-
-
-		parent.add(mainPanel, BorderLayout.CENTER);
-
-		return mainPanel;
+		return consoleField;
 	}
 
 	private void adjustVolume(Integer position) {
@@ -632,7 +642,9 @@ public class GUI extends MainWindow {
 	}
 
 	private void setElementVisibility(boolean visible) {
-		consoleField.setVisible(visible);
+		consoleField1.setVisible(visible);
+		consoleField2.setVisible(visible);
+		consoleField3.setVisible(visible);
 		volumeItem.setVisible(visible);
 		counterLabel.setVisible(visible);
 		quoteLabel1.setVisible(visible);

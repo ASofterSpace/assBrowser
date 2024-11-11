@@ -154,7 +154,7 @@ window.browser = {
 			imageStrip.style.width = "100%";
 			imageStrip.style.height = "100%";
 			imageStrip.style.zIndex = 100;
-			imageStrip.style.backgroundColor = "#FFFFFF";
+			imageStrip.style.backgroundColor = "#000000";
 			imageStrip.style.overflowY = "hidden";
 
 			tileStripsContainer.style.display = 'none';
