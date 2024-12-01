@@ -36,6 +36,7 @@ public class EmojiSelectorGUI {
 	final static String SCREAM = new String(Character.toChars(0x1F631));
 	final static String THUMBS_UP = new String(Character.toChars(0x1F44D));
 	final static String THUMBS_DOWN = new String(Character.toChars(0x1F44E));
+	final static String POINT_RIGHT_LEFT = new String(Character.toChars(0x1F449)) + new String(Character.toChars(0x1F448));
 	final static String CAT = new String(Character.toChars(0x1F431));
 	final static String FROG = new String(Character.toChars(0x1F438));
 	final static String TADA = new String(Character.toChars(0x1F389));
@@ -81,7 +82,7 @@ public class EmojiSelectorGUI {
 
 
 		// slight offset to center it
-		colCounter = 2;
+		colCounter = 0;
 		rowCounter = 0;
 
 		addLabel(PURPLE_HEART);
@@ -89,6 +90,7 @@ public class EmojiSelectorGUI {
 		addLabel(SCREAM, colorYellow);
 		addLabel(THUMBS_UP, colorYellow);
 		addLabel(THUMBS_DOWN, colorYellow);
+		addLabel(POINT_RIGHT_LEFT, colorYellow);
 		addLabel(CAT, colorYellow);
 		addLabel(FROG, colorGreen);
 		addLabel(TADA, colorRed);

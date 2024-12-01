@@ -27,8 +27,8 @@ public class AssBrowser {
 	public final static String WEB_ROOT_DIR = "deployed";
 
 	public final static String PROGRAM_TITLE = "assBrowser";
-	public final static String VERSION_NUMBER = "0.0.4.1(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
-	public final static String VERSION_DATE = "16. December 2020 - 11. November 2024";
+	public final static String VERSION_NUMBER = "0.0.4.2(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
+	public final static String VERSION_DATE = "16. December 2020 - 1. December 2024";
 
 	// synchronize with BackupGenerator
 	public static TextFile BACKUP_RUN_FILE = new TextFile("C:\\home\\BACKUP.TXT");
