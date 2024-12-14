@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.UUID;
 
 
 public class ServerRequestHandler extends WebServerRequestHandler {
@@ -635,6 +636,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				StringBuilder imagesStrBuilder = new StringBuilder();
 				String baseName = fileName.substring(0, fileName.lastIndexOf("."));
 				int imgNum = 1;
+				String uniqueVStr = getUniqueVStr();
 				while (true) {
 					String imgExtFound = null;
 					for (String curImgExt : IMAGE_EXTENSIONS) {
@@ -648,10 +650,10 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					}
 					String imgUrl = getFileAccessUrl(path, baseName + "_" + imgNum + "." + imgExtFound);
 					imagesStrBuilder.append("<a id=\"pic_" + imgNum + "\" target=\"_blank\" href=\"" + imgUrl + "\">");
-					imagesStrBuilder.append("<img src=\"" + imgUrl + "\">");
+					imagesStrBuilder.append("<img src=\"" + imgUrl + uniqueVStr + "\">");
 					imagesStrBuilder.append("</a>");
 					imagesColStrBuilders.get((imgNum - 1) % 4).append("<a target=\"_blank\" href=\"" + imgUrl + "\">");
-					imagesColStrBuilders.get((imgNum - 1) % 4).append("<img src=\"" + imgUrl + "\">");
+					imagesColStrBuilders.get((imgNum - 1) % 4).append("<img src=\"" + imgUrl + uniqueVStr + "\">");
 					imagesColStrBuilders.get((imgNum - 1) % 4).append("</a>");
 					imgNum++;
 				}
@@ -717,7 +719,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				if (isImageFile) {
 					String imgUrl = getFileAccessUrl(path, fileName);
 					fileHtmlStr = "<a target=\"_blank\" href=\"" + imgUrl + "\" style='max-width:99%; max-height:99%;' />";
-					fileHtmlStr += "<img src=\"" + imgUrl + "\" style='max-width:100%; max-height:100%;' />";
+					fileHtmlStr += "<img src=\"" + imgUrl + getUniqueVStr() + "\" style='max-width:100%; max-height:100%;' />";
 					fileHtmlStr += "</a>";
 				} else {
 					fileHtmlStr = "<div style='line-height: 2.5;text-align: center;' id='fileButtonContainer'>" +
@@ -1882,6 +1884,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		Set<Integer> picturesAdded = new HashSet<>();
 		String picLinkBase = "file:///" + UrlEncoder.encode(folder.getCanonicalDirname()) + "/";
+		String uniqueVStr = getUniqueVStr();
 
 		for (int i = pictureFileNames.size() - 1; i >= 0; i--) {
 
@@ -1910,7 +1913,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			contentStr = StrUtils.addAfterLinesContaining(
 				contentStr,
 				replaceWith,
-				picToHtml(picLinkBase, pictureFileNames.get(i), exportingToPdf),
+				picToHtml(picLinkBase, pictureFileNames.get(i), uniqueVStr, exportingToPdf),
 				"<br>"
 			);
 
@@ -1939,7 +1942,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				contentStr,
 				replaceWith,
 				"[[LOGPIC-UP-TO-" + i + "]]" +
-				picToHtml(picLinkBase, pictureFileNames.get(i), exportingToPdf),
+				picToHtml(picLinkBase, pictureFileNames.get(i), uniqueVStr, exportingToPdf),
 				"<br>"
 			);
 
@@ -1958,7 +1961,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				} else {
 					contentStr = StrUtils.replaceAll(contentStr, token,
 						"[[LOGPIC-UP-TO-" + nextPic + "]]" +
-						picToHtml(picLinkBase, pictureFileNames.get(nextPic), exportingToPdf)
+						picToHtml(picLinkBase, pictureFileNames.get(nextPic), uniqueVStr, exportingToPdf)
 					);
 					picturesAdded.add(nextPic);
 				}
@@ -1975,7 +1978,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		}
 
 		for (int i = highestPicShown + 1; i < pictureFileNames.size(); i++) {
-			contentStr += picToHtml(picLinkBase, pictureFileNames.get(i), exportingToPdf);
+			contentStr += picToHtml(picLinkBase, pictureFileNames.get(i), uniqueVStr, exportingToPdf);
 		}
 		*/
 
@@ -2003,7 +2006,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		builder.append("</div>");
 	}
 
-	private static String picToHtml(String picLinkBase, String picFileName, boolean exportingToPdf) {
+	private static String picToHtml(String picLinkBase, String picFileName, String uniqueVStr, boolean exportingToPdf) {
 		String aStyle = "";
 		if (exportingToPdf) {
 			aStyle = " style='text-align: center; width: 100%; display: inline-block;' ";
@@ -2011,7 +2014,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		return "<a href='" + picLinkBase + picFileName + "' " +
 				aStyle +
 				"target='_blank'>" +
-				"<img src='" + picLinkBase + picFileName + "' style='padding-top: 4pt; max-width: 100%;' /></a><br>";
+				"<img src='" + picLinkBase + picFileName + uniqueVStr + "' style='padding-top: 4pt; max-width: 100%;' /></a><br>";
 	}
 
 	private static String prepareExternalLinks(String fileHtmlStr, String urlStart) {
@@ -2087,6 +2090,10 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		str = StrUtils.replaceAll(str, "%C2%93", "%E2%80%9C");
 		str = StrUtils.replaceAll(str, "%C2%94", "%E2%80%9D");
 		return str;
+	}
+
+	private static String getUniqueVStr() {
+		return "?v=" + UUID.randomUUID();
 	}
 
 }
