@@ -82,7 +82,7 @@ public class EmojiSelectorGUI {
 
 
 		// slight offset to center it
-		colCounter = 0;
+		colCounter = 1;
 		rowCounter = 0;
 
 		addLabel(PURPLE_HEART);
@@ -193,7 +193,7 @@ public class EmojiSelectorGUI {
 				// Actually display the whole jazz
 				dialogWindow.setVisible(true);
 
-				dialogWindow.setLocation(new Point(width - 350, 20));
+				dialogWindow.setLocation(new Point(width - 372, 20));
 			}
 		});
 
