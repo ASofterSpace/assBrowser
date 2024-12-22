@@ -134,6 +134,9 @@ window.browser = {
 
 			closeScrollViewBtn.style.display = 'block';
 			closeScrollViewBtn.innerText = "Close View";
+
+			imageStrip.style.width = body.clientWidth + "px";
+			imageStrip.style.height = body.clientHeight + "px";
 		}
 	},
 
@@ -153,7 +156,7 @@ window.browser = {
 			imageStrip.style.position = "fixed";
 			imageStrip.style.width = "100%";
 			imageStrip.style.height = "100%";
-			imageStrip.style.zIndex = 100;
+			imageStrip.style.zIndex = 200;
 			imageStrip.style.backgroundColor = "#000000";
 			imageStrip.style.overflowY = "hidden";
 
@@ -166,12 +169,14 @@ window.browser = {
 			closeScrollViewBtn.innerText = "X";
 
 			leftComicViewBtn.style.display = 'block';
-
 			rightComicViewBtn.style.display = 'block';
 
+			imageStrip.style.width = body.clientWidth + "px";
+			imageStrip.style.height = body.clientHeight + "px";
+
 			window.setTimeout(function() {
-				var picWidth = imageStrip.clientHeight;
-				var picHeight = imageStrip.clientWidth;
+				var picWidth = body.clientHeight;
+				var picHeight = body.clientWidth;
 
 				var i = 1;
 				while (true) {
@@ -242,6 +247,9 @@ window.browser = {
 
 			body.style.padding = "0px";
 			body.style.margin = "0px";
+
+			tileStripsContainer.style.width = body.clientWidth + "px";
+			tileStripsContainer.style.height = body.clientHeight + "px";
 		}
 	},
 

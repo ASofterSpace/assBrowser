@@ -676,6 +676,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					overallBuilder.append("id='rightComicViewBtn'>\\/</span>");
 					overallBuilder.append("</span>");
 					overallBuilder.append(imagesStrBuilder);
+					overallBuilder.append("<br>");
+					overallBuilder.append("<br>");
 					overallBuilder.append("</div>");
 
 					overallBuilder.append("<div id='tileStripsContainer' style='display:none; overflow-y:scroll;'>");
