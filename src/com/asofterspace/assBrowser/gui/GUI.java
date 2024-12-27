@@ -119,6 +119,11 @@ public class GUI extends MainWindow {
 
 		super.create();
 
+		// enable anti-aliasing for swing
+		System.setProperty("swing.aatext", "true");
+		// enable anti-aliasing for awt
+		System.setProperty("awt.useSystemAAFontSettings", "on");
+
 		// remove title bar
 		mainFrame.setUndecorated(true);
 
@@ -436,9 +441,18 @@ public class GUI extends MainWindow {
 				String newPath = consoleResult.getPath();
 				newPath = PathCtrl.ensurePathIsSafe(newPath);
 				if (!newPath.equals(previousPath)) {
-					IoUtils.executeAsync(
-						database.getBrowserPath() + " http://localhost:3013/?link=" + UrlEncoder.encode(newPath)
-					);
+					String browserPath = database.getBrowserPath();
+					List<String> args = StrUtils.split(browserPath, " ");
+					List<String> actualArgs = new ArrayList<>();
+					for (int i = 1; i < args.size() - 1; i++) {
+						actualArgs.add(args.get(i));
+					}
+					actualArgs.add(args.get(args.size() - 1) + " http://localhost:3013/?link=" + UrlEncoder.encode(newPath));
+					try {
+						IoUtils.executeAsync(args.get(0), actualArgs);
+					} catch (IOException curErr) {
+						System.err.println("There was an I/O Exception while executing an external command asynchronously: " + curErr);
+					}
 				}
 			}
 		});

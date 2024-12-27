@@ -126,9 +126,11 @@ public class ConsoleCtrl {
 			command = StrUtils.replaceAll(command, "\\", "/");
 			command = StrUtils.replaceAll(command, "//", "/");
 
-			// if we have C:/, D:/, stuff like that...
 			if (command.length() > 2) {
-				if ((command.charAt(1) == ':') && (command.charAt(2) == '/')) {
+				// if we have C:/, D:/, stuff like that on Windows...
+				if (((command.charAt(1) == ':') && (command.charAt(2) == '/')) ||
+					// ... or /something on Linux ...
+					(command.charAt(0) == '/')) {
 					// use an absolute path!
 					previousPath = "";
 				}

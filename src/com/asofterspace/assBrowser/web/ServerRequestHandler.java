@@ -1015,7 +1015,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		if (accessFilesLocally) {
 			File vidfile = new File(viddir, videoPath);
-			html = StrUtils.replaceAll(html, "[[VIDEO_PATH]]", "file:///" +
+			html = StrUtils.replaceAll(html, "[[VIDEO_PATH]]", "file://" +
 				StrUtils.replaceAll(vidfile.getCanonicalFilename(), "\\", "/"));
 		} else {
 			html = StrUtils.replaceAll(html, "[[VIDEO_PATH]]", "funtubeVideo?path=" + UrlEncoder.encode(videoPath));
@@ -1295,7 +1295,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			if (fullPath.startsWith("/Desktop/") || path.startsWith("\\Desktop\\")) {
 				fullPath = PathCtrl.getOneUpDesktopLocation() + "/" + fullPath;
 			}
-			return "file:///" + StrUtils.replaceAll(StrUtils.replaceAll(
+			return "file://" + StrUtils.replaceAll(StrUtils.replaceAll(
 				fullPath,
 				"\\", "/"), "//", "/").replace("#", "%23");
 		}
@@ -1885,7 +1885,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 
 		Set<Integer> picturesAdded = new HashSet<>();
-		String picLinkBase = "file:///" + UrlEncoder.encode(folder.getCanonicalDirname()) + "/";
+		String picLinkBase = "file://" + UrlEncoder.encode(folder.getCanonicalDirname()) + "/";
 		String uniqueVStr = getUniqueVStr();
 
 		for (int i = pictureFileNames.size() - 1; i >= 0; i--) {
