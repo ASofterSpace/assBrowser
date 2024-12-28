@@ -634,7 +634,7 @@ public class ConsoleCtrl {
 		// for Windows
 		IoUtils.executeAsync("shutdown -s -t 1");
 		// for Linux
-		IoUtils.executeAsync("sudo poweroff");
+		IoUtils.executeAsync("/shutdown.sh");
 	}
 
 	public static void rebootNow() {
@@ -647,7 +647,7 @@ public class ConsoleCtrl {
 		// for Windows
 		IoUtils.executeAsync("shutdown -r -t 1");
 		// for Linux
-		IoUtils.executeAsync("sudo reboot");
+		IoUtils.executeAsync("/reboot.sh");
 	}
 
 }

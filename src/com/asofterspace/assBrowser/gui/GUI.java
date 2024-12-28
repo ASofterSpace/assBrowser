@@ -17,6 +17,7 @@ import com.asofterspace.toolbox.gui.GuiUtils;
 import com.asofterspace.toolbox.gui.MainWindow;
 import com.asofterspace.toolbox.images.ColorRGBA;
 import com.asofterspace.toolbox.io.IoUtils;
+import com.asofterspace.toolbox.io.TextFile;
 import com.asofterspace.toolbox.utils.DateUtils;
 import com.asofterspace.toolbox.utils.StrUtils;
 
@@ -564,44 +565,78 @@ public class GUI extends MainWindow {
 
 		try {
 
-			List<String> cmdAndArgs = new ArrayList<>();
-			cmdAndArgs.add(batScriptPath);
+			if (batScriptPath.startsWith("/sys/class/")) {
+				// Linux approach: read numbers directly from battery files
 
-			ProcessBuilder processBuilder = new ProcessBuilder(cmdAndArgs);
+				Integer chargeFull = null;
+				Integer chargeNow = null;
+				String acOnline = "0";
 
-			processBuilder.redirectErrorStream(true);
+				List<String> batScriptPaths = StrUtils.split(batScriptPath, " ");
 
-			Process proc = processBuilder.start();
+				TextFile txtFile = new TextFile(batScriptPaths.get(0) + "charge_full");
+				chargeFull = StrUtils.strToInt(txtFile.getContent());
 
-			try (BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()))) {
-				String curline = reader.readLine();
+				txtFile = new TextFile(batScriptPaths.get(0) + "charge_now");
+				chargeNow = StrUtils.strToInt(txtFile.getContent());
 
-				while (curline != null) {
-					String trimline = curline.trim();
-					if (!"".equals(trimline) && !trimline.contains("Battery")) {
-						String[] values = trimline.split(" ");
+				txtFile = new TextFile(batScriptPaths.get(1) + "online");
+				acOnline = txtFile.getContent();
 
-						if (values.length > 1) {
-							// BatteryStatus returns 1 if running on battery / unplugged
-							String powerState = values[0];
+				if ((chargeNow != null) && (chargeFull != null) && (acOnline != null)) {
+					int batteryCharge = (100 * chargeNow) / chargeFull;
+					if (acOnline.startsWith("1")) {
+						batteryLabel.setText("~ (" + batteryCharge + "%) ");
+						batteryLabel.setForeground(fgColorCol);
+						batteryLabel.setBackground(bgColorCol);
+					} else {
+						setBatteryProblemText(" ON BATTERY :: " + batteryCharge + "% ");
+					}
+				} else {
+					setBatteryProblemText("BATTERY STATE ERROR 3 ");
+				}
 
-							// EstimatedChargeRemaining is the percentage of the battery charge remaining
-							String batteryCharge = values[values.length-1];
+			} else {
+				// Windows approach: call script
+				List<String> cmdAndArgs = new ArrayList<>();
+				cmdAndArgs.add(batScriptPath);
 
-							if ("1".equals(powerState)) {
-								setBatteryProblemText(" ON BATTERY :: " + batteryCharge + "% ");
+				ProcessBuilder processBuilder = new ProcessBuilder(cmdAndArgs);
 
-							} else {
-								batteryLabel.setText("~ (" + batteryCharge + "%) ");
-								batteryLabel.setForeground(fgColorCol);
-								batteryLabel.setBackground(bgColorCol);
+				processBuilder.redirectErrorStream(true);
+
+				Process proc = processBuilder.start();
+
+				try (BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()))) {
+					String curline = reader.readLine();
+
+					while (curline != null) {
+						String trimline = curline.trim();
+						if (!"".equals(trimline) && !trimline.contains("Battery")) {
+							String[] values = trimline.split(" ");
+
+							if (values.length > 1) {
+								// BatteryStatus returns 1 if running on battery / unplugged
+								String powerState = values[0];
+
+								// EstimatedChargeRemaining is the percentage of the battery charge remaining
+								String batteryCharge = values[values.length-1];
+
+								if ("1".equals(powerState)) {
+									setBatteryProblemText(" ON BATTERY :: " + batteryCharge + "% ");
+
+								} else {
+									batteryLabel.setText("~ (" + batteryCharge + "%) ");
+									batteryLabel.setForeground(fgColorCol);
+									batteryLabel.setBackground(bgColorCol);
+								}
 							}
 						}
+						curline = reader.readLine();
 					}
-					curline = reader.readLine();
+				} catch (IOException e) {
+					setBatteryProblemText("BATTERY STATE ERROR 2 ");
 				}
-			} catch (IOException e) {
-				setBatteryProblemText("BATTERY STATE ERROR 2 ");
 			}
 
 		} catch (IOException ex) {
