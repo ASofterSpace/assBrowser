@@ -172,7 +172,9 @@ public class GUI extends MainWindow {
 		consoleField2 = addConsoleField(mainPanel, 1);
 		consoleField3 = addConsoleField(mainPanel, 2);
 
-		if ("pactl".equals(this.nircmdPath)) {
+		if ("amixer".equals(this.nircmdPath)) {
+			IoUtils.executeAsync(this.nircmdPath + " -q sset Master 0%");
+		} else if ("pactl".equals(this.nircmdPath)) {
 			IoUtils.executeAsync(this.nircmdPath + " -- set-sink-volume 0 0%");
 		} else {
 			IoUtils.executeAsync(this.nircmdPath + " setsysvolume 0");
@@ -483,11 +485,12 @@ public class GUI extends MainWindow {
 			position = 0;
 		}
 
-		int volPerc = Math.min(65535, position * 656);
-
-		if ("pactl".equals(this.nircmdPath)) {
-			IoUtils.executeAsync(this.nircmdPath + " -- set-sink-volume 0 " + volPerc + "%");
+		if ("amixer".equals(this.nircmdPath)) {
+			IoUtils.executeAsync(this.nircmdPath + " -q sset Master " + position + "%");
+		} else if ("pactl".equals(this.nircmdPath)) {
+			IoUtils.executeAsync(this.nircmdPath + " -- set-sink-volume 0 " + position + "%");
 		} else {
+			int volPerc = Math.min(65535, position * 656);
 			IoUtils.executeAsync(this.nircmdPath + " setsysvolume " + volPerc);
 		}
 	}
