@@ -113,17 +113,17 @@ public class GUI extends MainWindow {
 		this.database = database;
 		this.consoleCtrl = consoleCtrl;
 		this.nircmdPath = database.getNircmdPath();
+
+		// enable anti-aliasing for swing
+		System.setProperty("swing.aatext", "true");
+		// enable anti-aliasing for awt
+		System.setProperty("awt.useSystemAAFontSettings", "on");
 	}
 
 	@Override
 	public void run() {
 
 		super.create();
-
-		// enable anti-aliasing for swing
-		System.setProperty("swing.aatext", "true");
-		// enable anti-aliasing for awt
-		System.setProperty("awt.useSystemAAFontSettings", "on");
 
 		// remove title bar
 		mainFrame.setUndecorated(true);
@@ -172,8 +172,12 @@ public class GUI extends MainWindow {
 		consoleField2 = addConsoleField(mainPanel, 1);
 		consoleField3 = addConsoleField(mainPanel, 2);
 
-		IoUtils.executeAsync(this.nircmdPath + " setsysvolume 0");
-		IoUtils.executeAsync(this.nircmdPath + " mutesysvolume 0");
+		if ("pactl".equals(this.nircmdPath)) {
+			IoUtils.executeAsync(this.nircmdPath + " -- set-sink-volume 0 0%");
+		} else {
+			IoUtils.executeAsync(this.nircmdPath + " setsysvolume 0");
+			IoUtils.executeAsync(this.nircmdPath + " mutesysvolume 0");
+		}
 
 		volumeItem = new BarMenuItemForMainMenu();
 		volumeItem.setBackground(bgColorCol);
@@ -443,6 +447,8 @@ public class GUI extends MainWindow {
 				newPath = PathCtrl.ensurePathIsSafe(newPath);
 				if (!newPath.equals(previousPath)) {
 					String browserPath = database.getBrowserPath();
+					IoUtils.executeAsync(browserPath + " http://localhost:3013/?link=" + UrlEncoder.encode(newPath));
+					/*
 					List<String> args = StrUtils.split(browserPath, " ");
 					List<String> actualArgs = new ArrayList<>();
 					for (int i = 1; i < args.size() - 1; i++) {
@@ -454,6 +460,7 @@ public class GUI extends MainWindow {
 					} catch (IOException curErr) {
 						System.err.println("There was an I/O Exception while executing an external command asynchronously: " + curErr);
 					}
+					*/
 				}
 			}
 		});
@@ -476,8 +483,13 @@ public class GUI extends MainWindow {
 			position = 0;
 		}
 
-		IoUtils.executeAsync(this.nircmdPath + " setsysvolume " +
-			Math.min(65535, position * 656));
+		int volPerc = Math.min(65535, position * 656);
+
+		if ("pactl".equals(this.nircmdPath)) {
+			IoUtils.executeAsync(this.nircmdPath + " -- set-sink-volume 0 " + volPerc + "%");
+		} else {
+			IoUtils.executeAsync(this.nircmdPath + " setsysvolume " + volPerc);
+		}
 	}
 
 	private void refreshTitleBar() {
