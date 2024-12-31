@@ -1885,7 +1885,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 
 		Set<Integer> picturesAdded = new HashSet<>();
-		String picLinkBase = "file://" + UrlEncoder.encode(folder.getCanonicalDirname()) + "/";
+		String picLinkBase = "file://" + StrUtils.replaceAll(StrUtils.replaceAll(UrlEncoder.encode(folder.getCanonicalDirname()), "%2F", "/"), "%2E", ".") + "/";
 		String uniqueVStr = getUniqueVStr();
 
 		for (int i = pictureFileNames.size() - 1; i >= 0; i--) {
