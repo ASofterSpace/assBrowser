@@ -353,11 +353,23 @@ public class ConsoleCtrl {
 			matchWith += '_';
 		}
 		matchWith += ".sll";
+		File sllFileToRunWithArgs = null;
+		String sllFileArgs = null;
 		for (File file : sllFiles) {
-			if (matchWith.equals(file.getLocalFilename().toLowerCase())) {
-				result = runSllFile(file, result);
-				return result;
+			String sllFileName = file.getLocalFilename().toLowerCase();
+			if (sllFileName.endsWith("%.sll")) {
+				if (matchWith.startsWith(sllFileName.substring(0, sllFileName.length() - 5) + " ")) {
+					sllFileToRunWithArgs = file;
+					sllFileArgs = command.substring(sllFileName.length() - 4);
+				}
+			} else {
+				if (matchWith.equals(sllFileName)) {
+					return runSllFile(file, result, null);
+				}
 			}
+		}
+		if (sllFileToRunWithArgs != null) {
+			return runSllFile(sllFileToRunWithArgs, result, sllFileArgs);
 		}
 
 
@@ -589,10 +601,12 @@ public class ConsoleCtrl {
 		return StrUtils.doubleToStr(result);
 	}
 
-	private ConsoleResult runSllFile(File sllFile, ConsoleResult result) {
+	private ConsoleResult runSllFile(File sllFile, ConsoleResult result, String sllFileArgs) {
 
 		TextFile sllSimpleFile = PathCtrl.getEntryFile(sllFile);
 		String content = sllSimpleFile.getContent();
+
+		content = StrUtils.replaceAll(content, "%args%", sllFileArgs);
 
 		if (content.contains("%")) {
 			SimpleFile envVarsFile = PathCtrl.getSimpleEntryFile(new File(sllFile.getParentDirectory(), "Umgebungsvariablen.stpu"));
@@ -631,10 +645,13 @@ public class ConsoleCtrl {
 			return;
 		}
 
-		// for Windows
-		IoUtils.executeAsync("shutdown -s -t 1");
-		// for Linux
-		IoUtils.executeAsync("/shutdown.sh");
+		if ("\\".equals(System.lineSeparator())) {
+			// for Windows
+			IoUtils.executeAsync("shutdown -s -t 1");
+		} else {
+			// for Linux
+			IoUtils.executeAsync("/shutdown.sh");
+		}
 	}
 
 	public static void rebootNow() {
@@ -644,10 +661,13 @@ public class ConsoleCtrl {
 			return;
 		}
 
-		// for Windows
-		IoUtils.executeAsync("shutdown -r -t 1");
-		// for Linux
-		IoUtils.executeAsync("/reboot.sh");
+		if ("\\".equals(System.lineSeparator())) {
+			// for Windows
+			IoUtils.executeAsync("shutdown -r -t 1");
+		} else {
+			// for Linux
+			IoUtils.executeAsync("/reboot.sh");
+		}
 	}
 
 }
