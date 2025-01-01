@@ -72,6 +72,7 @@ public class GUI extends MainWindow {
 	private JLabel heartLabel;
 	private JLabel batteryLabel;
 	private JLabel clockLabel;
+	private BarMenuItemForMainMenu brightnessItem;
 
 	private boolean timerRunning = false;
 
@@ -96,6 +97,9 @@ public class GUI extends MainWindow {
 	private int batteryDisplayCounter = 0;
 	// private long lastVolumeTime = 0;
 	private String nircmdPath;
+
+	private TextFile brightnessFile;
+	private Integer brightnessMax;
 
 	Font sharedFont = null;
 
@@ -368,6 +372,31 @@ public class GUI extends MainWindow {
 			}
 		});
 
+		TextFile brightnessMaxFile = new TextFile("/sys/class/backlight/intel_backlight/max_brightness");
+		brightnessMax = StrUtils.strToInt(brightnessMaxFile.getContent());
+		if (brightnessMax != null) {
+			brightnessFile = new TextFile("/sys/class/backlight/intel_backlight/brightness");
+			Integer brightnessCur = StrUtils.strToInt(brightnessFile.getContent());
+			brightnessItem = new BarMenuItemForMainMenu();
+			brightnessItem.setBackground(bgColorCol);
+			brightnessItem.setForeground(fgColor.toColor());
+			brightnessItem.setBarPosition((100 * brightnessCur) / brightnessMax, false);
+			brightnessItem.setMaximum(100);
+			brightnessItem.setSendUpdateOnMousePress(true);
+			brightnessItem.addBarListener(new BarListener() {
+				@Override
+				public void onBarMove(Integer position) {
+					adjustBrightness(position);
+					hideEmojiSelector();
+				}
+
+				@Override
+				public void onBarDisplay(Integer position) {
+				}
+			});
+			mainPanel.add(brightnessItem, new Arrangement(15, 0, 0.0, 1.0));
+		}
+
 
 		parent.add(mainPanel, BorderLayout.CENTER);
 
@@ -493,6 +522,19 @@ public class GUI extends MainWindow {
 			int volPerc = Math.min(65535, position * 656);
 			IoUtils.executeAsync(this.nircmdPath + " setsysvolume " + volPerc);
 		}
+	}
+
+	private void adjustBrightness(Integer position) {
+		if (position == null) {
+			position = 0;
+		}
+
+		// do not set below a reasonable minimum as otherwise the screen will not be visible at all ^^'
+		if (position < 5) {
+			position = 5;
+		}
+
+		brightnessFile.saveContent("" + ((position * brightnessMax) / 100));
 	}
 
 	private void refreshTitleBar() {
@@ -721,6 +763,9 @@ public class GUI extends MainWindow {
 		heartLabel.setVisible(visible);
 		batteryLabel.setVisible(visible);
 		clockLabel.setVisible(visible);
+		if (brightnessItem != null) {
+			brightnessItem.setVisible(visible);
+		}
 	}
 
 	private void hideEmojiSelector() {
