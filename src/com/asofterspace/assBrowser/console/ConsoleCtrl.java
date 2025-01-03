@@ -17,6 +17,7 @@ import com.asofterspace.toolbox.io.SimpleFile;
 import com.asofterspace.toolbox.io.TextFile;
 import com.asofterspace.toolbox.utils.StrUtils;
 
+import java.awt.Desktop;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -208,7 +209,13 @@ public class ConsoleCtrl {
 		// shell execute
 
 		if (commandLow.startsWith("se:")) {
-			IoUtils.executeAsync(command.substring(3).trim());
+			command = command.substring(3).trim();
+			Directory cmdDir = new Directory(command);
+			if (cmdDir.exists()) {
+				GuiUtils.openFolder(command);
+			} else {
+				IoUtils.executeAsync(command);
+			}
 			return result;
 		}
 
