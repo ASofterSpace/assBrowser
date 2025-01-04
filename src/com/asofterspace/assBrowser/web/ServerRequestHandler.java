@@ -8,6 +8,7 @@ import com.asofterspace.assBrowser.AssBrowser;
 import com.asofterspace.assBrowser.console.ConsoleCtrl;
 import com.asofterspace.assBrowser.console.ConsoleResult;
 import com.asofterspace.assBrowser.Database;
+import com.asofterspace.assBrowser.paths.FileStringifier;
 import com.asofterspace.assBrowser.paths.PathCtrl;
 import com.asofterspace.toolbox.coders.UrlEncoder;
 import com.asofterspace.toolbox.gui.GuiUtils;
@@ -22,6 +23,8 @@ import com.asofterspace.toolbox.io.TextFile;
 import com.asofterspace.toolbox.utils.DateUtils;
 import com.asofterspace.toolbox.utils.Pair;
 import com.asofterspace.toolbox.utils.Record;
+import com.asofterspace.toolbox.utils.SortUtils;
+import com.asofterspace.toolbox.utils.Stringifier;
 import com.asofterspace.toolbox.utils.StrUtils;
 import com.asofterspace.toolbox.utils.TextEncoding;
 import com.asofterspace.toolbox.Utils;
@@ -71,6 +74,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 	// the link to the video that is played next (the first entry on the list of other videos)
 	private String nextVidLink = null;
+
+	private FileStringifier fileStringifier = new FileStringifier();
 
 	private static final String WARN_BASE = "warning_id_";
 	private static final String ID_MULT = "mult";
@@ -1388,6 +1393,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				if (childFolders.size() > 0) {
 					addTextToHtml(folderContent, "");
 				}
+
+				childFiles = SortUtils.sortAlphabetically(childFiles, fileStringifier);
 
 				for (File childFile : childFiles) {
 					addFileToHtml(folderContent, childFile.getLocalFilename(), childFile, path, !quickView, compareToFileName);
