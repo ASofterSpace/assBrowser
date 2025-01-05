@@ -17,6 +17,9 @@ window.browser = {
 
 	exportView: false,
 
+	// which specific picture view is currently active?
+	curView: null,
+
 
 	onResize: function() {
 
@@ -113,13 +116,16 @@ window.browser = {
 
 	openScrollView: function() {
 		this.closeMoreActions();
+		this.curView = 'scroll';
 
 		var imageStrip = document.getElementById("imageStrip");
 		var tileStripsContainer = document.getElementById("tileStripsContainer");
 		var body = document.getElementsByTagName("body")[0];
 		var closeScrollViewBtn = document.getElementById('closeScrollViewBtn');
+		var leftComicViewBtn = document.getElementById('leftComicViewBtn');
+		var rightComicViewBtn = document.getElementById('rightComicViewBtn');
 
-		if (imageStrip && tileStripsContainer && body && closeScrollViewBtn) {
+		if (imageStrip && tileStripsContainer && body && closeScrollViewBtn && leftComicViewBtn && rightComicViewBtn) {
 
 			imageStrip.style.position = "fixed";
 			imageStrip.style.width = "100%";
@@ -135,6 +141,9 @@ window.browser = {
 			closeScrollViewBtn.style.display = 'block';
 			closeScrollViewBtn.innerText = "Close View";
 
+			leftComicViewBtn.style.display = 'block';
+			rightComicViewBtn.style.display = 'block';
+
 			imageStrip.style.width = body.clientWidth + "px";
 			imageStrip.style.height = body.clientHeight + "px";
 		}
@@ -142,6 +151,7 @@ window.browser = {
 
 	openComicView: function() {
 		this.closeMoreActions();
+		this.curView = 'comic';
 		this.curComicViewPage = 1;
 
 		var imageStrip = document.getElementById("imageStrip");
@@ -151,7 +161,7 @@ window.browser = {
 		var leftComicViewBtn = document.getElementById('leftComicViewBtn');
 		var rightComicViewBtn = document.getElementById('rightComicViewBtn');
 
-		if (imageStrip && tileStripsContainer && body && closeScrollViewBtn) {
+		if (imageStrip && tileStripsContainer && body && closeScrollViewBtn && leftComicViewBtn && rightComicViewBtn) {
 
 			imageStrip.style.position = "fixed";
 			imageStrip.style.width = "100%";
@@ -210,25 +220,34 @@ window.browser = {
 	},
 
 	comicViewPrevPage: function() {
-		var newPage = document.getElementById("pic_" + (this.curComicViewPage - 1));
-		if (newPage) {
-			document.getElementById("pic_" + this.curComicViewPage).style.display = "none";
-			newPage.style.display = "inline";
-			this.curComicViewPage = this.curComicViewPage - 1;
+		if (this.curView == 'scroll') {
+			var imageStrip = document.getElementById("imageStrip").scrollBy(0, -128);
+		} else {
+			var newPage = document.getElementById("pic_" + (this.curComicViewPage - 1));
+			if (newPage) {
+				document.getElementById("pic_" + this.curComicViewPage).style.display = "none";
+				newPage.style.display = "inline";
+				this.curComicViewPage = this.curComicViewPage - 1;
+			}
 		}
 	},
 
 	comicViewNextPage: function() {
-		var newPage = document.getElementById("pic_" + (this.curComicViewPage + 1));
-		if (newPage) {
-			document.getElementById("pic_" + this.curComicViewPage).style.display = "none";
-			newPage.style.display = "inline";
-			this.curComicViewPage = this.curComicViewPage + 1;
+		if (this.curView == 'scroll') {
+			var imageStrip = document.getElementById("imageStrip").scrollBy(0, 128);
+		} else {
+			var newPage = document.getElementById("pic_" + (this.curComicViewPage + 1));
+			if (newPage) {
+				document.getElementById("pic_" + this.curComicViewPage).style.display = "none";
+				newPage.style.display = "inline";
+				this.curComicViewPage = this.curComicViewPage + 1;
+			}
 		}
 	},
 
 	openTileView: function() {
 		this.closeMoreActions();
+		this.curView = 'tile';
 
 		var imageStrip = document.getElementById("imageStrip");
 		var tileStripsContainer = document.getElementById("tileStripsContainer");
@@ -255,6 +274,7 @@ window.browser = {
 
 	closeView: function() {
 		this.closeMoreActions();
+		this.curView = null;
 
 		var tileStripsContainer = document.getElementById("tileStripsContainer");
 		tileStripsContainer.style.display = 'none';
