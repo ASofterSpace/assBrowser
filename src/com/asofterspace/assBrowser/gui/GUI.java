@@ -351,7 +351,7 @@ public class GUI extends MainWindow {
 			}
 		});
 
-		cpuLabel = createLabel("CPU: ? ");
+		cpuLabel = createLabel("C: ? ");
 		cpuLabel.setOpaque(true);
 		cpuLabel.setForeground(errorColor.toColor());
 		mainPanel.add(cpuLabel, new Arrangement(13, 0, 0.0, 1.0));
@@ -366,7 +366,7 @@ public class GUI extends MainWindow {
 			}
 		});
 
-		ramLabel = createLabel("RAM: ? ");
+		ramLabel = createLabel("M: ? ");
 		ramLabel.setOpaque(true);
 		ramLabel.setForeground(errorColor.toColor());
 		mainPanel.add(ramLabel, new Arrangement(14, 0, 0.0, 1.0));
@@ -381,7 +381,7 @@ public class GUI extends MainWindow {
 			}
 		});
 
-		batteryLabel = createLabel("BATTERY STATE UNINITIALIZED ");
+		batteryLabel = createLabel("B: UNINITIALIZED ");
 		batteryLabel.setOpaque(true);
 		batteryLabel.setForeground(errorColor.toColor());
 		mainPanel.add(batteryLabel, new Arrangement(15, 0, 0.0, 1.0));
@@ -684,14 +684,14 @@ public class GUI extends MainWindow {
 				if ((chargeNow != null) && (chargeFull != null) && (acOnline != null)) {
 					int batteryCharge = (100 * chargeNow) / chargeFull;
 					if (acOnline.startsWith("1")) {
-						batteryLabel.setText("~ (" + batteryCharge + "%) ");
+						batteryLabel.setText("B: ~ (" + batteryCharge + "%) ");
 						batteryLabel.setForeground(fgColorCol);
 						batteryLabel.setBackground(bgColorCol);
 					} else {
-						setBatteryProblemText(" ON BATTERY :: " + batteryCharge + "% ");
+						setBatteryProblemText("B: " + batteryCharge + "% ");
 					}
 				} else {
-					setBatteryProblemText("BATTERY STATE ERROR 3 ");
+					setBatteryProblemText("B: ERR 3 ");
 				}
 
 			} else {
@@ -721,10 +721,10 @@ public class GUI extends MainWindow {
 								String batteryCharge = values[values.length-1];
 
 								if ("1".equals(powerState)) {
-									setBatteryProblemText(" ON BATTERY :: " + batteryCharge + "% ");
+									setBatteryProblemText("B: " + batteryCharge + "% ");
 
 								} else {
-									batteryLabel.setText("~ (" + batteryCharge + "%) ");
+									batteryLabel.setText("B: ~ (" + batteryCharge + "%) ");
 									batteryLabel.setForeground(fgColorCol);
 									batteryLabel.setBackground(bgColorCol);
 								}
@@ -733,12 +733,12 @@ public class GUI extends MainWindow {
 						curline = reader.readLine();
 					}
 				} catch (IOException e) {
-					setBatteryProblemText("BATTERY STATE ERROR 2 ");
+					setBatteryProblemText("B: ERR 2 ");
 				}
 			}
 
 		} catch (IOException ex) {
-			setBatteryProblemText("BATTERY STATE ERROR 1 ");
+			setBatteryProblemText("B: ERR 1 ");
 		}
 	}
 
@@ -772,13 +772,13 @@ public class GUI extends MainWindow {
 						Integer cpuUs = StrUtils.strToInt(curline.substring(8, 11) + curline.substring(12, 13));
 						Integer cpuSy = StrUtils.strToInt(curline.substring(17, 20) + curline.substring(21, 22));
 						if ((cpuUs == null) || (cpuSy == null)) {
-							setCpuProblemText("CPU: ? ");
+							setCpuProblemText("C: ? ");
 						} else {
 							int cpuSum = (cpuUs + cpuSy) / 10;
 							if (cpuSum > 85) {
-								setCpuProblemText("CPU: " + cpuSum + "% ");
+								setCpuProblemText("C: " + cpuSum + "% ");
 							} else {
-								cpuLabel.setText("CPU: " + cpuSum + "% ");
+								cpuLabel.setText("C: " + cpuSum + "% ");
 								cpuLabel.setForeground(fgColorCol);
 								cpuLabel.setBackground(bgColorCol);
 							}
@@ -789,13 +789,13 @@ public class GUI extends MainWindow {
 						Integer ramMax = StrUtils.strToInt(curline.substring(9, 16));
 						Integer ramFree = StrUtils.strToInt(curline.substring(25, 32));
 						if ((ramMax == null) || (ramFree == null)) {
-							setRamProblemText("RAM: ? ");
+							setRamProblemText("M: ? ");
 						} else {
 							int ramSum = ((ramMax - ramFree) * 100) / ramMax;
 							if (ramSum > 85) {
-								setRamProblemText("RAM: " + ramSum + "% ");
+								setRamProblemText("M: " + ramSum + "% ");
 							} else {
-								ramLabel.setText("RAM: " + ramSum + "% ");
+								ramLabel.setText("M: " + ramSum + "% ");
 								ramLabel.setForeground(fgColorCol);
 								ramLabel.setBackground(bgColorCol);
 							}
@@ -806,12 +806,12 @@ public class GUI extends MainWindow {
 					linenum++;
 				}
 			} catch (IOException e) {
-				setCpuProblemText("CPU: - ");
-				setRamProblemText("RAM: - ");
+				setCpuProblemText("C: - ");
+				setRamProblemText("M: - ");
 			}
 		} catch (IOException ex) {
-			setCpuProblemText("CPU: X ");
-			setRamProblemText("RAM: X ");
+			setCpuProblemText("C: X ");
+			setRamProblemText("M: X ");
 			System.out.println(ex);
 		}
 	}
