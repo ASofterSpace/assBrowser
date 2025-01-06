@@ -71,6 +71,8 @@ public class GUI extends MainWindow {
 	private JLabel newlineLabel;
 	private JLabel heartLabel;
 	private JLabel batteryLabel;
+	private JLabel cpuLabel;
+	private JLabel ramLabel;
 	private JLabel clockLabel;
 	private BarMenuItemForMainMenu brightnessItem;
 
@@ -95,8 +97,11 @@ public class GUI extends MainWindow {
 	private static int height = INIT_HEIGHT;
 
 	private int batteryDisplayCounter = 0;
+	private int cpuDisplayCounter = 0;
+	private int ramDisplayCounter = 0;
 	// private long lastVolumeTime = 0;
 	private String nircmdPath;
+	private List<String> topCmdAndArgs;
 
 	private TextFile brightnessFile;
 	private Integer brightnessMax;
@@ -117,6 +122,10 @@ public class GUI extends MainWindow {
 		this.database = database;
 		this.consoleCtrl = consoleCtrl;
 		this.nircmdPath = database.getNircmdPath();
+
+		this.topCmdAndArgs = new ArrayList<>();
+		this.topCmdAndArgs.add("top");
+		this.topCmdAndArgs.add("-b");
 
 		// enable anti-aliasing for swing
 		System.setProperty("swing.aatext", "true");
@@ -342,10 +351,40 @@ public class GUI extends MainWindow {
 			}
 		});
 
+		cpuLabel = createLabel("CPU: ? ");
+		cpuLabel.setOpaque(true);
+		cpuLabel.setForeground(errorColor.toColor());
+		mainPanel.add(cpuLabel, new Arrangement(13, 0, 0.0, 1.0));
+
+		cpuLabel.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				checkCpuAndRamStatus();
+				resetGuiLocation();
+				clickHighlight(cpuLabel);
+				hideEmojiSelector();
+			}
+		});
+
+		ramLabel = createLabel("RAM: ? ");
+		ramLabel.setOpaque(true);
+		ramLabel.setForeground(errorColor.toColor());
+		mainPanel.add(ramLabel, new Arrangement(14, 0, 0.0, 1.0));
+
+		ramLabel.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				checkCpuAndRamStatus();
+				resetGuiLocation();
+				clickHighlight(ramLabel);
+				hideEmojiSelector();
+			}
+		});
+
 		batteryLabel = createLabel("BATTERY STATE UNINITIALIZED ");
 		batteryLabel.setOpaque(true);
 		batteryLabel.setForeground(errorColor.toColor());
-		mainPanel.add(batteryLabel, new Arrangement(13, 0, 0.0, 1.0));
+		mainPanel.add(batteryLabel, new Arrangement(15, 0, 0.0, 1.0));
 
 		batteryLabel.addMouseListener(new MouseAdapter() {
 			@Override
@@ -353,13 +392,12 @@ public class GUI extends MainWindow {
 				checkBatteryStatus();
 				resetGuiLocation();
 				clickHighlight(batteryLabel);
-
 				hideEmojiSelector();
 			}
 		});
 
 		clockLabel = createLabel("00:00 ");
-		mainPanel.add(clockLabel, new Arrangement(14, 0, 0.0, 1.0));
+		mainPanel.add(clockLabel, new Arrangement(16, 0, 0.0, 1.0));
 
 		clockLabel.addMouseListener(new MouseAdapter() {
 			@Override
@@ -394,7 +432,7 @@ public class GUI extends MainWindow {
 				public void onBarDisplay(Integer position) {
 				}
 			});
-			mainPanel.add(brightnessItem, new Arrangement(15, 0, 0.0, 1.0));
+			mainPanel.add(brightnessItem, new Arrangement(17, 0, 0.0, 1.0));
 		}
 
 
@@ -564,8 +602,11 @@ public class GUI extends MainWindow {
 						// check battery status
 						checkBatteryStatus();
 
-						// update time every 30 seconds
-						Thread.sleep(30 * 1000);
+						// check cpu and ram status
+						checkCpuAndRamStatus();
+
+						// update every 3 seconds
+						Thread.sleep(3 * 1000);
 
 					} catch (InterruptedException e) {
 						// just keep sleeping...
@@ -713,6 +754,95 @@ public class GUI extends MainWindow {
 			batteryDisplayCounter = 0;
 			batteryLabel.setForeground(bgColorCol);
 			batteryLabel.setBackground(errorColorCol);
+		}
+	}
+
+	private void checkCpuAndRamStatus() {
+		try {
+			ProcessBuilder processBuilder = new ProcessBuilder(topCmdAndArgs);
+			Process proc = processBuilder.start();
+
+			try (BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()))) {
+				String curline = reader.readLine();
+				int linenum = 0;
+
+				while (curline != null) {
+					if (linenum == 2) {
+						// System.out.println(curline + "\nus: '" + curline.substring(8, 11) + curline.substring(12, 13) + "' sys: '" + curline.substring(17, 20) + curline.substring(21, 22) + "'");
+						Integer cpuUs = StrUtils.strToInt(curline.substring(8, 11) + curline.substring(12, 13));
+						Integer cpuSy = StrUtils.strToInt(curline.substring(17, 20) + curline.substring(21, 22));
+						if ((cpuUs == null) || (cpuSy == null)) {
+							setCpuProblemText("CPU: ? ");
+						} else {
+							int cpuSum = (cpuUs + cpuSy) / 10;
+							if (cpuSum > 85) {
+								setCpuProblemText("CPU: " + cpuSum + "% ");
+							} else {
+								cpuLabel.setText("CPU: " + cpuSum + "% ");
+								cpuLabel.setForeground(fgColorCol);
+								cpuLabel.setBackground(bgColorCol);
+							}
+						}
+					}
+					if (linenum == 3) {
+						// System.out.println(curline + "\n'" + curline.substring(9, 16) + "' '" + curline.substring(25, 32) + "'");
+						Integer ramMax = StrUtils.strToInt(curline.substring(9, 16));
+						Integer ramFree = StrUtils.strToInt(curline.substring(25, 32));
+						if ((ramMax == null) || (ramFree == null)) {
+							setRamProblemText("RAM: ? ");
+						} else {
+							int ramSum = ((ramMax - ramFree) * 100) / ramMax;
+							if (ramSum > 85) {
+								setRamProblemText("RAM: " + ramSum + "% ");
+							} else {
+								ramLabel.setText("RAM: " + ramSum + "% ");
+								ramLabel.setForeground(fgColorCol);
+								ramLabel.setBackground(bgColorCol);
+							}
+						}
+						return;
+					}
+					curline = reader.readLine();
+					linenum++;
+				}
+			} catch (IOException e) {
+				setCpuProblemText("CPU: - ");
+				setRamProblemText("RAM: - ");
+			}
+		} catch (IOException ex) {
+			setCpuProblemText("CPU: X ");
+			setRamProblemText("RAM: X ");
+			System.out.println(ex);
+		}
+	}
+
+	private void setCpuProblemText(String text) {
+
+		cpuLabel.setText(text);
+
+		if (cpuDisplayCounter == 0) {
+			cpuDisplayCounter = 1;
+			cpuLabel.setForeground(errorColorCol);
+			cpuLabel.setBackground(bgColorCol);
+		} else {
+			cpuDisplayCounter = 0;
+			cpuLabel.setForeground(bgColorCol);
+			cpuLabel.setBackground(errorColorCol);
+		}
+	}
+
+	private void setRamProblemText(String text) {
+
+		ramLabel.setText(text);
+
+		if (ramDisplayCounter == 0) {
+			ramDisplayCounter = 1;
+			ramLabel.setForeground(errorColorCol);
+			ramLabel.setBackground(bgColorCol);
+		} else {
+			ramDisplayCounter = 0;
+			ramLabel.setForeground(bgColorCol);
+			ramLabel.setBackground(errorColorCol);
 		}
 	}
 
