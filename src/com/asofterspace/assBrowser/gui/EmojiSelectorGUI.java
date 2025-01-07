@@ -193,7 +193,7 @@ public class EmojiSelectorGUI {
 				// Actually display the whole jazz
 				dialogWindow.setVisible(true);
 
-				dialogWindow.setLocation(new Point(width - 372, 20));
+				dialogWindow.setLocation(new Point(width - 600, 20));
 			}
 		});
 

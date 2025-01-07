@@ -73,6 +73,7 @@ public class GUI extends MainWindow {
 	private JLabel batteryLabel;
 	private JLabel cpuLabel;
 	private JLabel ramLabel;
+	private JLabel swapLabel;
 	private JLabel clockLabel;
 	private BarMenuItemForMainMenu brightnessItem;
 
@@ -99,6 +100,7 @@ public class GUI extends MainWindow {
 	private int batteryDisplayCounter = 0;
 	private int cpuDisplayCounter = 0;
 	private int ramDisplayCounter = 0;
+	private int swapDisplayCounter = 0;
 	// private long lastVolumeTime = 0;
 	private String nircmdPath;
 	private List<String> topCmdAndArgs;
@@ -381,10 +383,25 @@ public class GUI extends MainWindow {
 			}
 		});
 
+		swapLabel = createLabel("S: ? ");
+		swapLabel.setOpaque(true);
+		swapLabel.setForeground(errorColor.toColor());
+		mainPanel.add(swapLabel, new Arrangement(15, 0, 0.0, 1.0));
+
+		swapLabel.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				checkCpuAndRamStatus();
+				resetGuiLocation();
+				clickHighlight(swapLabel);
+				hideEmojiSelector();
+			}
+		});
+
 		batteryLabel = createLabel("B: UNINITIALIZED ");
 		batteryLabel.setOpaque(true);
 		batteryLabel.setForeground(errorColor.toColor());
-		mainPanel.add(batteryLabel, new Arrangement(15, 0, 0.0, 1.0));
+		mainPanel.add(batteryLabel, new Arrangement(16, 0, 0.0, 1.0));
 
 		batteryLabel.addMouseListener(new MouseAdapter() {
 			@Override
@@ -397,7 +414,7 @@ public class GUI extends MainWindow {
 		});
 
 		clockLabel = createLabel("00:00 ");
-		mainPanel.add(clockLabel, new Arrangement(16, 0, 0.0, 1.0));
+		mainPanel.add(clockLabel, new Arrangement(17, 0, 0.0, 1.0));
 
 		clockLabel.addMouseListener(new MouseAdapter() {
 			@Override
@@ -432,7 +449,7 @@ public class GUI extends MainWindow {
 				public void onBarDisplay(Integer position) {
 				}
 			});
-			mainPanel.add(brightnessItem, new Arrangement(17, 0, 0.0, 1.0));
+			mainPanel.add(brightnessItem, new Arrangement(18, 0, 0.0, 1.0));
 		}
 
 
@@ -657,7 +674,7 @@ public class GUI extends MainWindow {
 
 		String batScriptPath = database.getBatteryStateScriptPath();
 		if (batScriptPath == null) {
-			setBatteryProblemText("BATTERY STATE UNKNOWN ");
+			setBatteryProblemText("B: ? ");
 			return;
 		}
 
@@ -764,6 +781,7 @@ public class GUI extends MainWindow {
 
 			try (BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()))) {
 				String curline = reader.readLine();
+				String prevMemLine = null;
 				int linenum = 0;
 
 				while (curline != null) {
@@ -785,19 +803,40 @@ public class GUI extends MainWindow {
 						}
 					}
 					if (linenum == 3) {
-						// System.out.println(curline + "\n'" + curline.substring(9, 16) + "' '" + curline.substring(25, 32) + "'");
-						Integer ramMax = StrUtils.strToInt(curline.substring(9, 16));
-						Integer ramFree = StrUtils.strToInt(curline.substring(25, 32));
+						prevMemLine = curline;
+					}
+					if (linenum == 4) {
+						// System.out.println(prevMemLine + "\nRAM: '" + prevMemLine.substring(9, 16) + "' '" + prevMemLine.substring(25, 32) + "'");
+						// System.out.println(curline + "\nswap: '" + curline.substring(9, 16) + "' '" + curline.substring(25, 32) + "'");
+						Integer ramMax = StrUtils.strToInt(prevMemLine.substring(9, 16));
+						Integer ramFree = StrUtils.strToInt(prevMemLine.substring(25, 32));
 						if ((ramMax == null) || (ramFree == null)) {
 							setRamProblemText("M: ? ");
 						} else {
 							int ramSum = ((ramMax - ramFree) * 100) / ramMax;
-							if (ramSum > 85) {
+							if (ramSum > 95) {
 								setRamProblemText("M: " + ramSum + "% ");
 							} else {
 								ramLabel.setText("M: " + ramSum + "% ");
 								ramLabel.setForeground(fgColorCol);
 								ramLabel.setBackground(bgColorCol);
+							}
+						}
+						Integer swapMax = StrUtils.strToInt(curline.substring(9, 16));
+						Integer swapFree = StrUtils.strToInt(curline.substring(25, 32));
+						if ((swapMax == null) || (swapFree == null)) {
+							setSwapProblemText("S: ? ");
+						} else {
+							int swapSum = 100;
+							if (swapMax > 0) {
+								swapSum = ((swapMax - swapFree) * 100) / swapMax;
+							}
+							if (swapSum > 75) {
+								setSwapProblemText("S: " + swapSum + "% ");
+							} else {
+								swapLabel.setText("S: " + swapSum + "% ");
+								swapLabel.setForeground(fgColorCol);
+								swapLabel.setBackground(bgColorCol);
 							}
 						}
 						return;
@@ -808,10 +847,12 @@ public class GUI extends MainWindow {
 			} catch (IOException e) {
 				setCpuProblemText("C: - ");
 				setRamProblemText("M: - ");
+				setSwapProblemText("S: - ");
 			}
 		} catch (IOException ex) {
 			setCpuProblemText("C: X ");
 			setRamProblemText("M: X ");
+			setSwapProblemText("S: X ");
 			System.out.println(ex);
 		}
 	}
@@ -843,6 +884,21 @@ public class GUI extends MainWindow {
 			ramDisplayCounter = 0;
 			ramLabel.setForeground(bgColorCol);
 			ramLabel.setBackground(errorColorCol);
+		}
+	}
+
+	private void setSwapProblemText(String text) {
+
+		swapLabel.setText(text);
+
+		if (swapDisplayCounter == 0) {
+			swapDisplayCounter = 1;
+			swapLabel.setForeground(errorColorCol);
+			swapLabel.setBackground(bgColorCol);
+		} else {
+			swapDisplayCounter = 0;
+			swapLabel.setForeground(bgColorCol);
+			swapLabel.setBackground(errorColorCol);
 		}
 	}
 
