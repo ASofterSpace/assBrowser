@@ -16,11 +16,14 @@ import com.asofterspace.toolbox.gui.BarMenuItemForMainMenu;
 import com.asofterspace.toolbox.gui.GuiUtils;
 import com.asofterspace.toolbox.gui.MainWindow;
 import com.asofterspace.toolbox.images.ColorRGBA;
+import com.asofterspace.toolbox.io.Directory;
+import com.asofterspace.toolbox.io.File;
 import com.asofterspace.toolbox.io.IoUtils;
 import com.asofterspace.toolbox.io.TextFile;
 import com.asofterspace.toolbox.utils.DateUtils;
 import com.asofterspace.toolbox.utils.StrUtils;
 
+import java.awt.AWTKeyStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.datatransfer.Clipboard;
@@ -32,13 +35,16 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.Font;
 import java.awt.GridBagLayout;
+import java.awt.KeyboardFocusManager;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.Line;
@@ -466,6 +472,10 @@ public class GUI extends MainWindow {
 		consoleField.setBorder(new LineBorder(borderColor.toColor()));
 		mainPanel.add(consoleField, new Arrangement(num, 0, 1.0, 1.0));
 
+		// prevent [TAB] from causing focus traversal
+		Set<AWTKeyStroke> noKeys = new HashSet<>();
+		consoleField.setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS, noKeys);
+
 		consoleField.addKeyListener(new KeyAdapter() {
 			public void keyReleased(KeyEvent event) {
 			}
@@ -508,6 +518,50 @@ public class GUI extends MainWindow {
 				if (event.getKeyCode() == KeyEvent.VK_F6) {
 					insertTextForFunctionKey(DateUtils.getCurrentDateTimeStamp(), consoleField);
 					event.consume();
+					return;
+				}
+
+				// [TAB] for tab completion
+				if (event.getKeyCode() == KeyEvent.VK_TAB) {
+					String txt = consoleField.getText();
+					int index = txt.indexOf(" /");
+					event.consume();
+					if (index >= 0) {
+						String beforepath = txt.substring(0, index+1);
+						String dirpath = txt.substring(index+1);
+						index = dirpath.lastIndexOf("/");
+						String fileLocalStart = dirpath.substring(index+1);
+						dirpath = dirpath.substring(0, index+1);
+						Directory parentDir = new Directory(dirpath);
+						boolean recursively = false;
+						List<Directory> dirs = parentDir.getAllDirectories(recursively);
+						List<File> files = parentDir.getAllFiles(recursively);
+						boolean foundOne = false;
+						String fileLocal = "";
+						for (Directory dir : dirs) {
+							if (dir.getLocalDirname().startsWith(fileLocalStart)) {
+								if (foundOne) {
+									return;
+								}
+								foundOne = true;
+								fileLocal = dir.getLocalDirname() + "/";
+							}
+						}
+						for (File file : files) {
+							if (file.getLocalFilename().startsWith(fileLocalStart)) {
+								if (foundOne) {
+									return;
+								}
+								foundOne = true;
+								fileLocal = file.getLocalFilename();
+							}
+						}
+
+						String newTxt = beforepath + dirpath + fileLocal;
+						consoleField.setText(newTxt);
+						consoleField.setSelectionStart(newTxt.length());
+						consoleField.setSelectionEnd(newTxt.length());
+					}
 					return;
 				}
 
