@@ -806,14 +806,14 @@ public class GUI extends MainWindow {
 						prevMemLine = curline;
 					}
 					if (linenum == 4) {
-						// System.out.println(prevMemLine + "\nRAM: '" + prevMemLine.substring(9, 16) + "' '" + prevMemLine.substring(25, 32) + "'");
-						// System.out.println(curline + "\nswap: '" + curline.substring(9, 16) + "' '" + curline.substring(25, 32) + "'");
+						// System.out.println(prevMemLine + "\nRAM: '" + prevMemLine.substring(9, 16) + "' '" + prevMemLine.substring(40, 47) + "'");
+						// System.out.println(curline + "\nswap: '" + curline.substring(9, 16) + "' '" + curline.substring(40, 47) + "'");
 						Integer ramMax = StrUtils.strToInt(prevMemLine.substring(9, 16));
-						Integer ramFree = StrUtils.strToInt(prevMemLine.substring(25, 32));
-						if ((ramMax == null) || (ramFree == null)) {
+						Integer ramUsed = StrUtils.strToInt(prevMemLine.substring(40, 47));
+						if ((ramMax == null) || (ramUsed == null)) {
 							setRamProblemText("M: ? ");
 						} else {
-							int ramSum = ((ramMax - ramFree) * 100) / ramMax;
+							int ramSum = (ramUsed * 100) / ramMax;
 							if (ramSum > 95) {
 								setRamProblemText("M: " + ramSum + "% ");
 							} else {
@@ -823,13 +823,13 @@ public class GUI extends MainWindow {
 							}
 						}
 						Integer swapMax = StrUtils.strToInt(curline.substring(9, 16));
-						Integer swapFree = StrUtils.strToInt(curline.substring(25, 32));
-						if ((swapMax == null) || (swapFree == null)) {
+						Integer swapUsed = StrUtils.strToInt(curline.substring(40, 47));
+						if ((swapMax == null) || (swapUsed == null)) {
 							setSwapProblemText("S: ? ");
 						} else {
 							int swapSum = 100;
 							if (swapMax > 0) {
-								swapSum = ((swapMax - swapFree) * 100) / swapMax;
+								swapSum = (swapUsed * 100) / swapMax;
 							}
 							if (swapSum > 75) {
 								setSwapProblemText("S: " + swapSum + "% ");
