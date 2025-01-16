@@ -1491,8 +1491,18 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					} else {
 						// add folder links for folders that are just plainly on a line - so just "folder" not "folder > file"
 						if (!line.contains(" &gt; ")) {
+							/*
+							// for Windows:
 							if (line.length() > 3) {
 								if ((line.charAt(1) == ':') && (line.charAt(2) == '\\')) {
+									line = "<span class='a' onclick=\"browser.openFolderInOS('" + StrUtils.replaceAll(line, "\\", "\\\\") + "')\">" +
+										line + "</span>";
+								}
+							}
+							*/
+							// for Linux:
+							if (line.length() > 1) {
+								if (line.charAt(0) == '/') {
 									line = "<span class='a' onclick=\"browser.openFolderInOS('" + StrUtils.replaceAll(line, "\\", "\\\\") + "')\">" +
 										line + "</span>";
 								}
@@ -1589,9 +1599,16 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		fileHtmlStr += "<br>";
 		int nextLine = fileHtmlStr.indexOf("<br>", start);
 		while (nextLine >= 0) {
+			/*
+			// for Windows:
 			int begin = fileHtmlStr.indexOf(":", start);
+			int offset = 1;
+			*/
+			// for Linux:
+			int begin = fileHtmlStr.indexOf("/", start);
+			int offset = 0;
 			int end = fileHtmlStr.indexOf(" &gt; ", start);
-			if ((begin == start + 1) && (end >= start) && (end < nextLine)) {
+			if ((begin == start + offset) && (end >= start) && (end < nextLine)) {
 				String linkStr = fileHtmlStr.substring(start, end);
 				newFileHtml.append("<span class='a' onclick=\"browser.openFolderInOS('" + StrUtils.replaceAll(linkStr, "\\", "\\\\") + "')\">");
 				newFileHtml.append(linkStr);
@@ -2049,7 +2066,11 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			newFileHtml.append(fileHtmlStr.substring(start, pos));
 			String linkStr = fileHtmlStr.substring(pos, end);
 			newFileHtml.append("<a href=\"" + linkStr + "\" target='_blank'>");
-			newFileHtml.append(linkStr);
+			String prettyLinkForDisplay = linkStr;
+			if (linkStr.startsWith("file://") || linkStr.startsWith("http://localhost:")) {
+				prettyLinkForDisplay = StrUtils.replaceAll(StrUtils.replaceAll(StrUtils.replaceAll(prettyLinkForDisplay, "%2F", "/"), "%2E", "."), "%20", " ");
+			}
+			newFileHtml.append(prettyLinkForDisplay);
 			newFileHtml.append("</a>");
 			start = end;
 			pos = fileHtmlStr.indexOf(urlStart, end);
