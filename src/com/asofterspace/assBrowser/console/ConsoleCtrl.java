@@ -177,11 +177,12 @@ public class ConsoleCtrl {
 
 		// switch to disk overview
 		if (("/".equals(commandLow)) || ("\\".equals(commandLow))) {
-			result.setPath("");
+			result.setPath("/");
 			return result;
 		}
 
 
+		/*
 		// switch to different disk
 		if ((commandLow.length() == 1) ||
 			((commandLow.length() == 2) && (commandLow.charAt(1) == ':')) ||
@@ -193,6 +194,7 @@ public class ConsoleCtrl {
 			}
 			return result;
 		}
+		*/
 
 
 		// math org
@@ -392,7 +394,7 @@ public class ConsoleCtrl {
 		// if this is the name of a folder, open it...
 		Directory openDir = new Directory(command);
 		if (openDir.exists()) {
-			IoUtils.executeAsync("explorer.exe " + command);
+			GuiUtils.openFolder(command);
 			return result;
 		}
 

@@ -107,6 +107,7 @@ public class GUI extends MainWindow {
 	private int cpuDisplayCounter = 0;
 	private int ramDisplayCounter = 0;
 	private int swapDisplayCounter = 0;
+	private int cpuAboveThresholdCounter = 0;
 	// private long lastVolumeTime = 0;
 	private String nircmdPath;
 	private List<String> topCmdAndArgs;
@@ -575,7 +576,7 @@ public class GUI extends MainWindow {
 				hideEmojiSelector();
 
 				String command = consoleField.getText();
-				String previousPath = PathCtrl.DESKTOP;
+				String previousPath = "";
 				previousPath = PathCtrl.ensurePathIsSafe(previousPath);
 
 				boolean fromOutside = true;
@@ -847,9 +848,18 @@ public class GUI extends MainWindow {
 							setCpuProblemText("C: ? ");
 						} else {
 							int cpuSum = (cpuUs + cpuSy) / 10;
-							if (cpuSum > 85) {
-								setCpuProblemText("C: " + cpuSum + "% ");
+							boolean setRegularCpuLabel = true;
+							if (cpuSum > 90) {
+								cpuAboveThresholdCounter++;
+								if (cpuAboveThresholdCounter > 5) {
+									// if CPU above threshold multiple times, alert as problem
+									setCpuProblemText("C: " + cpuSum + "% ");
+									setRegularCpuLabel = false;
+								}
 							} else {
+								cpuAboveThresholdCounter = 0;
+							}
+							if (setRegularCpuLabel) {
 								cpuLabel.setText("C: " + cpuSum + "% ");
 								cpuLabel.setForeground(fgColorCol);
 								cpuLabel.setBackground(bgColorCol);
