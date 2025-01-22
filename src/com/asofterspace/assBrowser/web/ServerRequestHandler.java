@@ -10,6 +10,7 @@ import com.asofterspace.assBrowser.console.ConsoleResult;
 import com.asofterspace.assBrowser.Database;
 import com.asofterspace.assBrowser.paths.FileStringifier;
 import com.asofterspace.assBrowser.paths.PathCtrl;
+import com.asofterspace.toolbox.coders.UrlDecoder;
 import com.asofterspace.toolbox.coders.UrlEncoder;
 import com.asofterspace.toolbox.gui.GuiUtils;
 import com.asofterspace.toolbox.io.Directory;
@@ -2068,7 +2069,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			newFileHtml.append("<a href=\"" + linkStr + "\" target='_blank'>");
 			String prettyLinkForDisplay = linkStr;
 			if (linkStr.startsWith("file://") || linkStr.startsWith("http://localhost:")) {
-				prettyLinkForDisplay = StrUtils.replaceAll(StrUtils.replaceAll(StrUtils.replaceAll(prettyLinkForDisplay, "%2F", "/"), "%2E", "."), "%20", " ");
+				prettyLinkForDisplay = UrlDecoder.decode(prettyLinkForDisplay);
 			}
 			newFileHtml.append(prettyLinkForDisplay);
 			newFileHtml.append("</a>");
