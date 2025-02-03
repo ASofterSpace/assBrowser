@@ -386,7 +386,7 @@ div.category > a:hover {
 
 div#more-actions-container, div#text-actions-container {
 	position:fixed;
-	bottom: 55pt;
+	bottom: 72pt;
 	background: rgba(30, 0, 25, 0.95);
 	border-radius: 9pt;
 	text-align: center;
