@@ -37,6 +37,8 @@ public class Database {
 
 	private final static String PROGRAMS_TO_OPEN_FILES = "programsToOpenFiles";
 
+	private final static String HOME_DIR = "homeDir";
+
 	private JsonFile dbFile;
 
 	private JSON root;
@@ -60,6 +62,9 @@ public class Database {
 	private Map<String, String> programsToOpenFiles = new HashMap<>();
 
 	private Map<String, String> inMemoryFolderContent = new ConcurrentHashMap<>();
+
+	private String homeDirPath;
+	private Directory homeDir = null;
 
 
 	public Database() {
@@ -91,6 +96,8 @@ public class Database {
 		this.videoDirPath = root.getString(VIDEO_DIR);
 
 		this.programsToOpenFiles = root.getStringMap(PROGRAMS_TO_OPEN_FILES);
+
+		this.homeDirPath = root.getString(HOME_DIR);
 	}
 
 	public Record getRoot() {
@@ -118,6 +125,8 @@ public class Database {
 		root.set(VIDEO_DIR, videoDirPath);
 
 		root.set(PROGRAMS_TO_OPEN_FILES, programsToOpenFiles);
+
+		root.set(HOME_DIR, homeDirPath);
 
 		dbFile.setAllContents(root);
 		dbFile.save();
@@ -177,6 +186,17 @@ public class Database {
 
 	public Map<String, String> getProgramsToOpenFiles() {
 		return programsToOpenFiles;
+	}
+
+	public String getHomeDirPathStr() {
+		return homeDirPath;
+	}
+
+	public Directory getHomeDir() {
+		if (homeDir == null) {
+			homeDir = new Directory(homeDirPath);
+		}
+		return homeDir;
 	}
 
 }

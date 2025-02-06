@@ -208,6 +208,27 @@ public class ConsoleCtrl {
 		}
 
 
+		// move file
+
+		if (commandLow.startsWith("mv:")) {
+			command = command.substring(3).trim();
+			Directory homeDir = database.getHomeDir();
+			String startStr = "new";
+			boolean recursively = false;
+			List<File> existingFiles = homeDir.getAllFilesStartingWith(startStr, recursively);
+			if (existingFiles.size() < 1) {
+				GuiUtils.complain("No file called new.* exists in " + homeDir.getAbsoluteDirname() + " - no idea have to move / rename!");
+			} else {
+				if (existingFiles.size() > 1) {
+					GuiUtils.complain("Several files called new.* exist in " + homeDir.getAbsoluteDirname() + " - no idea which one to choose!");
+				} else {
+					existingFiles.get(0).rename(command);
+				}
+			}
+			return result;
+		}
+
+
 		// shell execute
 
 		if (commandLow.startsWith("se:")) {
@@ -304,6 +325,7 @@ public class ConsoleCtrl {
 				"cd [xyz] .. navigates into a certain directory\n" +
 				"se: [xyz] .. executes [xyz] as OS shell command\n" +
 				"mo: [xyz] .. call the MathOrg for the mathematical formula [xyz]\n" +
+				"mv: [xyz] .. move a file called " + database.getHomeDirPathStr() + "/new.* to " + database.getHomeDirPathStr() + "/[xyz]\n" +
 				"grep / sed / find .. shows syntax of common commandline calls\n" +
 				"\n" +
 				"Block commands in entries:\n" +
