@@ -217,7 +217,18 @@ public class ConsoleCtrl {
 			boolean recursively = false;
 			List<File> existingFiles = homeDir.getAllFilesStartingWith(startStr, recursively);
 			if (existingFiles.size() < 1) {
-				GuiUtils.complain("No file called new.* exists in " + homeDir.getAbsoluteDirname() + " - no idea have to move / rename!");
+				// if no file exists in the home directory, check if there is a single file in the Downloads folder instead...
+				Directory downloadsDir = new Directory(homeDir, "Downloads");
+				existingFiles = downloadsDir.getAllFiles(recursively);
+				if (existingFiles.size() < 1) {
+					GuiUtils.complain("No file called new.* exists in " + homeDir.getAbsoluteDirname() + " and none in Downloads - no idea have to move / rename!");
+				} else {
+					if (existingFiles.size() > 1) {
+						GuiUtils.complain("Several files exist in " + homeDir.getAbsoluteDirname() + "/Downloads - no idea which one to choose!");
+					} else {
+						existingFiles.get(0).rename("../" + command);
+					}
+				}
 			} else {
 				if (existingFiles.size() > 1) {
 					GuiUtils.complain("Several files called new.* exist in " + homeDir.getAbsoluteDirname() + " - no idea which one to choose!");
