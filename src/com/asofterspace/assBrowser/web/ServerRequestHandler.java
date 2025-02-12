@@ -1783,37 +1783,40 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		StringBuilder wonkyEncodingStrBuilding = new StringBuilder();
 		appendWarningStart(wonkyEncodingStrBuilding, "The encoding of the file seems wonky or even broken!<br>See e.g.:", ID_ENCO);
 
-		int pos = contentStr.indexOf("?");
-		while (pos >= 0) {
-			// check if there is something like M?ori instead of the proper unicode characters - and complain for it to be fixed!
-			if (pos + 1 < contentStr.length()) {
-				if (Character.isLetter(contentStr.charAt(pos+1))) {
-					int posRbefore = contentStr.lastIndexOf(">", pos);
-					int posLbefore = contentStr.lastIndexOf("<", pos);
-					// sooo if R == -1 and L == -1 (just Fließtext)
-					// or if R > L, so either L == -1 or not, does not matter (outside of a link)
-					// then complain - but do not complain inside of a link or other html entity thingy!
-					if (posRbefore >= posLbefore) {
+		// unless there are code blocks on this page...
+		if (contentStr.indexOf("class='inlinecodeblock'") < 0) {
+			int pos = contentStr.indexOf("?");
+			while (pos >= 0) {
+				// ... check if there is something like M?ori instead of the proper unicode characters - and complain for it to be fixed!
+				if (pos + 1 < contentStr.length()) {
+					if (Character.isLetter(contentStr.charAt(pos+1))) {
+						int posRbefore = contentStr.lastIndexOf(">", pos);
+						int posLbefore = contentStr.lastIndexOf("<", pos);
+						// sooo if R == -1 and L == -1 (just Fließtext)
+						// or if R > L, so either L == -1 or not, does not matter (outside of a link)
+						// then complain - but do not complain inside of a link or other html entity thingy!
+						if (posRbefore >= posLbefore) {
 
-						// however, it could still be that we are not inside an HTML entity,
-						// but in the xyz of <a ...>xyz</a> - sooo let's guard against that as well...
-						int posNextL = contentStr.indexOf("<", pos);
-						int posNextLSAR = contentStr.indexOf("</a>", pos);
-						if ((posNextLSAR < 0) || (posNextLSAR > posNextL)) {
-							foundWonkyEncoding = true;
-							wonkyEncodingStrBuilding.append("<div class='line'>");
-							int from = Math.max(pos - 13, 0);
-							int to = Math.min(from + 26, contentStr.length());
-							String inner = contentStr.substring(from, to);
-							inner = StrUtils.replaceAll(inner, "<", "&lt;");
-							inner = StrUtils.replaceAll(inner, ">", "&gt;");
-							wonkyEncodingStrBuilding.append("... '" + inner + "' ...");
-							wonkyEncodingStrBuilding.append("</div>");
+							// however, it could still be that we are not inside an HTML entity,
+							// but in the xyz of <a ...>xyz</a> - sooo let's guard against that as well...
+							int posNextL = contentStr.indexOf("<", pos);
+							int posNextLSAR = contentStr.indexOf("</a>", pos);
+							if ((posNextLSAR < 0) || (posNextLSAR > posNextL)) {
+								foundWonkyEncoding = true;
+								wonkyEncodingStrBuilding.append("<div class='line'>");
+								int from = Math.max(pos - 13, 0);
+								int to = Math.min(from + 26, contentStr.length());
+								String inner = contentStr.substring(from, to);
+								inner = StrUtils.replaceAll(inner, "<", "&lt;");
+								inner = StrUtils.replaceAll(inner, ">", "&gt;");
+								wonkyEncodingStrBuilding.append("... '" + inner + "' ...");
+								wonkyEncodingStrBuilding.append("</div>");
+							}
 						}
 					}
 				}
+				pos = contentStr.indexOf("?", pos+1);
 			}
-			pos = contentStr.indexOf("?", pos+1);
 		}
 
 		if (foundWonkyEncoding) {
