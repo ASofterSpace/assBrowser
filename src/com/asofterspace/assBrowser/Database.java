@@ -23,6 +23,8 @@ public class Database {
 
 	private final static String PORT = "port";
 
+	private static final String CYBER_SNAIL_PORT = "cyberSnailPort";
+
 	private final static String BROWSER_PATH = "browserPath";
 
 	private final static String NIRCMD_PATH = "nircmdPath";
@@ -44,6 +46,8 @@ public class Database {
 	private JSON root;
 
 	private Integer port;
+
+	private Integer cyberSnailPort;
 
 	private String desktopLocation;
 
@@ -83,6 +87,8 @@ public class Database {
 
 		this.port = root.getInteger(PORT);
 
+		this.cyberSnailPort = root.getInteger(CYBER_SNAIL_PORT);
+
 		this.browserPath = root.getString(BROWSER_PATH);
 
 		this.nircmdPath = root.getString(NIRCMD_PATH);
@@ -109,6 +115,8 @@ public class Database {
 		root.makeObject();
 
 		root.set(PORT, port);
+
+		root.set(CYBER_SNAIL_PORT, cyberSnailPort);
 
 		root.set(DESKTOP_LOCATION, desktopLocation);
 
@@ -137,6 +145,10 @@ public class Database {
 			return 3013;
 		}
 		return port;
+	}
+
+	public Integer getCyberSnailPort() {
+		return cyberSnailPort;
 	}
 
 	public String getDesktopLocation() {

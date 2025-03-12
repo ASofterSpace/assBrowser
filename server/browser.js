@@ -25,7 +25,7 @@ window.browser = {
 
 		var retry = false;
 
-		var body = document.getElementById("body");
+		var body = document.getElementsByTagName("body")[0];
 		if (body) {
 			if (this.exportView) {
 				body.style.height = 'unset';
@@ -52,6 +52,8 @@ window.browser = {
 			window.setTimeout(function() {
 				window.browser.onResize();
 			}, 100);
+		} else {
+			window.browser.updateEncryptedBtn(window.data.encrypted);
 		}
 	},
 
@@ -435,6 +437,25 @@ window.browser = {
 		}
 	},
 
+	toggleEncrypt: function() {
+		window.data.encrypted = !window.data.encrypted;
+		this.saveEntry();
+	},
+
+	updateEncryptedBtn: function(encryptedVal) {
+		window.data.encrypted = encryptedVal;
+
+		var encryptedBtn = document.getElementById("encryptedBtn");
+
+		if (window.data.encrypted) {
+			encryptedBtn.className = "button activeInBackground";
+			encryptedBtn.innerText = "Encrypted - Click to Decrypt";
+		} else {
+			encryptedBtn.className = "button";
+			encryptedBtn.innerText = "Not Encrypted - Click to Encrypt";
+		}
+	},
+
 	saveEntry: function() {
 
 		var request = new XMLHttpRequest();
@@ -446,6 +467,7 @@ window.browser = {
 		var data = {
 			path: window.data.path,
 			file: window.data.file,
+			encrypted: window.data.encrypted,
 
 			content: savedContent
 		};
@@ -456,8 +478,7 @@ window.browser = {
 				// only update if the path didn't change in the meantime
 				// (it shouldn't, currently, but maybe in the future...)
 				if ((window.data.path == result.path) &&
-					(window.data.file == result.file) &&
-					(savedContent == document.getElementById("fileContentTextarea").value)) {
+					(window.data.file == result.file)) {
 					document.getElementById("save-btn").style.background = browser.COLOR_SAVE_GREEN;
 					window.setTimeout(function() {
 						if (document.getElementById("save-btn").style.backgroundColor == browser.COLOR_SAVE_GREEN) {
@@ -465,6 +486,11 @@ window.browser = {
 								document.getElementById("edit-btn").style.background;
 						}
 					}, 2500);
+					window.browser.updateEncryptedBtn(result.encrypted);
+				} else {
+					alert("Saving might have not worked - there is a data mismatch:\n" +
+						"window.data.path: " + window.data.path + "\nresult.path: " + result.path +
+						"\nwindow.data.file: " + window.data.file + "\nresult.file: " + result.file);
 				}
 			}
 		}

@@ -8,6 +8,7 @@ import com.asofterspace.assBrowser.AssBrowser;
 import com.asofterspace.assBrowser.console.ConsoleCtrl;
 import com.asofterspace.assBrowser.console.ConsoleResult;
 import com.asofterspace.assBrowser.Database;
+import com.asofterspace.assBrowser.entry.Entry;
 import com.asofterspace.assBrowser.paths.FileStringifier;
 import com.asofterspace.assBrowser.paths.PathCtrl;
 import com.asofterspace.toolbox.coders.UrlDecoder;
@@ -21,7 +22,6 @@ import com.asofterspace.toolbox.io.JSON;
 import com.asofterspace.toolbox.io.JsonParseException;
 import com.asofterspace.toolbox.io.SimpleFile;
 import com.asofterspace.toolbox.io.TextFile;
-import com.asofterspace.toolbox.utils.DateUtils;
 import com.asofterspace.toolbox.utils.Pair;
 import com.asofterspace.toolbox.utils.Record;
 import com.asofterspace.toolbox.utils.SortUtils;
@@ -32,6 +32,7 @@ import com.asofterspace.toolbox.Utils;
 import com.asofterspace.toolbox.virtualEmployees.SideBarCtrl;
 import com.asofterspace.toolbox.virtualEmployees.SideBarEntry;
 import com.asofterspace.toolbox.virtualEmployees.SideBarEntryForTool;
+import com.asofterspace.toolbox.web.WebAccessor;
 import com.asofterspace.toolbox.web.WebRequestFormData;
 import com.asofterspace.toolbox.web.WebRequestFormDataBlock;
 import com.asofterspace.toolbox.web.WebServer;
@@ -180,17 +181,38 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				String path = json.getString("path");
 				String fileName = json.getString("file");
 				String content = json.getString("content");
+				boolean encrypted = json.getBoolean("encrypted", false);
 				path = PathCtrl.ensurePathIsSafe(path);
 				path = PathCtrl.browserizePath(path);
 				localPath = PathCtrl.resolvePath(path);
 				Directory folder = new Directory(localPath);
 				TextFile entryFile = PathCtrl.getEntryFile(new File(folder, fileName));
+				// if not content is sent to save, take current content (e.g. when just encryption is toggled)
+				if ("".equals(content) || (content == null)) {
+					Entry entry = new Entry(entryFile, database);
+					content = entry.getStringContent();
+				}
 				// remove conditional break dashes
 				content = StrUtils.replaceAll(content, "­", "");
+
+				if (encrypted) {
+					String snailPath = entryFile.getCanonicalFilename() + ".cs";
+					JSON data = new JSON();
+					data.set("path", snailPath);
+					data.set("content", content);
+					String res = WebAccessor.postJson("http://localhost:" + database.getCyberSnailPort() + "/updateText", data.toString());
+					if (!"{\"success\": true}".equals(res)) {
+						GuiUtils.complain("Something went wrong with storing the encrypted file!\n" + res);
+					}
+
+					content = Entry.CYBER_SNAIL_CONST + snailPath;
+				}
+
 				entryFile.saveContent(content);
 				Record rec = Record.emptyObject();
 				rec.setString("path", path);
 				rec.setString("file", fileName);
+				rec.set("encrypted", encrypted);
 				answer = new WebServerAnswerInJson(rec);
 				break;
 
@@ -424,7 +446,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			String localPath = PathCtrl.resolvePath(path);
 			Directory folder = new Directory(localPath);
 			File genericFile = new File(folder, fileName);
-			String fileHtmlStr = loadEntryAsStr(genericFile);
+			Entry entry = new Entry(genericFile, database);
+			String fileHtmlStr = entry.getStringContent();
 			if ("false".equals(arguments.get("editingMode"))) {
 				fileHtmlStr = prepareEntryForDisplayInHtml(fileHtmlStr, folder, fileName, false);
 			}
@@ -432,6 +455,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			rec.setString("path", path);
 			rec.setString("file", fileName);
 			rec.setString("entry", fileHtmlStr);
+			rec.setString("encrypted", entry.isEncrypted());
 			return new WebServerAnswerInJson(rec);
 		}
 
@@ -486,6 +510,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		String path = arguments.get("path");
 		String fileName = arguments.get("file");
+		boolean encrypted = false;
 		path = PathCtrl.ensurePathIsSafe(path);
 
 		// if a link argument exists, it overrides path and file - it may contain just a path, or a path followed
@@ -542,12 +567,6 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		indexContent = StrUtils.replaceAll(indexContent, "[[CONSOLE]]", consoleCtrl.getHtmlStr());
 
-		JSON jsonData = new JSON(Record.emptyObject());
-		jsonData.set("path", path);
-		jsonData.set("file", fileName);
-		jsonData.set("version", AssBrowser.VERSION_NUMBER);
-		indexContent = StrUtils.replaceAll(indexContent, "[[DATA]]", jsonData.toString());
-
 		indexContent = StrUtils.replaceAll(indexContent, "[[PATH]]", path);
 
 		String fileNameShort = fileName;
@@ -593,7 +612,9 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				lowCaseFileName.endsWith(".txt") || lowCaseFileName.endsWith(".ini") ||
 				lowCaseFileName.endsWith(".srt")) {
 
-				fileHtmlStr = loadEntryAsStr(genericFile);
+				Entry entry = new Entry(genericFile, database);
+				fileHtmlStr = entry.getStringContent();
+				encrypted = entry.isEncrypted();
 
 				if (!"true".equals(arguments.get("editLinks"))) {
 					// follow link automatically
@@ -616,10 +637,11 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 									if (pathFile.getRight() == null) {
 										break;
 									}
-									fileHtmlStr = loadEntryAsStr(new File(
+									entry = new Entry(new File(
 										new Directory(PathCtrl.resolvePath(pathFile.getLeft())),
-										pathFile.getRight())
-									);
+										pathFile.getRight()), database);
+									fileHtmlStr = entry.getStringContent();
+									encrypted = entry.isEncrypted();
 								}
 
 							} else {
@@ -738,6 +760,13 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			}
 		}
 
+		JSON jsonData = new JSON(Record.emptyObject());
+		jsonData.set("path", path);
+		jsonData.set("file", fileName);
+		jsonData.set("encrypted", encrypted);
+		jsonData.set("version", AssBrowser.VERSION_NUMBER);
+		indexContent = StrUtils.replaceAll(indexContent, "[[DATA]]", jsonData.toString());
+
 		indexContent = StrUtils.replaceAll(indexContent, "[[FILE_CONTENT]]", fileHtmlStr);
 
 		indexContent = StrUtils.replaceAll(indexContent, "[[IMAGES]]", imagesStr);
@@ -855,6 +884,10 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			buttonHtml.append("  exportButtonA.href = window.location.href + '&export=true';\n");
 			buttonHtml.append("}, 1000);\n");
 			buttonHtml.append("</script>\n");
+			buttonHtml.append("<br>");
+
+			buttonHtml.append("<span id='encryptedBtn' onclick='browser.toggleEncrypt()'>");
+			buttonHtml.append("</span>");
 			buttonHtml.append("<br>");
 
 			buttonHtml.append("<span class='button editBtnDisabled' onclick='browser.findCrossReferencesSelectedText()'>");
@@ -1179,6 +1212,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			TextFile txtFile = PathCtrl.getEntryFile(childFile);
 
 			// only load the file if it is small - if it is huge, it is VERY VERY likely not to be a link anyway...
+			// also, just assume it is not encrypted - if it was, it also would be a link, really!
 			long contentLen = txtFile.getContentLength();
 			if (contentLen < 255) {
 				boolean complainIfMissing = false;
@@ -1410,25 +1444,6 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		}
 
 		return result;
-	}
-
-	private String loadEntryAsStr(File genericFile) {
-
-		String fileHtmlStr = null;
-
-		if (genericFile.exists()) {
-			TextFile file = PathCtrl.getEntryFile(genericFile);
-			fileHtmlStr = file.getContent();
-			fileHtmlStr = DateUtils.convertDateTimeStampsDEtoEN(fileHtmlStr);
-		} else {
-			fileHtmlStr = genericFile.getLocalFilenameWithoutType() + "\n\n";
-		}
-
-		if (fileHtmlStr == null) {
-			fileHtmlStr = "! Unable to load file: " + genericFile.getAbsoluteFilename() + " !";
-		}
-
-		return fileHtmlStr;
 	}
 
 	private String prepareEntryForDisplayInHtml(String fileHtmlStr, Directory folder, String fileName, boolean exportingToPdf) {
