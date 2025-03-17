@@ -244,6 +244,7 @@ public class ConsoleCtrl {
 
 		if (commandLow.startsWith("se:")) {
 			command = command.substring(3).trim();
+			command = replaceHomeDirStr(command);
 			Directory cmdDir = new Directory(command);
 			if (cmdDir.exists()) {
 				GuiUtils.openFolder(command);
@@ -351,20 +352,7 @@ public class ConsoleCtrl {
 
 		// commandline syntax reminders
 
-		String syntaxReminder = null;
-		switch (commandLow) {
-			case "grep":
-				syntaxReminder = "grep -rni \"needle\" --include \\*.txt '/drives/c/home/a softer space/'";
-				break;
-			case "find":
-				syntaxReminder = "find . -name '*.txt'";
-				break;
-			case "sed":
-				syntaxReminder = "sed -i \"s.origStr.newStr.g\" file.txt";
-				break;
-			default:
-				break;
-		}
+		String syntaxReminder = applyCommandlineSyntaxReminder(commandLow);
 		if (syntaxReminder != null) {
 			result.setCommand(syntaxReminder);
 			if (history.size() > 0) {
@@ -417,7 +405,7 @@ public class ConsoleCtrl {
 
 		// only if called from the outside (not e.g. from an sll file)...
 		if (calledFromOutside) {
-			ConsoleResult res = redirectToPathIfMatchesFileOrFolder(previousPath, commandLow, result);
+			ConsoleResult res = redirectToPathIfMatchesFileOrFolder(previousPath, replaceHomeDirStr(commandLow), result);
 			if (res != null) {
 				return res;
 			}
@@ -425,6 +413,7 @@ public class ConsoleCtrl {
 
 
 		// if this is the name of a folder, open it...
+		command = replaceHomeDirStr(command);
 		Directory openDir = new Directory(command);
 		if (openDir.exists()) {
 			GuiUtils.openFolder(command);
@@ -710,6 +699,37 @@ public class ConsoleCtrl {
 			// for Linux
 			IoUtils.executeAsync("/reboot.sh");
 		}
+	}
+
+	public static String applyCommandlineSyntaxReminder(String commandLow) {
+		switch (commandLow) {
+			case "grep":
+			case "grep ":
+				return "grep -rni \"needle\" --include \\*.txt '/drives/c/home/a softer space/'";
+			case "find":
+			case "find ":
+				return "find . -name '*.txt'";
+			case "sed":
+			case "sed ":
+				return "sed -i \"s.origStr.newStr.g\" file.txt";
+			case "for":
+			case "for ":
+				return "for (var i = 0; i < arr.length; i++) {";
+			case "7z":
+			case "7z ":
+				return "7z a newFile.zip existingFileToZip.txt -pPlainttextPassword";
+			case "tar":
+			case "tar ":
+				return "tar -zxvf existingFileToUnTar.tar.gz";
+		}
+		return null;
+	}
+
+	private String replaceHomeDirStr(String commandStr) {
+		if (commandStr.contains(" ~")) {
+			commandStr = StrUtils.replaceAll(commandStr, " ~", " " + database.getHomeDir().getCanonicalDirname());
+		}
+		return commandStr;
 	}
 
 }

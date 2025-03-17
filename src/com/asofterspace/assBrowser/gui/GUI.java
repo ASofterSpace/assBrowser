@@ -524,41 +524,51 @@ public class GUI extends MainWindow {
 
 				// [TAB] for tab completion
 				if (event.getKeyCode() == KeyEvent.VK_TAB) {
-					String txt = consoleField.getText();
-					int index = txt.indexOf(" /");
 					event.consume();
-					if (index >= 0) {
-						String beforepath = txt.substring(0, index+1);
-						String dirpath = txt.substring(index+1);
-						index = dirpath.lastIndexOf("/");
-						String fileLocalStart = dirpath.substring(index+1);
-						dirpath = dirpath.substring(0, index+1);
-						Directory parentDir = new Directory(dirpath);
-						boolean recursively = false;
-						List<Directory> dirs = parentDir.getAllDirectories(recursively);
-						List<File> files = parentDir.getAllFiles(recursively);
-						boolean foundOne = false;
-						String fileLocal = "";
-						for (Directory dir : dirs) {
-							if (dir.getLocalDirname().startsWith(fileLocalStart)) {
-								if (foundOne) {
-									return;
-								}
-								foundOne = true;
-								fileLocal = dir.getLocalDirname() + "/";
-							}
+					String txt = consoleField.getText();
+					// tab complete syntax reminder
+					String newTxt = ConsoleCtrl.applyCommandlineSyntaxReminder(txt);
+					if (newTxt == null) {
+						// tab complete files / folders
+						if (txt.contains(" ~")) {
+							txt = StrUtils.replaceAll(txt, " ~", " " + database.getHomeDir().getCanonicalDirname());
 						}
-						for (File file : files) {
-							if (file.getLocalFilename().startsWith(fileLocalStart)) {
-								if (foundOne) {
-									return;
+						int index = txt.indexOf(" /");
+						if (index >= 0) {
+							String beforepath = txt.substring(0, index+1);
+							String dirpath = txt.substring(index+1);
+							index = dirpath.lastIndexOf("/");
+							String fileLocalStart = dirpath.substring(index+1);
+							dirpath = dirpath.substring(0, index+1);
+							Directory parentDir = new Directory(dirpath);
+							boolean recursively = false;
+							List<Directory> dirs = parentDir.getAllDirectories(recursively);
+							List<File> files = parentDir.getAllFiles(recursively);
+							boolean foundOne = false;
+							String fileLocal = "";
+							for (Directory dir : dirs) {
+								if (dir.getLocalDirname().startsWith(fileLocalStart)) {
+									if (foundOne) {
+										return;
+									}
+									foundOne = true;
+									fileLocal = dir.getLocalDirname() + "/";
 								}
-								foundOne = true;
-								fileLocal = file.getLocalFilename();
 							}
-						}
+							for (File file : files) {
+								if (file.getLocalFilename().startsWith(fileLocalStart)) {
+									if (foundOne) {
+										return;
+									}
+									foundOne = true;
+									fileLocal = file.getLocalFilename();
+								}
+							}
 
-						String newTxt = beforepath + dirpath + fileLocal;
+							newTxt = beforepath + dirpath + fileLocal;
+						}
+					}
+					if (newTxt != null) {
 						consoleField.setText(newTxt);
 						consoleField.setSelectionStart(newTxt.length());
 						consoleField.setSelectionEnd(newTxt.length());
