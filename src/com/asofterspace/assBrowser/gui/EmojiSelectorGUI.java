@@ -36,7 +36,7 @@ public class EmojiSelectorGUI {
 	final static String SCREAM = new String(Character.toChars(0x1F631));
 	final static String THUMBS_UP = new String(Character.toChars(0x1F44D));
 	final static String THUMBS_DOWN = new String(Character.toChars(0x1F44E));
-	final static String POINT_RIGHT_LEFT = new String(Character.toChars(0x1F449)) + new String(Character.toChars(0x1F448));
+	final static String ZAP = new String(Character.toChars(0x26A1));
 	final static String CAT = new String(Character.toChars(0x1F431));
 	final static String FROG = new String(Character.toChars(0x1F438));
 	final static String TADA = new String(Character.toChars(0x1F389));
@@ -48,6 +48,7 @@ public class EmojiSelectorGUI {
 	final static char[] MUSHROOM_BROWN_CHARS = new char[] {Character.toChars(0x1F344)[0], Character.toChars(0x200D)[0], Character.toChars(0x1F7EB)[0]};
 	final static String MUSHROOM_BROWN = new String(MUSHROOM_BROWN_CHARS);
 	final static String MUSHROOM_RED = new String(Character.toChars(0x1F344));
+	final static String POINT_RIGHT_LEFT = new String(Character.toChars(0x1F449)) + new String(Character.toChars(0x1F448));
 
 	final static Color colorYellow = new ColorRGBA(255, 255, 0).toColor();
 	final static Color colorGreen = new ColorRGBA(0, 196, 0).toColor();
@@ -82,7 +83,7 @@ public class EmojiSelectorGUI {
 
 
 		// slight offset to center it
-		colCounter = 1;
+		colCounter = 2;
 		rowCounter = 0;
 
 		addLabel(PURPLE_HEART);
@@ -90,7 +91,7 @@ public class EmojiSelectorGUI {
 		addLabel(SCREAM, colorYellow);
 		addLabel(THUMBS_UP, colorYellow);
 		addLabel(THUMBS_DOWN, colorYellow);
-		addLabel(POINT_RIGHT_LEFT, colorYellow);
+		addLabel(ZAP, colorYellow);
 		addLabel(CAT, colorYellow);
 		addLabel(FROG, colorGreen);
 		addLabel(TADA, colorRed);
@@ -101,6 +102,7 @@ public class EmojiSelectorGUI {
 		addLabel(FIRE, colorOrange);
 		addLabel(MUSHROOM_RED, MUSHROOM_BROWN, colorBrown);
 		addLabel(MUSHROOM_RED, colorRed);
+		addLabel(POINT_RIGHT_LEFT, colorYellow);
 
 		colCounter = 0;
 		rowCounter = 1;
@@ -145,6 +147,116 @@ public class EmojiSelectorGUI {
 		addLabel("ñ");
 		addLabel("å");
 		addLabel("Å");
+
+		colCounter = 0;
+		rowCounter = 3;
+
+		addLabel("a");
+		addLabel("b");
+		addLabel("c");
+		addLabel("d");
+		addLabel("e");
+		addLabel("f");
+		addLabel("g");
+		addLabel("h");
+		addLabel("i");
+		addLabel("j");
+		addLabel("k");
+		addLabel("l");
+		addLabel("m");
+		addLabel("n");
+		addLabel("o");
+		addLabel("p");
+		addLabel("q");
+		addLabel("r");
+
+		colCounter = 0;
+		rowCounter = 4;
+
+		addLabel("s");
+		addLabel("t");
+		addLabel("u");
+		addLabel("v");
+		addLabel("w");
+		addLabel("x");
+		addLabel("y");
+		addLabel("z");
+		addLabel("");
+		addLabel("");
+		addLabel("");
+		addLabel("");
+		addLabel("");
+		addLabel("");
+		addLabel("");
+		addLabel("");
+		addLabel("");
+		addLabel("");
+
+		colCounter = 0;
+		rowCounter = 5;
+
+		addLabel("A");
+		addLabel("B");
+		addLabel("C");
+		addLabel("D");
+		addLabel("E");
+		addLabel("F");
+		addLabel("G");
+		addLabel("H");
+		addLabel("I");
+		addLabel("J");
+		addLabel("K");
+		addLabel("L");
+		addLabel("M");
+		addLabel("N");
+		addLabel("O");
+		addLabel("P");
+		addLabel("Q");
+		addLabel("R");
+
+		colCounter = 0;
+		rowCounter = 6;
+
+		addLabel("S");
+		addLabel("T");
+		addLabel("U");
+		addLabel("V");
+		addLabel("W");
+		addLabel("X");
+		addLabel("Y");
+		addLabel("Z");
+		addLabel("");
+		addLabel(".");
+		addLabel(",");
+		addLabel(";");
+		addLabel("(");
+		addLabel(")");
+		addLabel("[");
+		addLabel("]");
+		addLabel("{");
+		addLabel("}");
+
+		colCounter = 0;
+		rowCounter = 7;
+
+		addLabel("0");
+		addLabel("1");
+		addLabel("2");
+		addLabel("3");
+		addLabel("4");
+		addLabel("5");
+		addLabel("6");
+		addLabel("7");
+		addLabel("8");
+		addLabel("9");
+		addLabel("");
+		addLabel("<");
+		addLabel(">");
+		addLabel("|");
+		addLabel("-");
+		addLabel("_");
+		addLabel("");
+		addLabel("");
 
 		// remove title bar
 		dialogWindow.setUndecorated(true);
