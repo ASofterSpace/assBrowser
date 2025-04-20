@@ -722,9 +722,14 @@ window.browser = {
 			el = document.getElementById("folderTextarea");
 		}
 
+		/*
 		if (el.scrollTopMax > 0) {
-			newUrl += "&scroll=" + (el.scrollTop / el.scrollTopMax);
+			var scrollVal = el.scrollTop / el.scrollTopMax;
+			if (scrollVal > 0) {
+				newUrl += "&scroll=" + scrollVal;
+			}
 		}
+		*/
 
 		var selEditLinks = document.getElementById('sel-edit-links');
 		if (selEditLinks.className == 'selected') {
