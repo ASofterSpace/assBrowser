@@ -747,10 +747,21 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					}
 				}
 				if (isImageFile) {
+					// displaying one image in the browser
 					String imgUrl = getFileAccessUrl(path, fileName);
-					fileHtmlStr = "<a target=\"_blank\" href=\"" + imgUrl + "\" style='max-width:99%; max-height:99%;' />";
-					fileHtmlStr += "<img src=\"" + imgUrl + getUniqueVStr() + "\" style='max-width:100%; max-height:100%;' />";
-					fileHtmlStr += "</a>";
+					fileHtmlStr = "<span style='position:fixed;top:2pt;right:106pt;background:rgba(64,0,128,0.8);border-radius: 6pt;padding: 0pt 3pt;'>" +
+						"<span class='button' onclick='browser.singleImgViewPrev()' style='display: block; margin-top: 5pt; margin-bottom: 5pt;'>" +
+						"Prev" +
+						"</span>" +
+						"</span>" +
+						"<span style='position:fixed;top:2pt;right:66pt;background:rgba(64,0,128,0.8);border-radius: 6pt;padding: 0pt 3pt;'>" +
+						"<span class='button' onclick='browser.singleImgViewNext()' style='display: block; margin-top: 5pt; margin-bottom: 5pt;'>" +
+						"Next" +
+						"</span>" +
+						"</span>" +
+						"<a target=\"_blank\" href=\"" + imgUrl + "\" style='max-width:99%; max-height:99%;' />" +
+						"<img src=\"" + imgUrl + getUniqueVStr() + "\" style='max-width:100%; max-height:100%;' />" +
+						"</a>";
 				} else {
 					fileHtmlStr = "<div style='line-height: 2.5;text-align: center;' id='fileButtonContainer'>" +
 								  "No preview for '" + fileName + "' available.<br><br>" +

@@ -247,6 +247,42 @@ window.browser = {
 		}
 	},
 
+	// navigate to previous entry
+	singleImgViewPrev: function() {
+		var entries = document.getElementById('folderContainer').childNodes;
+		var prevEntry = null;
+		for (var i = 0; i < entries.length; i++) {
+			if (entries[i].className) {
+				if (entries[i].innerText == window.data.file) {
+					if (prevEntry != null) {
+						prevEntry.onclick(null);
+					}
+					return;
+				} else if (entries[i].className.indexOf("entry") >= 0) {
+					prevEntry = entries[i];
+				}
+			}
+		}
+	},
+
+	// navigate to next entry
+	singleImgViewNext: function() {
+		var entries = document.getElementById('folderContainer').childNodes;
+		var nextEntry = null;
+		for (var i = entries.length - 1; i >= 0; i--) {
+			if (entries[i].className) {
+				if (entries[i].innerText == window.data.file) {
+					if (nextEntry != null) {
+						nextEntry.onclick(null);
+					}
+					return;
+				} else if (entries[i].className.indexOf("entry") >= 0) {
+					nextEntry = entries[i];
+				}
+			}
+		}
+	},
+
 	openTileView: function() {
 		this.closeMoreActions();
 		this.curView = 'tile';
