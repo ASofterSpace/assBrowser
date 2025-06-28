@@ -41,6 +41,10 @@ public class Database {
 
 	private final static String HOME_DIR = "homeDir";
 
+	private final static String DISPLAY_GUI = "displayGUI";
+
+	private final static String DISPLAY_SIDEBAR = "displaySidebar";
+
 	private JsonFile dbFile;
 
 	private JSON root;
@@ -69,6 +73,10 @@ public class Database {
 
 	private String homeDirPath;
 	private Directory homeDir = null;
+
+	private boolean displayGUI = true;
+
+	private boolean displaySidebar = true;
 
 
 	public Database() {
@@ -104,6 +112,10 @@ public class Database {
 		this.programsToOpenFiles = root.getStringMap(PROGRAMS_TO_OPEN_FILES);
 
 		this.homeDirPath = root.getString(HOME_DIR);
+
+		this.displayGUI = root.getBoolean(DISPLAY_GUI, true);
+
+		this.displaySidebar = root.getBoolean(DISPLAY_SIDEBAR, true);
 	}
 
 	public Record getRoot() {
@@ -135,6 +147,10 @@ public class Database {
 		root.set(PROGRAMS_TO_OPEN_FILES, programsToOpenFiles);
 
 		root.set(HOME_DIR, homeDirPath);
+
+		root.set(DISPLAY_GUI, displayGUI);
+
+		root.set(DISPLAY_SIDEBAR, displaySidebar);
 
 		dbFile.setAllContents(root);
 		dbFile.save();
@@ -209,6 +225,14 @@ public class Database {
 			homeDir = new Directory(homeDirPath);
 		}
 		return homeDir;
+	}
+
+	public boolean getDisplayGUI() {
+		return displayGUI;
+	}
+
+	public boolean getDisplaySidebar() {
+		return displaySidebar;
 	}
 
 }

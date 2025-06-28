@@ -135,10 +135,12 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			return;
 		}
 
-		WebServerAnswer sideBarAnswer = SideBarCtrl.handlePost(fileLocation, jsonData);
-		if (sideBarAnswer != null) {
-			respond(200, sideBarAnswer);
-			return;
+		if (database.getDisplaySidebar()) {
+			WebServerAnswer sideBarAnswer = SideBarCtrl.handlePost(fileLocation, jsonData);
+			if (sideBarAnswer != null) {
+				respond(200, sideBarAnswer);
+				return;
+			}
 		}
 
 		JSON json;
@@ -505,8 +507,16 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		TextFile indexBaseFile = new TextFile(webRoot, "index.htm");
 		String indexContent = indexBaseFile.getContent();
 
-		indexContent = StrUtils.replaceAll(indexContent, "[[SIDEBAR]]",
-			SideBarCtrl.getSidebarHtmlStr(SideBarEntryForTool.BROWSER));
+		String sideBarStr = "" +
+			"<style>\n" +
+			"body {" +
+			"	padding-right: 4pt;" +
+			"}" +
+			"</style>\n";
+		if (database.getDisplaySidebar()) {
+			sideBarStr = SideBarCtrl.getSidebarHtmlStr(SideBarEntryForTool.BROWSER);
+		}
+		indexContent = StrUtils.replaceAll(indexContent, "[[SIDEBAR]]", sideBarStr);
 
 		String path = arguments.get("path");
 		String fileName = arguments.get("file");
@@ -1268,9 +1278,11 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 	@Override
 	protected File getFileFromLocation(String location, String[] arguments) {
 
-		File sideBarImageFile = SideBarCtrl.getSideBarImageFile(location);
-		if (sideBarImageFile != null) {
-			return sideBarImageFile;
+		if (database.getDisplaySidebar()) {
+			File sideBarImageFile = SideBarCtrl.getSideBarImageFile(location);
+			if (sideBarImageFile != null) {
+				return sideBarImageFile;
+			}
 		}
 
 		String locEquiv = getWhitelistedLocationEquivalent(location);

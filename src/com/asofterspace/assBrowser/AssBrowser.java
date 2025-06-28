@@ -27,8 +27,8 @@ public class AssBrowser {
 	public final static String WEB_ROOT_DIR = "deployed";
 
 	public final static String PROGRAM_TITLE = "assBrowser";
-	public final static String VERSION_NUMBER = "0.0.5.1(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
-	public final static String VERSION_DATE = "16. December 2020 - 20. April 2025";
+	public final static String VERSION_NUMBER = "0.0.5.2(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
+	public final static String VERSION_DATE = "16. December 2020 - 28. June 2025";
 
 	// synchronize with BackupGenerator
 	public static TextFile BACKUP_RUN_FILE = new TextFile("~/BACKUP.TXT");
@@ -81,10 +81,11 @@ public class AssBrowser {
 
 		System.out.println("Starting up console line GUI...");
 
-		GUI gui = new GUI(database, consoleCtrl);
-		SwingUtilities.invokeLater(gui);
-		consoleCtrl.setGUI(gui);
-
+		if (database.getDisplayGUI()) {
+			GUI gui = new GUI(database, consoleCtrl);
+			SwingUtilities.invokeLater(gui);
+			consoleCtrl.setGUI(gui);
+		}
 
 		try {
 
