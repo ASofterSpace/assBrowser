@@ -48,6 +48,8 @@ public class EmojiSelectorGUI {
 	final static char[] MUSHROOM_BROWN_CHARS = new char[] {Character.toChars(0x1F344)[0], Character.toChars(0x200D)[0], Character.toChars(0x1F7EB)[0]};
 	final static String MUSHROOM_BROWN = new String(MUSHROOM_BROWN_CHARS);
 	final static String MUSHROOM_RED = new String(Character.toChars(0x1F344));
+	final static String CHECKMARK = new String(Character.toChars(0x2714));
+	final static String CROSS = new String(Character.toChars(0x274C));
 	final static String POINT_RIGHT_LEFT = new String(Character.toChars(0x1F449)) + new String(Character.toChars(0x1F448));
 
 	final static Color colorYellow = new ColorRGBA(255, 255, 0).toColor();
@@ -82,8 +84,8 @@ public class EmojiSelectorGUI {
 		dialogWindow.getContentPane().setBackground(GUI.bgColorCol);
 
 
-		// slight offset to center it
-		colCounter = 2;
+		// we could use a slight offset to center it
+		colCounter = 0;
 		rowCounter = 0;
 
 		addLabel(PURPLE_HEART);
@@ -102,6 +104,8 @@ public class EmojiSelectorGUI {
 		addLabel(FIRE, colorOrange);
 		addLabel(MUSHROOM_RED, MUSHROOM_BROWN, colorBrown);
 		addLabel(MUSHROOM_RED, colorRed);
+		addLabel(CHECKMARK, colorGreen);
+		addLabel(CROSS, colorRed);
 		addLabel(POINT_RIGHT_LEFT, colorYellow);
 
 		colCounter = 0;
