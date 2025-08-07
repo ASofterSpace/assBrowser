@@ -1,30 +1,30 @@
 body {
 	font-family: "Calibri";
 	overflow: hidden;
-	background: linear-gradient(-26deg, #160022, #220022, #11001A, #220022, #220022, #220011, #220022, #110022, #110011, #11001A, #220022, #220022, #220011, #220022, #110022, #110011, #11001A, #220022);
 	padding-left: 4pt;
 	padding-right: 60pt;
 }
 
 a, div.a {
-	color: #88AAFF;
 	text-decoration: none;
 	cursor: pointer;
 }
 
 body > div, div#mainContent > div, div#mainContent > textarea {
-	color: #88AAFF;
 	padding-bottom: 10pt;
 }
 
 input, textarea, select {
-	color: #AACCFF;
-	background: rgb(24, 0, 27);
 	border: 1px solid rgb(80, 60, 160);
 	border-radius: 4pt;
 	padding: 0pt 4pt 1pt 4pt;
 	font-family: "Calibri";
 	font-size: 1em;
+}
+
+iframe {
+	width: 100%;
+	height: 100%;
 }
 
 div#mainContent {
@@ -38,7 +38,6 @@ div#mainContent, div.scrollable {
 }
 
 span.button, a.button {
-	color: #AACCFF;
 	padding: 0pt 4pt;
 	border-radius: 5pt;
 	background: rgba(150, 200, 250, 0.2);
@@ -139,13 +138,11 @@ textarea#folderTextarea {
 }
 
 div#fileContentContainer a, div#fileContentContainer span.a, div#crossRefResultArea > a {
-	color: #4488FF;
 	font-style: italic;
 	cursor: pointer;
 }
 
 div#fileButtonContainer > a {
-	color: #AACCFF;
 	font-style: normal;
 }
 
@@ -387,7 +384,6 @@ div.category > a:hover {
 div#more-actions-container, div#text-actions-container {
 	position:fixed;
 	bottom: 72pt;
-	background: rgba(30, 0, 25, 0.95);
 	border-radius: 9pt;
 	text-align: center;
 	line-height: 2;

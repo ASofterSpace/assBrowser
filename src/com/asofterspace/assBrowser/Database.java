@@ -45,6 +45,10 @@ public class Database {
 
 	private final static String DISPLAY_SIDEBAR = "displaySidebar";
 
+	private final static String SET_AUDIO_VOLUME_TO_SILENCE_AT_STARTUP = "setAudioVolumetoSilenceAtStartup";
+
+	private final static String STYLE = "style";
+
 	private JsonFile dbFile;
 
 	private JSON root;
@@ -77,6 +81,10 @@ public class Database {
 	private boolean displayGUI = true;
 
 	private boolean displaySidebar = true;
+
+	private boolean setAudioVolumetoSilenceAtStartup = true;
+
+	private String style;
 
 
 	public Database() {
@@ -116,6 +124,10 @@ public class Database {
 		this.displayGUI = root.getBoolean(DISPLAY_GUI, true);
 
 		this.displaySidebar = root.getBoolean(DISPLAY_SIDEBAR, true);
+
+		this.setAudioVolumetoSilenceAtStartup = root.getBoolean(SET_AUDIO_VOLUME_TO_SILENCE_AT_STARTUP, false);
+
+		this.style = root.getString(STYLE, "turquoise");
 	}
 
 	public Record getRoot() {
@@ -151,6 +163,10 @@ public class Database {
 		root.set(DISPLAY_GUI, displayGUI);
 
 		root.set(DISPLAY_SIDEBAR, displaySidebar);
+
+		root.set(SET_AUDIO_VOLUME_TO_SILENCE_AT_STARTUP, setAudioVolumetoSilenceAtStartup);
+
+		root.set(STYLE, style);
 
 		dbFile.setAllContents(root);
 		dbFile.save();
@@ -233,6 +249,14 @@ public class Database {
 
 	public boolean getDisplaySidebar() {
 		return displaySidebar;
+	}
+
+	public boolean getSetAudioVolumetoSilenceAtStartup() {
+		return setAudioVolumetoSilenceAtStartup;
+	}
+
+	public String getStyle() {
+		return style;
 	}
 
 }

@@ -194,13 +194,15 @@ public class GUI extends MainWindow {
 		consoleField2 = addConsoleField(mainPanel, 1);
 		consoleField3 = addConsoleField(mainPanel, 2);
 
-		if ("amixer".equals(this.nircmdPath)) {
-			IoUtils.executeAsync(this.nircmdPath + " -q sset Master 0%");
-		} else if ("pactl".equals(this.nircmdPath)) {
-			IoUtils.executeAsync(this.nircmdPath + " -- set-sink-volume 0 0%");
-		} else {
-			IoUtils.executeAsync(this.nircmdPath + " setsysvolume 0");
-			IoUtils.executeAsync(this.nircmdPath + " mutesysvolume 0");
+		if (database.getSetAudioVolumetoSilenceAtStartup()) {
+			if ("amixer".equals(this.nircmdPath)) {
+				IoUtils.executeAsync(this.nircmdPath + " -q sset Master 0%");
+			} else if ("pactl".equals(this.nircmdPath)) {
+				IoUtils.executeAsync(this.nircmdPath + " -- set-sink-volume 0 0%");
+			} else {
+				IoUtils.executeAsync(this.nircmdPath + " setsysvolume 0");
+				IoUtils.executeAsync(this.nircmdPath + " mutesysvolume 0");
+			}
 		}
 
 		volumeItem = new BarMenuItemForMainMenu();

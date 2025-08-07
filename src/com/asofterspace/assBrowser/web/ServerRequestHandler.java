@@ -518,6 +518,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		}
 		indexContent = StrUtils.replaceAll(indexContent, "[[SIDEBAR]]", sideBarStr);
 
+		indexContent = applySelectedStyles(indexContent);
+
 		String path = arguments.get("path");
 		String fileName = arguments.get("file");
 		boolean encrypted = false;
@@ -613,6 +615,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		String fileHtmlStr = "";
 		String imagesStr = "";
+		// LANG-SWITCHING String langStr = "<html lang=\"en\">";
 		int amountOfImages = 0;
 
 		if (fileName != null) {
@@ -662,6 +665,15 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 						}
 					}
 				}
+
+				/* LANG-SWITCHING
+				int theCounter = StrUtils.countStringInString(" the ", fileHtmlStr);
+				int derDieDasCounter = StrUtils.countStringInString(" der ", fileHtmlStr) +
+					StrUtils.countStringInString(" die ", fileHtmlStr) + StrUtils.countStringInString(" das ", fileHtmlStr);
+				if (derDieDasCounter > theCounter) {
+					langStr = "<html lang=\"de\">";
+				}
+				*/
 
 				fileHtmlStr = prepareEntryForDisplayInHtml(fileHtmlStr, folder, fileName, exportingToPdf);
 
@@ -749,37 +761,43 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				fileHtmlStr = file.getContent();
 				fileHtmlStr = prepareStrForDisplayInHtml(fileHtmlStr);
 			} else {
-				boolean isImageFile = false;
-				for (String curImgExt : IMAGE_EXTENSIONS) {
-					if (lowCaseFileName.endsWith("." + curImgExt)) {
-						isImageFile = true;
-						break;
-					}
-				}
-				if (isImageFile) {
-					// displaying one image in the browser
-					String imgUrl = getFileAccessUrl(path, fileName);
-					fileHtmlStr = "<span style='position:fixed;top:2pt;right:106pt;background:rgba(64,0,128,0.8);border-radius: 6pt;padding: 0pt 3pt;'>" +
-						"<span class='button' onclick='browser.singleImgViewPrev()' style='display: block; margin-top: 5pt; margin-bottom: 5pt;'>" +
-						"Prev" +
-						"</span>" +
-						"</span>" +
-						"<span style='position:fixed;top:2pt;right:66pt;background:rgba(64,0,128,0.8);border-radius: 6pt;padding: 0pt 3pt;'>" +
-						"<span class='button' onclick='browser.singleImgViewNext()' style='display: block; margin-top: 5pt; margin-bottom: 5pt;'>" +
-						"Next" +
-						"</span>" +
-						"</span>" +
-						"<a target=\"_blank\" href=\"" + imgUrl + "\" style='max-width:99%; max-height:99%;' />" +
-						"<img src=\"" + imgUrl + getUniqueVStr() + "\" style='max-width:100%; max-height:100%;' />" +
-						"</a>";
+				if (lowCaseFileName.endsWith(".pdf") || lowCaseFileName.endsWith(".htm") || lowCaseFileName.endsWith(".html")) {
+					fileHtmlStr = "<iframe src=\"file://" + PathCtrl.resolvePath(path + "/" + fileName) + "\"></iframe>";
 				} else {
-					fileHtmlStr = "<div style='line-height: 2.5;text-align: center;' id='fileButtonContainer'>" +
-								  "No preview for '" + fileName + "' available.<br><br>" +
-								  getFileButtonsHtml(path, fileName, "padding: 4pt 9pt;") +
-								  "</div>";
+					boolean isImageFile = false;
+					for (String curImgExt : IMAGE_EXTENSIONS) {
+						if (lowCaseFileName.endsWith("." + curImgExt)) {
+							isImageFile = true;
+							break;
+						}
+					}
+					if (isImageFile) {
+						// displaying one image in the browser
+						String imgUrl = getFileAccessUrl(path, fileName);
+						fileHtmlStr = "<span style='position:fixed;top:2pt;right:106pt;background:rgba(64,0,128,0.8);border-radius: 6pt;padding: 0pt 3pt;'>" +
+							"<span class='button' onclick='browser.singleImgViewPrev()' style='display: block; margin-top: 5pt; margin-bottom: 5pt;'>" +
+							"Prev" +
+							"</span>" +
+							"</span>" +
+							"<span style='position:fixed;top:2pt;right:66pt;background:rgba(64,0,128,0.8);border-radius: 6pt;padding: 0pt 3pt;'>" +
+							"<span class='button' onclick='browser.singleImgViewNext()' style='display: block; margin-top: 5pt; margin-bottom: 5pt;'>" +
+							"Next" +
+							"</span>" +
+							"</span>" +
+							"<a target=\"_blank\" href=\"" + imgUrl + "\" style='max-width:99%; max-height:99%;' />" +
+							"<img src=\"" + imgUrl + getUniqueVStr() + "\" style='max-width:100%; max-height:100%;' />" +
+							"</a>";
+					} else {
+						fileHtmlStr = "<div style='line-height: 2.5;text-align: center;' id='fileButtonContainer'>" +
+									  "No preview for '" + fileName + "' available.<br><br>" +
+									  getFileButtonsHtml(path, fileName, "padding: 4pt 9pt;") +
+									  "</div>";
+					}
 				}
 			}
 		}
+
+		// LANG-SWITCHING indexContent = StrUtils.replaceAll(indexContent, "<html lang=\"en\">", langStr);
 
 		JSON jsonData = new JSON(Record.emptyObject());
 		jsonData.set("path", path);
@@ -1026,6 +1044,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		html = StrUtils.replaceAll(html, "[[SIDEBAR]]",
 			SideBarCtrl.getSidebarHtmlStr(SideBarEntryForTool.FUNTUBE));
+
+		html = applySelectedStyles(html);
 
 		String videoPath = arguments.get("path");
 		String title = videoPathToTitle(videoPath);
@@ -1313,13 +1333,23 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 	}
 
 	private String getFileButtonsHtml(String path, String fileName, String style) {
-		return "<span class='button' onclick='browser.openFileInOS(\"" + path + "/" + fileName + "\")' " +
-			   "style='" + style + "'>" +
-			   "Open Current File" +
-			   "</span>" +
-			   "<br>" +
 
-			   "<a href=\"" + getFileAccessUrl(path, fileName) +
+		StringBuilder result = new StringBuilder();
+
+		int dotIndex = fileName.lastIndexOf(".");
+		if (dotIndex >= 0) {
+			Map<String, String> programs = database.getProgramsToOpenFiles();
+			String program = programs.get(fileName.substring(dotIndex).toLowerCase());
+			if (program != null) {
+				result.append("<span class='button' onclick='browser.openFileInOS(\"" + PathCtrl.resolvePath(path + "/" + fileName) + "\")' " +
+					   "style='" + style + "'>" +
+					   "Open Current File" +
+					   "</span>" +
+					   "<br>");
+			}
+		}
+
+		result.append("<a href=\"" + getFileAccessUrl(path, fileName) +
 			   "\" target='_blank' " +
 			   "class='button'" +
 			   "style='" + style + "'>" +
@@ -1336,7 +1366,9 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			   "<span class='button' onclick='browser.showDeleteModal();' " +
 			   "style='" + style + "'>" +
 			   "Delete Current File" +
-			   "</span>";
+			   "</span>");
+
+		return result.toString();
 	}
 
 	private boolean isAudio(String path) {
@@ -2150,6 +2182,26 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			}
 		}
 		return new Pair<>(path, fileName);
+	}
+
+	private String applySelectedStyles(String html) {
+		if ("purple".equals(database.getStyle())) {
+			html = StrUtils.replaceAll(html, "<body style=\"", "<body style=\"background: linear-gradient(-26deg, #160022, #220022, #11001A, " +
+				"#220022, #220022, #220011, #220022, #110022, #110011, #11001A, #220022, #220022, #220011, #220022, #110022, #110011, #11001A, #220022);");
+			html = StrUtils.replaceAll(html, "[[COLOR_TEXT_1]]", "#88AAFF");
+			html = StrUtils.replaceAll(html, "[[COLOR_TEXT_2]]", "#AACCFF");
+			html = StrUtils.replaceAll(html, "[[COLOR_TEXT_3]]", "#4488FF");
+			html = StrUtils.replaceAll(html, "[[COLOR_BG_1]]", "rgb(24, 0, 27)");
+			html = StrUtils.replaceAll(html, "[[COLOR_BG_2]]", "rgba(30, 0, 25, 0.95)");
+		} else {
+			html = StrUtils.replaceAll(html, "<body style=\"", "<body style=\"background: linear-gradient(27deg, #299, #57A, #299, #A5E, #4A7, #299);");
+			html = StrUtils.replaceAll(html, "[[COLOR_TEXT_1]]", "#000");
+			html = StrUtils.replaceAll(html, "[[COLOR_TEXT_2]]", "#000");
+			html = StrUtils.replaceAll(html, "[[COLOR_TEXT_3]]", "#440088");
+			html = StrUtils.replaceAll(html, "[[COLOR_BG_1]]", "rgb(150, 120, 220)");
+			html = StrUtils.replaceAll(html, "[[COLOR_BG_2]]", "rgba(120, 80, 220, 0.85)");
+		}
+		return html;
 	}
 
 	// replaces legacy ISO nonsense on loading with actual UTF-8 characters - like in browser.js
