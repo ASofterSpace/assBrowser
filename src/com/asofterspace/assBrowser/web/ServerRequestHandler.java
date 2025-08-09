@@ -85,6 +85,9 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 	private static final String ID_PICS = "pics";
 	private static final String ID_ENCO = "enco";
 
+	private static String indexContentBaseCached = null;
+	private static String funtubeContentBaseCached = null;
+
 
 	public ServerRequestHandler(WebServer server, Socket request, Directory webRoot, Directory serverDir,
 		Database database, ConsoleCtrl consoleCtrl) {
@@ -191,7 +194,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				TextFile entryFile = PathCtrl.getEntryFile(new File(folder, fileName));
 				// if not content is sent to save, take current content (e.g. when just encryption is toggled)
 				if ("".equals(content) || (content == null)) {
-					Entry entry = new Entry(entryFile, database);
+					Entry entry = new Entry(entryFile, null, database);
 					content = entry.getStringContent();
 				}
 				// remove conditional break dashes
@@ -235,7 +238,12 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			case "/doRename":
 				path = json.getString("path");
 				fileName = json.getString("file");
+				String fileNameForView = json.getString("filenameForView");
+				String fileNameForViewFull = fileName;
+				fileName = replaceNotOSLegalCharacters(fileName);
 				String newName = json.getString("newName").trim();
+				String newNameForViewFull = newName;
+				newName = replaceNotOSLegalCharacters(newName);
 				path = PathCtrl.ensurePathIsSafe(path);
 				path = PathCtrl.browserizePath(path);
 				localPath = PathCtrl.resolvePath(path);
@@ -281,9 +289,13 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 									i++;
 								}
 
+								if (fileNameForView == null) {
+									fileNameForView = fileNameForViewFull.substring(0, fileNameForViewFull.length() - 5);
+								}
+								String newNameForView = newNameForViewFull.substring(0, newNameForViewFull.length() - 5);
 								vstpuFile = PathCtrl.getVSTPUfile(folder);
 								content = "\n" + vstpuFile.getContent() + "\n";
-								content = StrUtils.replaceAll(content, fileBaseName, newBaseName);
+								content = StrUtils.replaceAll(content, fileNameForView, newNameForView);
 								content = content.substring(1, content.length() - 1);
 								vstpuFile.saveContent(content);
 							}
@@ -443,12 +455,13 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		if (location.startsWith("/getEntry")) {
 			String path = arguments.get("path");
 			String fileName = arguments.get("file");
+			String filenameForView = arguments.get("filenameForView");
 			path = PathCtrl.ensurePathIsSafe(path);
 			path = PathCtrl.browserizePath(path);
 			String localPath = PathCtrl.resolvePath(path);
 			Directory folder = new Directory(localPath);
 			File genericFile = new File(folder, fileName);
-			Entry entry = new Entry(genericFile, database);
+			Entry entry = new Entry(genericFile, filenameForView, database);
 			String fileHtmlStr = entry.getStringContent();
 			if ("false".equals(arguments.get("editingMode"))) {
 				fileHtmlStr = prepareEntryForDisplayInHtml(fileHtmlStr, folder, fileName, false);
@@ -502,7 +515,11 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		IoUtils.execute(ffmpegInvocation);
 	}
 
-	private WebServerAnswer generateAnswerToMainGetRequest(Map<String, String> arguments, String message) {
+	private String getIndexContentBase() {
+
+		if (indexContentBaseCached != null) {
+			return indexContentBaseCached;
+		}
 
 		TextFile indexBaseFile = new TextFile(webRoot, "index.htm");
 		String indexContent = indexBaseFile.getContent();
@@ -520,8 +537,21 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		indexContent = applySelectedStyles(indexContent);
 
+		indexContentBaseCached = indexContent;
+
+		return indexContentBaseCached;
+	}
+
+	private WebServerAnswer generateAnswerToMainGetRequest(Map<String, String> arguments, String message) {
+
+		String indexContent = getIndexContentBase();
+
 		String path = arguments.get("path");
 		String fileName = arguments.get("file");
+
+		// optional; used if the filename contains characters that the OS cannot handle
+		String filenameForView = arguments.get("filenameForView");
+
 		boolean encrypted = false;
 		path = PathCtrl.ensurePathIsSafe(path);
 
@@ -555,6 +585,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			Pair<String, String> pathFile = resolveLink(link);
 			path = pathFile.getLeft();
 			fileName = pathFile.getRight();
+			filenameForView = null;
 		}
 
 		indexContent = StrUtils.replaceAll(indexContent, "[[CONSOLE_VALUE]]", consoleValue);
@@ -625,7 +656,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				lowCaseFileName.endsWith(".txt") || lowCaseFileName.endsWith(".ini") ||
 				lowCaseFileName.endsWith(".srt")) {
 
-				Entry entry = new Entry(genericFile, database);
+				Entry entry = new Entry(genericFile, filenameForView, database);
 				fileHtmlStr = entry.getStringContent();
 				encrypted = entry.isEncrypted();
 
@@ -652,7 +683,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 									}
 									entry = new Entry(new File(
 										new Directory(PathCtrl.resolvePath(pathFile.getLeft())),
-										pathFile.getRight()), database);
+										pathFile.getRight()), null, database);
 									fileHtmlStr = entry.getStringContent();
 									encrypted = entry.isEncrypted();
 								}
@@ -802,6 +833,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		JSON jsonData = new JSON(Record.emptyObject());
 		jsonData.set("path", path);
 		jsonData.set("file", fileName);
+		jsonData.set("filenameForView", filenameForView);
 		jsonData.set("encrypted", encrypted);
 		jsonData.set("version", AssBrowser.VERSION_NUMBER);
 		indexContent = StrUtils.replaceAll(indexContent, "[[DATA]]", jsonData.toString());
@@ -1037,15 +1069,28 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		return new WebServerAnswerInHtml(indexContent);
 	}
 
-	private WebServerAnswer generateAnswerToFunTubeRequest(Map<String, String> arguments) {
+	private String getFuntubeContentBase() {
 
-		TextFile indexBaseFile = new TextFile(webRoot, "funtube.htm");
-		String html = indexBaseFile.getContent();
+		if (funtubeContentBaseCached != null) {
+			return funtubeContentBaseCached;
+		}
+
+		TextFile funtubeBaseFile = new TextFile(webRoot, "funtube.htm");
+		String html = funtubeBaseFile.getContent();
 
 		html = StrUtils.replaceAll(html, "[[SIDEBAR]]",
 			SideBarCtrl.getSidebarHtmlStr(SideBarEntryForTool.FUNTUBE));
 
 		html = applySelectedStyles(html);
+
+		funtubeContentBaseCached = html;
+
+		return funtubeContentBaseCached;
+	}
+
+	private WebServerAnswer generateAnswerToFunTubeRequest(Map<String, String> arguments) {
+
+		String html = getFuntubeContentBase();
 
 		String videoPath = arguments.get("path");
 		String title = videoPathToTitle(videoPath);
@@ -1246,7 +1291,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 	}
 
 	private void addFileToHtml(StringBuilder folderContent, String filename, File childFile, String path,
-		boolean tryToLoad, String compareToFileName) {
+		boolean tryToLoad, String compareToFileName, String filenameForView) {
 
 		String entryOrLink = "entry";
 		if (tryToLoad) {
@@ -1269,7 +1314,11 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			folderContent.append("opened ");
 		}
 		folderContent.append(entryOrLink + "' ");
+
 		String link = "/?path=" + funkCode(path) + "&file=" + funkCode(childFile.getLocalFilename());
+		if (filenameForView != null) {
+			link += "&filenameForView=" + funkCode(filenameForView);
+		}
 		link = StrUtils.replaceAll(link, "'", "\\'");
 		folderContent.append("onclick=\"browser.navigateTo('" + link + "')\"");
 		if (filename.startsWith("   ")) {
@@ -1465,11 +1514,22 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 								if (!entry.toLowerCase().endsWith(".sll")) {
 									ext = ".stpu";
 								}
-								curFile = files.get(entry.toLowerCase() + ext);
+
+								String filenameForView = entry;
+								String filenameForOS = filenameForView;
+								filenameForOS = replaceNotOSLegalCharacters(filenameForOS);
+
+								// if it is the same, no need to track it around everywh€re
+								if (filenameForView.equals(filenameForOS)) {
+									filenameForView = null;
+								}
+								filenameForOS += ext;
+
+								curFile = files.get(filenameForOS.toLowerCase());
 								if (curFile != null) {
-									addFileToHtml(folderContent, entry, curFile, path, !quickView, compareToFileName);
+									addFileToHtml(folderContent, entry, curFile, path, !quickView, compareToFileName, filenameForView);
 								} else {
-									addFileToHtml(folderContent, entry, new File(folder, entry + ext), path, false, compareToFileName);
+									addFileToHtml(folderContent, entry, new File(folder, filenameForOS), path, false, compareToFileName, filenameForView);
 								}
 							}
 						}
@@ -1487,7 +1547,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				childFiles = SortUtils.sortAlphabetically(childFiles, fileStringifier);
 
 				for (File childFile : childFiles) {
-					addFileToHtml(folderContent, childFile.getLocalFilename(), childFile, path, !quickView, compareToFileName);
+					addFileToHtml(folderContent, childFile.getLocalFilename(), childFile, path, !quickView, compareToFileName, null);
 				}
 			}
 		}
@@ -1992,140 +2052,140 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 			// transform just the text picture 3 into a link to the third picture
 			String replaceWith = "<a href='" + picLinkBase + pictureFileNames.get(i) + "' " +
-				"target='_blank'>" +
-				"picture " + (i+1) +
-				"</a>";
+			"target='_blank'>" +
+			"picture " + (i+1) +
+			"</a>";
 
-			// replace all not preceded by >
-			contentStr = StrUtils.replaceAllIfNotInsideTag(
-				contentStr,
-				"picture " + (i+1),
-				replaceWith
-			);
+		// replace all not preceded by >
+		contentStr = StrUtils.replaceAllIfNotInsideTag(
+			contentStr,
+			"picture " + (i+1),
+			replaceWith
+		);
 
-			// replace all preceded by exactly <br>
-			contentStr = StrUtils.replaceAll(
-				contentStr,
-				"<br>picture " + (i+1),
-				"<br>" + replaceWith
-			);
+		// replace all preceded by exactly <br>
+		contentStr = StrUtils.replaceAll(
+			contentStr,
+			"<br>picture " + (i+1),
+			"<br>" + replaceWith
+		);
 
-			contentStr = StrUtils.addAfterLinesContaining(
-				contentStr,
-				replaceWith,
-				picToHtml(picLinkBase, pictureFileNames.get(i), uniqueVStr, exportingToPdf),
-				"<br>"
-			);
+		contentStr = StrUtils.addAfterLinesContaining(
+			contentStr,
+			replaceWith,
+			picToHtml(picLinkBase, pictureFileNames.get(i), uniqueVStr, exportingToPdf),
+			"<br>"
+		);
 
-			// transform just the text pictures up to 3 into a link to the third picture,
-			// which will later be augmented by pictures 1 and 2 (if they have not been added already)
-			replaceWith = "<a href='" + picLinkBase + pictureFileNames.get(i) + "' " +
-				"target='_blank'>" +
-				"pictures up to " + (i+1) +
-				"</a>";
+		// transform just the text pictures up to 3 into a link to the third picture,
+		// which will later be augmented by pictures 1 and 2 (if they have not been added already)
+		replaceWith = "<a href='" + picLinkBase + pictureFileNames.get(i) + "' " +
+			"target='_blank'>" +
+			"pictures up to " + (i+1) +
+			"</a>";
 
-			// replace all not preceded by >
-			contentStr = StrUtils.replaceAllIfNotInsideTag(
-				contentStr,
-				"pictures up to " + (i+1),
-				replaceWith
-			);
+		// replace all not preceded by >
+		contentStr = StrUtils.replaceAllIfNotInsideTag(
+			contentStr,
+			"pictures up to " + (i+1),
+			replaceWith
+		);
 
-			// replace all preceded by exactly <br>
-			contentStr = StrUtils.replaceAll(
-				contentStr,
-				"<br>pictures up to " + (i+1),
-				"<br>" + replaceWith
-			);
+		// replace all preceded by exactly <br>
+		contentStr = StrUtils.replaceAll(
+			contentStr,
+			"<br>pictures up to " + (i+1),
+			"<br>" + replaceWith
+		);
 
-			contentStr = StrUtils.addAfterLinesContaining(
-				contentStr,
-				replaceWith,
-				"[[LOGPIC-UP-TO-" + i + "]]" +
-				picToHtml(picLinkBase, pictureFileNames.get(i), uniqueVStr, exportingToPdf),
-				"<br>"
-			);
+		contentStr = StrUtils.addAfterLinesContaining(
+			contentStr,
+			replaceWith,
+			"[[LOGPIC-UP-TO-" + i + "]]" +
+			picToHtml(picLinkBase, pictureFileNames.get(i), uniqueVStr, exportingToPdf),
+			"<br>"
+		);
 
-			if (!contentStr.equals(beforeThisRound)) {
-				picturesAdded.add(i);
+		if (!contentStr.equals(beforeThisRound)) {
+			picturesAdded.add(i);
+		}
+	}
+
+	// second round to add the other pictures when going "up to" a certain one
+	for (int i = pictureFileNames.size() - 1; i >= 0; i--) {
+		String token = "[[LOGPIC-UP-TO-" + i + "]]";
+		if (contentStr.contains(token)) {
+			Integer nextPic = i - 1;
+			if ((nextPic < 0) || picturesAdded.contains(nextPic)) {
+				contentStr = StrUtils.replaceAll(contentStr, token, "");
+			} else {
+				contentStr = StrUtils.replaceAll(contentStr, token,
+					"[[LOGPIC-UP-TO-" + nextPic + "]]" +
+					picToHtml(picLinkBase, pictureFileNames.get(nextPic), uniqueVStr, exportingToPdf)
+				);
+				picturesAdded.add(nextPic);
 			}
 		}
-
-		// second round to add the other pictures when going "up to" a certain one
-		for (int i = pictureFileNames.size() - 1; i >= 0; i--) {
-			String token = "[[LOGPIC-UP-TO-" + i + "]]";
-			if (contentStr.contains(token)) {
-				Integer nextPic = i - 1;
-				if ((nextPic < 0) || picturesAdded.contains(nextPic)) {
-					contentStr = StrUtils.replaceAll(contentStr, token, "");
-				} else {
-					contentStr = StrUtils.replaceAll(contentStr, token,
-						"[[LOGPIC-UP-TO-" + nextPic + "]]" +
-						picToHtml(picLinkBase, pictureFileNames.get(nextPic), uniqueVStr, exportingToPdf)
-					);
-					picturesAdded.add(nextPic);
-				}
-			}
-		}
-
-		/* actually, skip the third round and only add pictures when necessary
-		// third round to add all remaining pictures in the very end
-		int highestPicShown = -1;
-		for (Integer picNum : picturesAdded) {
-			if (picNum > highestPicShown) {
-				highestPicShown = picNum;
-			}
-		}
-
-		for (int i = highestPicShown + 1; i < pictureFileNames.size(); i++) {
-			contentStr += picToHtml(picLinkBase, pictureFileNames.get(i), uniqueVStr, exportingToPdf);
-		}
-		*/
-
-		return contentStr;
 	}
 
-	private static void appendWarningStart(StringBuilder builder, String warningText, String identifier) {
-		builder.append("<div class='warning_outer' id='" + WARN_BASE + identifier + "'>");
-		builder.append("<div class='warning'>");
-		builder.append("<div class='line'>");
-		builder.append("<b>Warning!</b> ");
-		builder.append(warningText);
-		builder.append("</div>");
-	}
-
-	private static void appendWarningEnd(StringBuilder builder, String identifier) {
-		builder.append("<div style='text-align: right;'>");
-		builder.append("<span class='entry_warning_button' ");
-		builder.append("onclick='document.getElementById(\"" + WARN_BASE + identifier + "\").style.display = \"none\";'>");
-		builder.append("Dismiss");
-		builder.append("</span>");
-		builder.append("</div>");
-
-		builder.append("</div>");
-		builder.append("</div>");
-	}
-
-	private static String picToHtml(String picLinkBase, String picFileName, String uniqueVStr, boolean exportingToPdf) {
-		String aStyle = "";
-		if (exportingToPdf) {
-			aStyle = " style='text-align: center; width: 100%; display: inline-block;' ";
+	/* actually, skip the third round and only add pictures when necessary
+	// third round to add all remaining pictures in the very end
+	int highestPicShown = -1;
+	for (Integer picNum : picturesAdded) {
+		if (picNum > highestPicShown) {
+			highestPicShown = picNum;
 		}
-		return "<a href='" + picLinkBase + picFileName + "' " +
-				aStyle +
-				"target='_blank'>" +
-				"<img src='" + picLinkBase + picFileName + uniqueVStr + "' style='padding-top: 4pt; max-width: 100%;' /></a><br>";
 	}
 
-	private static String prepareExternalLinks(String fileHtmlStr, String urlStart) {
-		StringBuilder newFileHtml = new StringBuilder();
-		int pos = fileHtmlStr.indexOf(urlStart);
-		int start = 0;
-		while (pos >= 0) {
-			int end = fileHtmlStr.length();
-			int end1 = fileHtmlStr.indexOf(" ", pos);
-			int end2 = fileHtmlStr.indexOf("\t", pos);
-			// just search for any opening angle, as at this point html-encoding has already been
+	for (int i = highestPicShown + 1; i < pictureFileNames.size(); i++) {
+		contentStr += picToHtml(picLinkBase, pictureFileNames.get(i), uniqueVStr, exportingToPdf);
+	}
+	*/
+
+	return contentStr;
+}
+
+private static void appendWarningStart(StringBuilder builder, String warningText, String identifier) {
+	builder.append("<div class='warning_outer' id='" + WARN_BASE + identifier + "'>");
+	builder.append("<div class='warning'>");
+	builder.append("<div class='line'>");
+	builder.append("<b>Warning!</b> ");
+	builder.append(warningText);
+	builder.append("</div>");
+}
+
+private static void appendWarningEnd(StringBuilder builder, String identifier) {
+	builder.append("<div style='text-align: right;'>");
+	builder.append("<span class='entry_warning_button' ");
+	builder.append("onclick='document.getElementById(\"" + WARN_BASE + identifier + "\").style.display = \"none\";'>");
+	builder.append("Dismiss");
+	builder.append("</span>");
+	builder.append("</div>");
+
+	builder.append("</div>");
+	builder.append("</div>");
+}
+
+private static String picToHtml(String picLinkBase, String picFileName, String uniqueVStr, boolean exportingToPdf) {
+	String aStyle = "";
+	if (exportingToPdf) {
+		aStyle = " style='text-align: center; width: 100%; display: inline-block;' ";
+	}
+	return "<a href='" + picLinkBase + picFileName + "' " +
+			aStyle +
+			"target='_blank'>" +
+			"<img src='" + picLinkBase + picFileName + uniqueVStr + "' style='padding-top: 4pt; max-width: 100%;' /></a><br>";
+}
+
+private static String prepareExternalLinks(String fileHtmlStr, String urlStart) {
+	StringBuilder newFileHtml = new StringBuilder();
+	int pos = fileHtmlStr.indexOf(urlStart);
+	int start = 0;
+	while (pos >= 0) {
+		int end = fileHtmlStr.length();
+		int end1 = fileHtmlStr.indexOf(" ", pos);
+		int end2 = fileHtmlStr.indexOf("\t", pos);
+		// just search for any opening angle, as at this point html-encoding has already been
 			// done, and any such is an opening or closing tag, not just a part of the link itself
 			int end3 = fileHtmlStr.indexOf("<", pos);
 			if (end1 >= start) {
@@ -2194,7 +2254,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			html = StrUtils.replaceAll(html, "[[COLOR_BG_1]]", "rgb(24, 0, 27)");
 			html = StrUtils.replaceAll(html, "[[COLOR_BG_2]]", "rgba(30, 0, 25, 0.95)");
 		} else {
-			html = StrUtils.replaceAll(html, "<body style=\"", "<body style=\"background: linear-gradient(27deg, #299, #57A, #299, #A5E, #4A7, #299);");
+			html = StrUtils.replaceAll(html, "<body style=\"", "<body style=\"background: linear-gradient(27deg, rgb(0, 80, 80), rgb(70, 50, 120), rgb(4, 103, 103), rgb(80, 0, 120), rgb(0, 90, 90), rgb(60, 0, 70));");
 			html = StrUtils.replaceAll(html, "[[COLOR_TEXT_1]]", "#000");
 			html = StrUtils.replaceAll(html, "[[COLOR_TEXT_2]]", "#000");
 			html = StrUtils.replaceAll(html, "[[COLOR_TEXT_3]]", "#440088");
@@ -2214,6 +2274,14 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		str = StrUtils.replaceAll(str, "%C2%93", "%E2%80%9C");
 		str = StrUtils.replaceAll(str, "%C2%94", "%E2%80%9D");
 		return str;
+	}
+
+	private static String replaceNotOSLegalCharacters(String filenameForOS) {
+		// replace characters that are not legal for files names on the OS level
+		filenameForOS = StrUtils.replaceAll(filenameForOS, "?", "-");
+		filenameForOS = StrUtils.replaceAll(filenameForOS, "/", "-");
+		filenameForOS = StrUtils.replaceAll(filenameForOS, "\\", "-");
+		return filenameForOS;
 	}
 
 	private static String getUniqueVStr() {

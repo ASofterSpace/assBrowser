@@ -97,7 +97,6 @@ public class PathCtrl {
 	 * So replaces \Desktop\foo with C:\blubb\Desktop\foo
 	 */
 	public static String resolvePath(String path) {
-
 		if (startsWithDesktopPath(path)) {
 			return StrUtils.replaceAll(
 				StrUtils.replaceAll(getOneUpDesktopLocation() + "/" + path, "\\", "/"),

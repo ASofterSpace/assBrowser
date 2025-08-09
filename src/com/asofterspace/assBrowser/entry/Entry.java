@@ -22,7 +22,7 @@ public class Entry {
 	private boolean encrypted = false;
 
 
-	public Entry(File genericFile, Database database) {
+	public Entry(File genericFile, String filenameForView, Database database) {
 
 		if (genericFile.exists()) {
 			TextFile file = PathCtrl.getEntryFile(genericFile);
@@ -36,7 +36,11 @@ public class Entry {
 
 			content = DateUtils.convertDateTimeStampsDEtoEN(content);
 		} else {
-			content = genericFile.getLocalFilenameWithoutType() + "\n\n";
+			if (filenameForView != null) {
+				content = filenameForView + "\n\n";
+			} else {
+				content = genericFile.getLocalFilenameWithoutType() + "\n\n";
+			}
 		}
 
 		if (content == null) {

@@ -995,6 +995,7 @@ window.browser = {
 		var data = {
 			path: window.data.path,
 			file: window.data.file,
+			filenameForView: window.data.filenameForView,
 			newName: document.getElementById("renameInput").value
 		};
 
