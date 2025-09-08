@@ -2254,12 +2254,13 @@ private static String prepareExternalLinks(String fileHtmlStr, String urlStart) 
 			html = StrUtils.replaceAll(html, "[[COLOR_BG_1]]", "rgb(24, 0, 27)");
 			html = StrUtils.replaceAll(html, "[[COLOR_BG_2]]", "rgba(30, 0, 25, 0.95)");
 		} else {
-			html = StrUtils.replaceAll(html, "<body style=\"", "<body style=\"background: linear-gradient(27deg, rgb(0, 80, 80), rgb(70, 50, 120), rgb(4, 103, 103), rgb(80, 0, 120), rgb(0, 90, 90), rgb(60, 0, 70));");
-			html = StrUtils.replaceAll(html, "[[COLOR_TEXT_1]]", "#000");
-			html = StrUtils.replaceAll(html, "[[COLOR_TEXT_2]]", "#000");
-			html = StrUtils.replaceAll(html, "[[COLOR_TEXT_3]]", "#440088");
-			html = StrUtils.replaceAll(html, "[[COLOR_BG_1]]", "rgb(150, 120, 220)");
-			html = StrUtils.replaceAll(html, "[[COLOR_BG_2]]", "rgba(120, 80, 220, 0.85)");
+			// html = StrUtils.replaceAll(html, "<body style=\"", "<body style=\"background: linear-gradient(27deg, rgb(0, 30, 30), rgb(30, 10, 60), rgb(0, 45, 45), rgb(30, 0, 60), rgb(0, 30, 30), rgb(20, 0, 30));");
+			html = StrUtils.replaceAll(html, "<body style=\"", "<body style=\"background: linear-gradient(-27deg, rgb(0, 30, 40), rgb(30, 10, 60), rgb(0, 20, 60), rgb(60, 0, 60), rgb(0, 30, 30), rgb(20, 0, 30), rgb(0, 30, 40), rgb(30, 10, 60), rgb(0, 30, 60), rgb(60, 0, 60), rgb(0, 30, 40), rgb(20, 0, 30));");
+			html = StrUtils.replaceAll(html, "[[COLOR_TEXT_1]]", "#88AAFF");
+			html = StrUtils.replaceAll(html, "[[COLOR_TEXT_2]]", "#AACCFF");
+			html = StrUtils.replaceAll(html, "[[COLOR_TEXT_3]]", "#4488FF");
+			html = StrUtils.replaceAll(html, "[[COLOR_BG_1]]", "rgb(24, 0, 27)");
+			html = StrUtils.replaceAll(html, "[[COLOR_BG_2]]", "rgba(30, 0, 25, 0.95)");
 		}
 		return html;
 	}

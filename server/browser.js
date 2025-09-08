@@ -483,12 +483,14 @@ window.browser = {
 
 		var encryptedBtn = document.getElementById("encryptedBtn");
 
-		if (window.data.encrypted) {
-			encryptedBtn.className = "button activeInBackground";
-			encryptedBtn.innerText = "Encrypted - Click to Decrypt";
-		} else {
-			encryptedBtn.className = "button";
-			encryptedBtn.innerText = "Not Encrypted - Click to Encrypt";
+		if (encryptedBtn) {
+			if (window.data.encrypted) {
+				encryptedBtn.className = "button activeInBackground";
+				encryptedBtn.innerText = "Encrypted - Click to Decrypt";
+			} else {
+				encryptedBtn.className = "button";
+				encryptedBtn.innerText = "Not Encrypted - Click to Encrypt";
+			}
 		}
 	},
 
@@ -539,6 +541,7 @@ window.browser = {
 		this.closeMoreActions();
 		this.folderEditingMode = !this.folderEditingMode;
 		var scrollBefore = 0;
+		var previousFolderText = document.getElementById("folderContainer").innerText;
 		if (this.folderEditingMode) {
 			scrollBefore = document.getElementById("folderContainer").scrollTop /
 				document.getElementById("folderContainer").scrollTopMax;
@@ -580,8 +583,8 @@ window.browser = {
 					if (window.browser.folderEditingMode) {
 						browser.preventFolderChangeFire = true;
 
-						if (result.content == null) {
-							result.content = document.getElementById("folderContainer").innerText;
+						if ((result.content == null) || (result.content == "")) {
+							result.content = previousFolderText;
 						}
 
 						document.getElementById("folderTextarea").value = browser.decodeToTextarea(result.content);
