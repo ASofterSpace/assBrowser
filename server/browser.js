@@ -424,9 +424,13 @@ window.browser = {
 		}
 
 		var request = new XMLHttpRequest();
-		request.open("GET", "getEntry?editingMode=" + this.editingMode +
+		var getStr = "getEntry?editingMode=" + this.editingMode +
 			"&path=" + encodeURIComponent(window.data.path) +
-			"&file=" + encodeURIComponent(window.data.file), true);
+			"&file=" + encodeURIComponent(window.data.file);
+		if (window.data.filenameForView) {
+			getStr += "&filenameForView=" + encodeURIComponent(window.data.filenameForView);
+		}
+		request.open("GET", getStr, true);
 		request.setRequestHeader("Content-Type", "application/json");
 
 		request.onreadystatechange = function() {
@@ -998,9 +1002,12 @@ window.browser = {
 		var data = {
 			path: window.data.path,
 			file: window.data.file,
-			filenameForView: window.data.filenameForView,
 			newName: document.getElementById("renameInput").value
 		};
+
+		if (window.data.filenameForView) {
+			data.filenameForView = window.data.filenameForView;
+		}
 
 		request.onreadystatechange = function() {
 			if (request.readyState == 4 && request.status == 200) {

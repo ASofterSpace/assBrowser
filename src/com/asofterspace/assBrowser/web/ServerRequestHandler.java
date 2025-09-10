@@ -239,7 +239,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				path = json.getString("path");
 				fileName = json.getString("file");
 				String fileNameForView = json.getString("filenameForView");
-				String fileNameForViewFull = fileName;
+				String fileNameForViewFull = fileNameForView;
 				fileName = replaceNotOSLegalCharacters(fileName);
 				String newName = json.getString("newName").trim();
 				String newNameForViewFull = newName;
@@ -274,22 +274,11 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 							if (fileName.endsWith(".stpu") && newName.endsWith(".stpu")) {
 								String fileBaseName = fileName.substring(0, fileName.length() - 5);
 								String newBaseName = newName.substring(0, newName.length() - 5);
-								int i = 1;
-								while (true) {
-									boolean didCopyAFile = false;
-									for (String curImgExt : IMAGE_EXTENSIONS) {
-										didCopyAFile = tryCopy(folder, fileBaseName, newBaseName, i, "." + curImgExt);
-										if (didCopyAFile) {
-											break;
-										}
-									}
-									if (!didCopyAFile) {
-										break;
-									}
-									i++;
-								}
+								renameImagesAttachedToSTPUBase(folder, fileBaseName, newBaseName);
 
-								if (fileNameForView == null) {
+								if (fileNameForViewFull == null) {
+									fileNameForView = fileBaseName;
+								} else {
 									fileNameForView = fileNameForViewFull.substring(0, fileNameForViewFull.length() - 5);
 								}
 								String newNameForView = newNameForViewFull.substring(0, newNameForViewFull.length() - 5);
@@ -383,6 +372,23 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		}
 
 		respond(200, answer);
+	}
+
+	private void renameImagesAttachedToSTPUBase(Directory folder, String fileBaseName, String newBaseName) {
+		int i = 1;
+		while (true) {
+			boolean didCopyAFile = false;
+			for (String curImgExt : IMAGE_EXTENSIONS) {
+				didCopyAFile = tryCopy(folder, fileBaseName, newBaseName, i, "." + curImgExt);
+				if (didCopyAFile) {
+					break;
+				}
+			}
+			if (!didCopyAFile) {
+				break;
+			}
+			i++;
+		}
 	}
 
 	private boolean tryCopy(Directory folder, String fileBaseName, String newBaseName, int i, String fileEnding) {
@@ -613,6 +619,9 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		indexContent = StrUtils.replaceAll(indexContent, "[[PATH]]", path);
 
 		String fileNameShort = fileName;
+		if (filenameForView != null) {
+			fileNameShort = filenameForView;
+		}
 		if (fileNameShort == null) {
 			fileNameShort = "";
 		}
@@ -1310,27 +1319,27 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			}
 		}
 		folderContent.append("<div class='a line ");
-		if (filename.toLowerCase().equals(compareToFileName)) {
+		if (filename.toLowerCase().equals(compareToFileName) || filenameForView.toLowerCase().equals(compareToFileName)) {
 			folderContent.append("opened ");
 		}
 		folderContent.append(entryOrLink + "' ");
 
 		String link = "/?path=" + funkCode(path) + "&file=" + funkCode(childFile.getLocalFilename());
-		if (filenameForView != null) {
+		if (!filename.equals(filenameForView)) {
 			link += "&filenameForView=" + funkCode(filenameForView);
 		}
 		link = StrUtils.replaceAll(link, "'", "\\'");
 		folderContent.append("onclick=\"browser.navigateTo('" + link + "')\"");
-		if (filename.startsWith("   ")) {
+		if (filenameForView.startsWith("   ")) {
 			folderContent.append(" style=\"text-align:center;\"");
 			int pos = 0;
-			while ((pos < filename.length()) && (filename.charAt(pos) == ' ')) {
+			while ((pos < filenameForView.length()) && (filenameForView.charAt(pos) == ' ')) {
 				pos++;
 			}
-			filename = filename.substring(pos);
+			filenameForView = filenameForView.substring(pos);
 		}
 		folderContent.append(">");
-		folderContent.append(HTML.escapeHTMLstrNbsp(filename));
+		folderContent.append(HTML.escapeHTMLstrNbsp(filenameForView));
 		folderContent.append("</div>");
 	}
 
@@ -1519,17 +1528,23 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 								String filenameForOS = filenameForView;
 								filenameForOS = replaceNotOSLegalCharacters(filenameForOS);
 
-								// if it is the same, no need to track it around everywh€re
-								if (filenameForView.equals(filenameForOS)) {
-									filenameForView = null;
-								}
-								filenameForOS += ext;
+								if (!filenameForView.equals(filenameForOS)) {
+									// if we have a wrong local file on disk (so e.g. containing ":" or "?" in its name),
+									// rename it (but just the file itself, let's just assume that there are not memes etc. attached)
+									File wrongLocalFile = files.get(filenameForView.toLowerCase() + ext);
+									if (wrongLocalFile != null) {
+										wrongLocalFile.rename(filenameForOS + ext);
+										files.put(filenameForOS.toLowerCase() + ext, wrongLocalFile);
 
-								curFile = files.get(filenameForOS.toLowerCase());
+										renameImagesAttachedToSTPUBase(wrongLocalFile.getParentDirectory(), filenameForView, filenameForOS);
+									}
+								}
+
+								curFile = files.get(filenameForOS.toLowerCase() + ext);
 								if (curFile != null) {
-									addFileToHtml(folderContent, entry, curFile, path, !quickView, compareToFileName, filenameForView);
+									addFileToHtml(folderContent, filenameForOS, curFile, path, !quickView, compareToFileName, filenameForView);
 								} else {
-									addFileToHtml(folderContent, entry, new File(folder, filenameForOS), path, false, compareToFileName, filenameForView);
+									addFileToHtml(folderContent, filenameForOS, new File(folder, filenameForOS+ext), path, false, compareToFileName, filenameForView);
 								}
 							}
 						}
@@ -1547,7 +1562,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				childFiles = SortUtils.sortAlphabetically(childFiles, fileStringifier);
 
 				for (File childFile : childFiles) {
-					addFileToHtml(folderContent, childFile.getLocalFilename(), childFile, path, !quickView, compareToFileName, null);
+					String localFilename = childFile.getLocalFilename();
+					addFileToHtml(folderContent, localFilename, childFile, path, !quickView, compareToFileName, localFilename);
 				}
 			}
 		}
@@ -2280,6 +2296,9 @@ private static String prepareExternalLinks(String fileHtmlStr, String urlStart) 
 	private static String replaceNotOSLegalCharacters(String filenameForOS) {
 		// replace characters that are not legal for files names on the OS level
 		filenameForOS = StrUtils.replaceAll(filenameForOS, "?", "-");
+		filenameForOS = StrUtils.replaceAll(filenameForOS, "*", "-");
+		filenameForOS = StrUtils.replaceAll(filenameForOS, "|", "-");
+		filenameForOS = StrUtils.replaceAll(filenameForOS, ":", "-");
 		filenameForOS = StrUtils.replaceAll(filenameForOS, "/", "-");
 		filenameForOS = StrUtils.replaceAll(filenameForOS, "\\", "-");
 		return filenameForOS;
