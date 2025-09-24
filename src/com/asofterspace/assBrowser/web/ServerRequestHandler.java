@@ -874,7 +874,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		buttonHtml.append("</a>");
 
 		if (fileName != null) {
-			buttonHtml.append("<span id='save-btn' class='button' onclick='browser.saveEntry()' style='display:none;'>");
+			buttonHtml.append("<span id='save-btn' class='button' onclick='browser.saveEntryAndShow()' style='display:none;'>");
 			buttonHtml.append("Save");
 			buttonHtml.append("</span>");
 

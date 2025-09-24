@@ -498,7 +498,11 @@ window.browser = {
 		}
 	},
 
-	saveEntry: function() {
+	saveEntryAndShow: function() {
+		this.saveEntry(true);
+	},
+
+	saveEntry: function(doToggleToShowAfterSuccess) {
 
 		var request = new XMLHttpRequest();
 		request.open("POST", "saveEntry", true);
@@ -529,6 +533,11 @@ window.browser = {
 						}
 					}, 2500);
 					window.browser.updateEncryptedBtn(result.encrypted);
+					if (doToggleToShowAfterSuccess) {
+						if (window.browser.editingMode) {
+							window.browser.toggleEditEntry();
+						}
+					}
 				} else {
 					alert("Saving might have not worked - there is a data mismatch:\n" +
 						"window.data.path: " + window.data.path + "\nresult.path: " + result.path +
