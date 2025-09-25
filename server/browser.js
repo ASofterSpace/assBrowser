@@ -624,21 +624,23 @@ window.browser = {
 
 
 	doToggleSomeEditingMode: function() {
-
+		var toggleFolder = false;
 		if (browser.editingMode) {
 			if (browser.folderEditingMode) {
-				if (document.getElementById("save-folder-btn").style.backgroundColor == browser.COLOR_SAVE_RED) {
-					browser.toggleEditEntry();
-				} else {
-					browser.toggleEditFolder();
+				if (document.getElementById("save-folder-btn").style.backgroundColor != browser.COLOR_SAVE_RED) {
+					toggleFolder = true;
 				}
-			} else {
-				browser.toggleEditEntry();
 			}
 		} else {
 			if (browser.folderEditingMode) {
-				browser.toggleEditFolder();
-			} else {
+				toggleFolder = true;
+			}
+		}
+
+		if (toggleFolder) {
+			browser.toggleEditFolder();
+		} else {
+			if (document.getElementById("edit-btn").style.visibility != "hidden") {
 				browser.toggleEditEntry();
 			}
 		}
@@ -1208,9 +1210,7 @@ window.onkeydown = function(event) {
 	// [Ctrl]+[D] (to the right of [S] on German keyboards) for leave editing mode after saving,
 	// or even entering edit mode (of the entry) if neither entry nor folder are in editing mode
 	if ((event.metaKey || event.ctrlKey) && event.keyCode == 68) {
-		if (document.getElementById("edit-btn").style.visibility != "hidden") {
-			browser.doToggleSomeEditingMode();
-		}
+		browser.doToggleSomeEditingMode();
 		event.preventDefault();
 		return false;
 	}
