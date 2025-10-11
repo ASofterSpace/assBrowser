@@ -543,6 +543,28 @@ window.browser = {
 		request.send(JSON.stringify(data));
 	},
 
+	autoSaveEntry: function() {
+
+		// do not autosave encrypted entries as that would generate more overhead
+		if (window.data.encrypted) {
+			return;
+		}
+
+		var request = new XMLHttpRequest();
+		request.open("POST", "autoSaveEntry", true);
+		request.setRequestHeader("Content-Type", "application/json");
+
+		var savedContent = document.getElementById("fileContentTextarea").value;
+
+		var data = {
+			path: window.data.path,
+			file: window.data.file,
+			content: savedContent
+		};
+
+		request.send(JSON.stringify(data));
+	},
+
 
 	toggleEditFolder: function() {
 		this.closeMoreActions();
@@ -1345,3 +1367,9 @@ window.browser.loadFullFolderView();
 window.browser.scrollIfNecessary();
 
 window.browser.adjustOpenBrowserField();
+
+window.setInterval(function() {
+	if (window.browser.editingMode) {
+		window.browser.autoSaveEntry();
+	}
+}, 32000);

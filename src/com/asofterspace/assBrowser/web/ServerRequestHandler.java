@@ -66,7 +66,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 	private ConsoleCtrl consoleCtrl;
 
-	private static final String[] IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "gif", "bmp", "webp", "avif"};
+	private static final String[] IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "gif", "bmp", "webp", "avif", "svg"};
 
 	private String videoDirPathStr = null;
 
@@ -84,6 +84,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 	private static final String ID_MISS = "miss";
 	private static final String ID_PICS = "pics";
 	private static final String ID_ENCO = "enco";
+	private static final String ID_BACK = "back";
 
 	private static String indexContentBaseCached = null;
 	private static String funtubeContentBaseCached = null;
@@ -192,7 +193,9 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				localPath = PathCtrl.resolvePath(path);
 				Directory folder = new Directory(localPath);
 				TextFile entryFile = PathCtrl.getEntryFile(new File(folder, fileName));
-				// if not content is sent to save, take current content (e.g. when just encryption is toggled)
+				File backupFile = new File(folder, toBackupFileName(fileName));
+				backupFile.delete();
+				// if no content is sent to save, take current content (e.g. when just encryption is toggled)
 				if ("".equals(content) || (content == null)) {
 					Entry entry = new Entry(entryFile, null, database);
 					content = entry.getStringContent();
@@ -219,6 +222,21 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				rec.setString("file", fileName);
 				rec.set("encrypted", encrypted);
 				answer = new WebServerAnswerInJson(rec);
+				break;
+
+			case "/autoSaveEntry":
+				path = json.getString("path");
+				fileName = json.getString("file");
+				content = json.getString("content");
+				path = PathCtrl.ensurePathIsSafe(path);
+				path = PathCtrl.browserizePath(path);
+				localPath = PathCtrl.resolvePath(path);
+				folder = new Directory(localPath);
+				TextFile backupTextFile = PathCtrl.getEntryFile(new File(folder, toBackupFileName(fileName)));
+				// remove conditional break dashes
+				content = StrUtils.replaceAll(content, "­", "");
+				backupTextFile.saveContent(content);
+				answer = new WebServerAnswerInJson(Record.emptyObject());
 				break;
 
 			case "/saveFolder":
@@ -470,6 +488,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			Entry entry = new Entry(genericFile, filenameForView, database);
 			String fileHtmlStr = entry.getStringContent();
 			if ("false".equals(arguments.get("editingMode"))) {
+
 				fileHtmlStr = prepareEntryForDisplayInHtml(fileHtmlStr, folder, fileName, false);
 			}
 			Record rec = Record.emptyObject();
@@ -1579,6 +1598,18 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 	private String prepareEntryForDisplayInHtml(String fileHtmlStr, Directory folder, String fileName, boolean exportingToPdf) {
 
+		// by default, we have null - and only keep a string in here if there is a mismatch!
+		String backupContent = null;
+		TextFile backupFile = PathCtrl.getEntryFile(new File(folder, toBackupFileName(fileName)));
+		if (backupFile.exists()) {
+			backupContent = backupFile.getContent();
+			if (backupContent.equals(fileHtmlStr)) {
+				backupContent = null;
+			} else {
+				System.out.println("Backup file content mismatch for entry '" + fileName + "'!");
+			}
+		}
+
 		fileHtmlStr = prepareStrForDisplayInHtml(fileHtmlStr);
 
 		String lowFileName = fileName.toLowerCase();
@@ -1791,6 +1822,23 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		// add inline pictures
 		fileHtmlStr = addPicturesToEntryHtml(fileHtmlStr, folder, fileName, exportingToPdf);
+
+		if (backupContent != null) {
+			StringBuilder warnBuilder = new StringBuilder();
+			appendWarningStart(warnBuilder, "There is a backup with different content!<br>Its content is:", ID_BACK);
+			String contentHolderId = WARN_BASE + ID_BACK + "_holder";
+			warnBuilder.append("<div id='" + contentHolderId + "'>");
+			warnBuilder.append(prepareStrForDisplayInHtml(backupContent));
+			warnBuilder.append("</div>");
+			warnBuilder.append("<div style='text-align: right;'>");
+			warnBuilder.append("<span class='entry_warning_button' ");
+			warnBuilder.append("onclick='navigator.clipboard.writeText(document.getElementById(\"" + contentHolderId + "\").innerText);'>");
+			warnBuilder.append("Copy Text from Backup to Clipboard");
+			warnBuilder.append("</span>");
+			warnBuilder.append("</div>");
+			appendWarningEnd(warnBuilder, ID_BACK);
+			fileHtmlStr = warnBuilder.toString() + fileHtmlStr;
+		}
 
 		if (!exportingToPdf) {
 			// add footnote up/down links for numbered footnotes such as [1], [2], [3], etc.
@@ -2302,6 +2350,10 @@ private static String prepareExternalLinks(String fileHtmlStr, String urlStart) 
 		filenameForOS = StrUtils.replaceAll(filenameForOS, "/", "-");
 		filenameForOS = StrUtils.replaceAll(filenameForOS, "\\", "-");
 		return filenameForOS;
+	}
+
+	private static String toBackupFileName(String fileName) {
+		return "."+fileName+"-[BACKUP]";
 	}
 
 	private static String getUniqueVStr() {

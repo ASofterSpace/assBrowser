@@ -115,7 +115,7 @@ public class EmojiSelectorGUI {
 		addLabel("•");
 		addLabel("—");
 		addLabel("–");
-		addLabel("˜");
+		addLabel("_");
 		addLabel("†");
 		addLabel("‡");
 		addLabel("±");
@@ -230,9 +230,9 @@ public class EmojiSelectorGUI {
 		addLabel("Y");
 		addLabel("Z");
 		addLabel("");
-		addLabel(".");
-		addLabel(",");
-		addLabel(";");
+		addLabel("");
+		addLabel("<");
+		addLabel(">");
 		addLabel("(");
 		addLabel(")");
 		addLabel("[");
@@ -254,13 +254,35 @@ public class EmojiSelectorGUI {
 		addLabel("8");
 		addLabel("9");
 		addLabel("");
-		addLabel("<");
-		addLabel(">");
+		addLabel("");
+		addLabel("");
 		addLabel("|");
-		addLabel("-");
-		addLabel("_");
+		addLabel("˜");
+		addLabel("#");
+		addLabel("\\");
+		addLabel("/");
+
+		colCounter = 0;
+		rowCounter = 8;
+
 		addLabel("");
 		addLabel("");
+		addLabel("");
+		addLabel("");
+		addLabel("");
+		addLabel("");
+		addLabel("");
+		addLabel("");
+		addLabel("");
+		addLabel("");
+		addLabel("");
+		addLabel("");
+		addLabel("");
+		addLabel(".");
+		addLabel(",");
+		addLabel(";");
+		addLabel("!");
+		addLabel("?");
 
 		// remove title bar
 		dialogWindow.setUndecorated(true);
