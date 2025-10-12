@@ -4,6 +4,7 @@
  */
 package com.asofterspace.assBrowser.gui;
 
+import com.asofterspace.assBrowser.AssBrowser;
 import com.asofterspace.toolbox.gui.Arrangement;
 import com.asofterspace.toolbox.gui.GuiUtils;
 import com.asofterspace.toolbox.images.ColorRGBA;
@@ -76,7 +77,7 @@ public class EmojiSelectorGUI {
 
 		// Create the window
 		boolean blockMainGUI = false;
-		dialogWindow = new JDialog(gui.getMainFrame(), "Emoji Selection", blockMainGUI);
+		dialogWindow = new JDialog(gui.getMainFrame(), AssBrowser.PROGRAM_TITLE + " - Keyboard", blockMainGUI);
 		GridBagLayout dialogWindowLayout = new GridBagLayout();
 		dialogWindow.setLayout(dialogWindowLayout);
 		dialogWindow.getRootPane().setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
@@ -231,8 +232,8 @@ public class EmojiSelectorGUI {
 		addLabel("Z");
 		addLabel("");
 		addLabel("");
-		addLabel("<");
-		addLabel(">");
+		addLabel("");
+		addLabel("");
 		addLabel("(");
 		addLabel(")");
 		addLabel("[");
@@ -255,8 +256,8 @@ public class EmojiSelectorGUI {
 		addLabel("9");
 		addLabel("");
 		addLabel("");
-		addLabel("");
-		addLabel("|");
+		addLabel("<");
+		addLabel(">");
 		addLabel("˜");
 		addLabel("#");
 		addLabel("\\");
@@ -277,12 +278,12 @@ public class EmojiSelectorGUI {
 		addLabel("");
 		addLabel("");
 		addLabel("");
-		addLabel("");
 		addLabel(".");
 		addLabel(",");
 		addLabel(";");
 		addLabel("!");
 		addLabel("?");
+		addLabel("|");
 
 		// remove title bar
 		dialogWindow.setUndecorated(true);

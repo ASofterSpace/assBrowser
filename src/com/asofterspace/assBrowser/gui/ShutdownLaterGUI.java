@@ -4,6 +4,7 @@
  */
 package com.asofterspace.assBrowser.gui;
 
+import com.asofterspace.assBrowser.AssBrowser;
 import com.asofterspace.assBrowser.console.ConsoleCtrl;
 import com.asofterspace.toolbox.gui.Arrangement;
 import com.asofterspace.toolbox.gui.GuiUtils;
@@ -60,7 +61,7 @@ public class ShutdownLaterGUI {
 
 		// Create the window
 		boolean blockMainGUI = false;
-		final JDialog dialogWindow = new JDialog(gui.getMainFrame(), "Timer", blockMainGUI);
+		final JDialog dialogWindow = new JDialog(gui.getMainFrame(), AssBrowser.PROGRAM_TITLE + " - Timer", blockMainGUI);
 		GridBagLayout dialogWindowLayout = new GridBagLayout();
 		dialogWindow.setLayout(dialogWindowLayout);
 		dialogWindow.getRootPane().setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
