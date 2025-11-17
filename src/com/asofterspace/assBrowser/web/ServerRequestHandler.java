@@ -1825,7 +1825,9 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		if (backupContent != null) {
 			StringBuilder warnBuilder = new StringBuilder();
-			appendWarningStart(warnBuilder, "There is an auto-saved backup with different content!<br>Its content is:", ID_BACK);
+			appendWarningStart(warnBuilder, "There is an auto-saved backup with different content!<br><br>" +
+				"The file is located at:<br>" + backupFile.getCanonicalFilename() + "<br><br>Its content is:",
+				ID_BACK);
 			String contentHolderId = WARN_BASE + ID_BACK + "_holder";
 			warnBuilder.append("<div id='" + contentHolderId + "'>");
 			warnBuilder.append(prepareStrForDisplayInHtml(backupContent));
