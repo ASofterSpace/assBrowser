@@ -66,7 +66,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 	private ConsoleCtrl consoleCtrl;
 
-	private static final String[] IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "gif", "bmp", "webp", "avif", "svg"};
+	private static final String[] IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "gif", "bmp", "webp", "avif", "svg", "tif", "tiff"};
 
 	private String videoDirPathStr = null;
 
@@ -1515,21 +1515,26 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			if (vstpuFile.exists()) {
 				List<String> entries = vstpuFile.getContents();
 
-				Map<String, Directory> directories = new HashMap<>();
-				for (Directory childFolder : childFolders) {
-					directories.put(childFolder.getLocalDirname().toLowerCase(), childFolder);
-				}
-
-				Map<String, File> files = new HashMap<>();
-				for (File file : childFiles) {
-					files.put(file.getLocalFilename().toLowerCase(), file);
-				}
-
 				if (entries == null) {
 					addTextToHtml(folderContent, "! Unable to load " + PathCtrl.VSTPU_STPU + " !");
 				} else {
 
+					Map<String, Directory> directories = new HashMap<>();
+					for (Directory childFolder : childFolders) {
+						directories.put(childFolder.getLocalDirname().toLowerCase(), childFolder);
+					}
+
+					Map<String, File> files = new HashMap<>();
+					for (File file : childFiles) {
+						files.put(file.getLocalFilename().toLowerCase(), file);
+					}
+
 					for (String entry : entries) {
+
+						// if the VSTPU file is a bit broken, and &nbsp; placeholders were saved
+						// instead of spaces, replace them back to regular spaces
+						entry = StrUtils.replaceAll(entry, "\u00A0", " ");
+
 						if ("".equals(entry.trim())) {
 							addTextToHtml(folderContent, entry);
 						} else {

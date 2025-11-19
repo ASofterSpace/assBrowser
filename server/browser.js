@@ -616,7 +616,10 @@ window.browser = {
 							result.content = previousFolderText;
 						}
 
-						document.getElementById("folderTextarea").value = browser.decodeToTextarea(result.content);
+						result.content = browser.decodeToTextarea(result.content);
+						// replace "&nbsp;" with " "
+						result.content = result.content.split(String.fromCodePoint(160)).join(" ");
+						document.getElementById("folderTextarea").value = result.content;
 						document.getElementById("folderTextarea").focus();
 
 						window.setTimeout(function() {
