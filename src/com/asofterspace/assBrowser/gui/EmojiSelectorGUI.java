@@ -110,8 +110,35 @@ public class EmojiSelectorGUI {
 		addLabel(POINT_RIGHT_LEFT, colorYellow);
 
 		colCounter = 0;
-		rowCounter = 1;
+		rowCounter++;
 
+		addLabel("½");
+		addLabel("⅓");
+		addLabel("⅔");
+		addLabel("¼");
+		addLabel("¾");
+		addLabel("⅕");
+		addLabel("⅖");
+		addLabel("⅗");
+		addLabel("⅘");
+		addLabel("⅙");
+		addLabel("⅚");
+		addLabel("⅐");
+		addLabel("⅛");
+		addLabel("⅜");
+		addLabel("⅝");
+		addLabel("⅞");
+		addLabel("⅑");
+		addLabel("⅒");
+
+		colCounter = 0;
+		rowCounter++;
+
+		addLabel("");
+		addLabel("");
+		addLabel("");
+		addLabel("");
+		addLabel("");
 		addLabel("·");
 		addLabel("•");
 		addLabel("—");
@@ -120,11 +147,6 @@ public class EmojiSelectorGUI {
 		addLabel("†");
 		addLabel("‡");
 		addLabel("±");
-		addLabel("½");
-		addLabel("¼");
-		addLabel("¾");
-		addLabel("¿");
-		addLabel("¡");
 		addLabel("×");
 		addLabel("÷");
 		addLabel("ø");
@@ -132,7 +154,7 @@ public class EmojiSelectorGUI {
 		addLabel("¬");
 
 		colCounter = 0;
-		rowCounter = 2;
+		rowCounter++;
 
 		addLabel("ä");
 		addLabel("Ä");
@@ -154,7 +176,7 @@ public class EmojiSelectorGUI {
 		addLabel("Å");
 
 		colCounter = 0;
-		rowCounter = 3;
+		rowCounter++;
 
 		addLabel("a");
 		addLabel("b");
@@ -176,7 +198,7 @@ public class EmojiSelectorGUI {
 		addLabel("r");
 
 		colCounter = 0;
-		rowCounter = 4;
+		rowCounter++;
 
 		addLabel("s");
 		addLabel("t");
@@ -198,7 +220,7 @@ public class EmojiSelectorGUI {
 		addLabel("");
 
 		colCounter = 0;
-		rowCounter = 5;
+		rowCounter++;
 
 		addLabel("A");
 		addLabel("B");
@@ -220,7 +242,7 @@ public class EmojiSelectorGUI {
 		addLabel("R");
 
 		colCounter = 0;
-		rowCounter = 6;
+		rowCounter++;
 
 		addLabel("S");
 		addLabel("T");
@@ -242,7 +264,7 @@ public class EmojiSelectorGUI {
 		addLabel("}");
 
 		colCounter = 0;
-		rowCounter = 7;
+		rowCounter++;
 
 		addLabel("0");
 		addLabel("1");
@@ -255,18 +277,17 @@ public class EmojiSelectorGUI {
 		addLabel("8");
 		addLabel("9");
 		addLabel("");
-		addLabel("");
 		addLabel("<");
 		addLabel(">");
 		addLabel("˜");
 		addLabel("#");
 		addLabel("\\");
 		addLabel("/");
+		addLabel("|");
 
 		colCounter = 0;
-		rowCounter = 8;
+		rowCounter++;
 
-		addLabel("");
 		addLabel("");
 		addLabel("");
 		addLabel("");
@@ -282,8 +303,9 @@ public class EmojiSelectorGUI {
 		addLabel(",");
 		addLabel(";");
 		addLabel("!");
+		addLabel("¡");
 		addLabel("?");
-		addLabel("|");
+		addLabel("¿");
 
 		// remove title bar
 		dialogWindow.setUndecorated(true);
