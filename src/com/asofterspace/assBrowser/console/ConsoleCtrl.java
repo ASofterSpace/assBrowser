@@ -702,25 +702,30 @@ public class ConsoleCtrl {
 	}
 
 	public static String applyCommandlineSyntaxReminder(String commandLow) {
-		switch (commandLow) {
+		if (commandLow == null) {
+			return null;
+		}
+		switch (commandLow.trim()) {
 			case "grep":
-			case "grep ":
 				return "grep -rni \"needle\" --include \\*.txt '/drives/c/home/a softer space/'";
 			case "find":
-			case "find ":
 				return "find . -name '*.txt'";
 			case "sed":
-			case "sed ":
 				return "sed -i \"s.origStr.newStr.g\" file.txt";
 			case "for":
-			case "for ":
 				return "for (var i = 0; i < arr.length; i++) {";
 			case "7z":
-			case "7z ":
 				return "7z a newFile.zip existingFileToZip.txt -pPlainttextPassword";
+			case "zip":
+				return "zip -r newFile.zip existingFolderToZip";
 			case "tar":
-			case "tar ":
 				return "tar -zxvf existingFileToUnTar.tar.gz";
+			case "ssh":
+				return "ssh -i /home/user/.ssh/(keyfile) -p (port) user@server.org";
+			case "sftp":
+				return "sftp -i /home/user/.ssh/(keyfile) -p (port) user@server.org";
+			case "scp":
+				return "scp -i /home/user/.ssh/(keyfile) -P (port) user@server.org:/remote/file /local/file";
 		}
 		return null;
 	}
