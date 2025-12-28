@@ -726,6 +726,8 @@ public class ConsoleCtrl {
 				return "sftp -i /home/user/.ssh/(keyfile) -p (port) user@server.org";
 			case "scp":
 				return "scp -i /home/user/.ssh/(keyfile) -P (port) user@server.org:/remote/file /local/file";
+			case "ln":
+				return "ln -s /absolute/path/to/existing/target folderOrFilenameOfNewLinkToIt";
 		}
 		return null;
 	}
