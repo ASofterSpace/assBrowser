@@ -728,6 +728,12 @@ public class ConsoleCtrl {
 				return "scp -i /home/user/.ssh/(keyfile) -P (port) user@server.org:/remote/file /local/file";
 			case "ln":
 				return "ln -s /absolute/path/to/existing/target folderOrFilenameOfNewLinkToIt";
+			case "du":
+				return "du -sh * | sort -h";
+			case "df":
+				return "df -h";
+			case "ls":
+				return "ls -lash";
 		}
 		return null;
 	}
