@@ -39,6 +39,8 @@ public class Database {
 
 	private final static String PROGRAMS_TO_OPEN_FILES = "programsToOpenFiles";
 
+	private final static String COMMANDLINE_SYNTAX_REMINDERS = "commandlineSyntaxReminders";
+
 	private final static String HOME_DIR = "homeDir";
 
 	private final static String DISPLAY_GUI = "displayGUI";
@@ -72,6 +74,8 @@ public class Database {
 	private String videoDirPath;
 
 	private Map<String, String> programsToOpenFiles = new HashMap<>();
+
+	private Map<String, String> commandlineSyntaxReminders = new HashMap<>();
 
 	private Map<String, String> inMemoryFolderContent = new ConcurrentHashMap<>();
 
@@ -119,6 +123,8 @@ public class Database {
 
 		this.programsToOpenFiles = root.getStringMap(PROGRAMS_TO_OPEN_FILES);
 
+		this.commandlineSyntaxReminders = root.getStringMap(COMMANDLINE_SYNTAX_REMINDERS);
+
 		this.homeDirPath = root.getString(HOME_DIR);
 
 		this.displayGUI = root.getBoolean(DISPLAY_GUI, true);
@@ -157,6 +163,8 @@ public class Database {
 		root.set(VIDEO_DIR, videoDirPath);
 
 		root.set(PROGRAMS_TO_OPEN_FILES, programsToOpenFiles);
+
+		root.set(COMMANDLINE_SYNTAX_REMINDERS, commandlineSyntaxReminders);
 
 		root.set(HOME_DIR, homeDirPath);
 
@@ -230,6 +238,10 @@ public class Database {
 
 	public Map<String, String> getProgramsToOpenFiles() {
 		return programsToOpenFiles;
+	}
+
+	public Map<String, String> getCommandlineSyntaxReminders() {
+		return commandlineSyntaxReminders;
 	}
 
 	public String getHomeDirPathStr() {

@@ -20,6 +20,7 @@ import com.asofterspace.toolbox.utils.StrUtils;
 import java.awt.Desktop;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 
 public class ConsoleCtrl {
@@ -701,41 +702,17 @@ public class ConsoleCtrl {
 		}
 	}
 
-	public static String applyCommandlineSyntaxReminder(String commandLow) {
+	public String applyCommandlineSyntaxReminder(String commandLow) {
 		if (commandLow == null) {
 			return null;
 		}
-		switch (commandLow.trim()) {
-			case "grep":
-				return "grep -rni \"needle\" --include \\*.txt '/drives/c/home/a softer space/'";
-			case "find":
-				return "find . -name '*.txt'";
-			case "sed":
-				return "sed -i \"s.origStr.newStr.g\" file.txt";
-			case "for":
-				return "for (var i = 0; i < arr.length; i++) {";
-			case "7z":
-				return "7z a newFile.zip existingFileToZip.txt -pPlainttextPassword";
-			case "zip":
-				return "zip -r newFile.zip existingFolderToZip";
-			case "tar":
-				return "tar -zxvf existingFileToUnTar.tar.gz";
-			case "ssh":
-				return "ssh -i /home/user/.ssh/(keyfile) -p (port) user@server.org";
-			case "sftp":
-				return "sftp -i /home/user/.ssh/(keyfile) -p (port) user@server.org";
-			case "scp":
-				return "scp -i /home/user/.ssh/(keyfile) -P (port) user@server.org:/remote/file /local/file";
-			case "ln":
-				return "ln -s /absolute/path/to/existing/target folderOrFilenameOfNewLinkToIt";
-			case "du":
-				return "du -sh * | sort -h";
-			case "df":
-				return "df -h";
-			case "ls":
-				return "ls -lash";
+
+		Map<String, String> commandlineSyntaxReminders = database.getCommandlineSyntaxReminders();
+		if (commandlineSyntaxReminders == null) {
+			return null;
 		}
-		return null;
+
+		return commandlineSyntaxReminders.get(commandLow.trim());
 	}
 
 	private String replaceHomeDirStr(String commandStr) {

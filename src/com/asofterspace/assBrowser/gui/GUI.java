@@ -529,7 +529,7 @@ public class GUI extends MainWindow {
 					event.consume();
 					String txt = consoleField.getText();
 					// tab complete syntax reminder
-					String newTxt = ConsoleCtrl.applyCommandlineSyntaxReminder(txt);
+					String newTxt = consoleCtrl.applyCommandlineSyntaxReminder(txt);
 					if (newTxt == null) {
 						// tab complete files / folders
 						if (txt.contains(" ~")) {
