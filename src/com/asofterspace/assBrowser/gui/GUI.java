@@ -407,20 +407,22 @@ public class GUI extends MainWindow {
 			}
 		});
 
-		batteryLabel = createLabel("B: UNINITIALIZED ");
-		batteryLabel.setOpaque(true);
-		batteryLabel.setForeground(errorColor.toColor());
-		mainPanel.add(batteryLabel, new Arrangement(16, 0, 0.0, 1.0));
+		if (database.getBatteryStateScriptPath() != null) {
+			batteryLabel = createLabel("B: UNINITIALIZED ");
+			batteryLabel.setOpaque(true);
+			batteryLabel.setForeground(errorColor.toColor());
+			mainPanel.add(batteryLabel, new Arrangement(16, 0, 0.0, 1.0));
 
-		batteryLabel.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				checkBatteryStatus();
-				resetGuiLocation();
-				clickHighlight(batteryLabel);
-				hideEmojiSelector();
-			}
-		});
+			batteryLabel.addMouseListener(new MouseAdapter() {
+				@Override
+				public void mouseClicked(MouseEvent e) {
+					checkBatteryStatus();
+					resetGuiLocation();
+					clickHighlight(batteryLabel);
+					hideEmojiSelector();
+				}
+			});
+		}
 
 		clockLabel = createLabel("00:00 ");
 		mainPanel.add(clockLabel, new Arrangement(17, 0, 0.0, 1.0));
@@ -652,8 +654,8 @@ public class GUI extends MainWindow {
 		}
 
 		// do not set below a reasonable minimum as otherwise the screen will not be visible at all ^^'
-		if (position < 5) {
-			position = 5;
+		if (position < database.getBacklightMinimum()) {
+			position = database.getBacklightMinimum();
 		}
 
 		brightnessFile.saveContent("" + ((position * brightnessMax) / 100));
@@ -740,8 +742,7 @@ public class GUI extends MainWindow {
 	private void checkBatteryStatus() {
 
 		String batScriptPath = database.getBatteryStateScriptPath();
-		if (batScriptPath == null) {
-			setBatteryProblemText("B: ? ");
+		if ((batScriptPath == null) || (batteryLabel == null)) {
 			return;
 		}
 
@@ -827,6 +828,10 @@ public class GUI extends MainWindow {
 	}
 
 	private void setBatteryProblemText(String text) {
+
+		if (batteryLabel == null) {
+			return;
+		}
 
 		batteryLabel.setText(text);
 
@@ -1023,7 +1028,9 @@ public class GUI extends MainWindow {
 		quoteLabel6.setVisible(visible);
 		newlineLabel.setVisible(visible);
 		heartLabel.setVisible(visible);
-		batteryLabel.setVisible(visible);
+		if (batteryLabel != null) {
+			batteryLabel.setVisible(visible);
+		}
 		clockLabel.setVisible(visible);
 		if (brightnessItem != null) {
 			brightnessItem.setVisible(visible);

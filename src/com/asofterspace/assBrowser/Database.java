@@ -29,6 +29,8 @@ public class Database {
 
 	private final static String NIRCMD_PATH = "nircmdPath";
 
+	private final static String BACKLIGHT_MINIMUM = "backlightMinimum";
+
 	private final static String BATTERY_STATE_SCRIPT_PATH = "batteryStateScriptPath";
 
 	private final static String FFMPEG_PATH = "ffmpegPath";
@@ -90,6 +92,8 @@ public class Database {
 
 	private String style;
 
+	private int backlightMinimum;
+
 
 	public Database() {
 
@@ -134,6 +138,8 @@ public class Database {
 		this.setAudioVolumetoSilenceAtStartup = root.getBoolean(SET_AUDIO_VOLUME_TO_SILENCE_AT_STARTUP, false);
 
 		this.style = root.getString(STYLE, "turquoise");
+
+		this.backlightMinimum = root.getInteger(BACKLIGHT_MINIMUM, 0);
 	}
 
 	public Record getRoot() {
@@ -175,6 +181,8 @@ public class Database {
 		root.set(SET_AUDIO_VOLUME_TO_SILENCE_AT_STARTUP, setAudioVolumetoSilenceAtStartup);
 
 		root.set(STYLE, style);
+
+		root.set(BACKLIGHT_MINIMUM, backlightMinimum);
 
 		dbFile.setAllContents(root);
 		dbFile.save();
@@ -269,6 +277,10 @@ public class Database {
 
 	public String getStyle() {
 		return style;
+	}
+
+	public int getBacklightMinimum() {
+		return backlightMinimum;
 	}
 
 }
