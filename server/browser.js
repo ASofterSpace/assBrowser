@@ -378,7 +378,7 @@ window.browser = {
 					browser.scrollIfNecessary();
 				}
 			}
-		}
+		};
 
 		request.send();
 	},
@@ -467,7 +467,7 @@ window.browser = {
 						"Current file is: " + window.data.file);
 				}
 			}
-		}
+		};
 
 		request.send();
 	},
@@ -642,7 +642,7 @@ window.browser = {
 						"Current path is: " + window.data.path);
 				}
 			}
-		}
+		};
 
 		request.send();
 	},
