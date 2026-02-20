@@ -15,6 +15,7 @@ import com.asofterspace.toolbox.io.File;
 import com.asofterspace.toolbox.io.IoUtils;
 import com.asofterspace.toolbox.io.SimpleFile;
 import com.asofterspace.toolbox.io.TextFile;
+import com.asofterspace.toolbox.utils.MathUtils;
 import com.asofterspace.toolbox.utils.StrUtils;
 
 import java.awt.Desktop;
@@ -474,18 +475,7 @@ public class ConsoleCtrl {
 
 		cur = StrUtils.replaceAll(cur, "ans", "(" + prevMathOrgResult + ")");
 
-		cur = StrUtils.replaceAll(cur, "pi", "(3,141592653589793238)");
-
-		cur = StrUtils.replaceAll(cur, ".", ",");
-		cur = StrUtils.replaceAll(cur, "•", "*");
-		cur = StrUtils.replaceAll(cur, "·", "*");
-		cur = StrUtils.replaceAll(cur, "x", "*");
-		cur = StrUtils.replaceAll(cur, "×", "*");
-		cur = StrUtils.replaceAll(cur, "-/", "\\");
-		cur = StrUtils.replaceAll(cur, "/", ":");
-
-		String result = computeMathOrgCalculate(cur);
-		result = StrUtils.replaceAll(result, ",", ".");
+		String result = MathUtils.calculateMathStr(cur);
 
 		prevMathOrgResult = result;
 
@@ -493,144 +483,6 @@ public class ConsoleCtrl {
 		GuiUtils.copyToClipboard(result);
 
 		return command.trim() + " = " + result;
-	}
-
-	/**
-	 * Actually perform the mathorg calculation by first checking if there are brackets present, and if so,
-	 * recursively removing them by calculating inner parts, and if not, by splitting the input on math ops
-	 * and applying one after the other
-	 * (the input is called vars as this was directly translated from datacomx source code)
-	 */
-	private String computeMathOrgCalculate(String vars) {
-
-		if (vars.contains("(")) {
-
-			int lastStartPos = -1;
-			for (int i = 0; i < vars.length(); i++) {
-				char c = vars.charAt(i);
-				switch (c) {
-					case '(':
-						lastStartPos = i;
-						break;
-					case ')':
-						if (lastStartPos >= 0) {
-							return computeMathOrgCalculate(
-								vars.substring(0, lastStartPos) +
-								computeMathOrgCalculate(vars.substring(lastStartPos + 1, i)) +
-								vars.substring(i + 1)
-							);
-						}
-						return "ERROR: Encountered unmatched ')'!";
-				}
-			}
-			return "ERROR: Encountered unmatched '('!";
-		}
-
-		if (vars.contains(")")) {
-			return "ERROR: Encountered unmatched ')'!";
-		}
-
-		vars = StrUtils.replaceAll(vars, " ", "");
-		vars = StrUtils.replaceAll(vars, "\t", "");
-		vars = StrUtils.replaceAll(vars, "/", ":");
-		vars = StrUtils.replaceAll(vars, "-", "+-");
-		vars = StrUtils.replaceAll(vars, "*+-", "*-");
-		vars = StrUtils.replaceAll(vars, ":+-", ":-");
-		while (vars.contains("++")) {
-			vars = StrUtils.replaceAll(vars, "++", "+");
-		}
-		while (vars.startsWith("+")) {
-			if (vars.length() > 1) {
-				vars = vars.substring(2);
-			} else {
-				return "ERROR: No input!";
-			}
-		}
-
-		// ensure the first term starts with a plus
-		vars = "+" + vars;
-
-		// we split the string that is operated on into terms, with each term starting with a math operation
-		// followed by a number (where the number itself may contain the char '\' to indicate root, so e.g.
-		// a term can be +1 (add one) or :4 (divide by four) or -3/9 (minus the third root of nine))
-		List<String> terms = new ArrayList<>();
-		String currentTerm = "";
-		for (int i = 0; i < vars.length(); i++) {
-			char c = vars.charAt(i);
-			switch (c) {
-				case '*':
-				case ':':
-				case '+':
-				case '^':
-					terms.add(currentTerm);
-					currentTerm = "" + c;
-					break;
-				default:
-					currentTerm += c;
-					break;
-			}
-		}
-		terms.add(currentTerm);
-
-		// iterate over all terms and resolve potentially existing roots
-		for (int i = 0; i < terms.size(); i++) {
-			String curTerm = terms.get(i);
-			int pos = curTerm.indexOf("\\");
-			// \ cannot be the first letter, as that is the math op
-			if (pos > 0) {
-				// if it is the second letter, we have a square root
-				Double whichRoot = 2.0;
-				if (pos > 1) {
-					// if it is the third letter or later, we have a special root
-					String whichRootStr = curTerm.substring(2, pos);
-					whichRoot = StrUtils.strToDouble(whichRootStr);
-					if (whichRoot == null) {
-						return "ERROR: '" + whichRootStr + "'-th root cannot be parsed!";
-					}
-				}
-				String underRootStr = curTerm.substring(pos + 1);
-				Double underRoot = StrUtils.strToDouble(underRootStr);
-				if (underRoot == null) {
-					return "ERROR: Term under root '" + underRootStr + "' cannot be parsed!";
-				}
-				terms.set(i, "" + curTerm.charAt(0) + Math.pow(underRoot, 1 / whichRoot));
-			}
-		}
-
-		// perform the actual computation of the terms
-		double result = 0.0;
-
-		for (String term : terms) {
-
-			// a term that is just an op without a number does not do anything
-			if (term.length() < 2) {
-				continue;
-			}
-
-			char ops = term.charAt(0);
-
-			Double termNum = StrUtils.strToDouble(term.substring(1));
-			if (termNum == null) {
-				return "ERROR: The term '" + term.substring(1) + "' could not be parsed!";
-			}
-
-			switch (ops) {
-				case '+':
-					result += termNum;
-					break;
-				case '*':
-					result *= termNum;
-					break;
-				case ':':
-					result /= termNum;
-					break;
-				case '^':
-					result = Math.pow(result, termNum);
-					break;
-			}
-		}
-
-		return StrUtils.doubleToStr(result);
 	}
 
 	private ConsoleResult runSllFile(File sllFile, ConsoleResult result, String sllFileArgs) {
