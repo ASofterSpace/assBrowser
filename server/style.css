@@ -5,7 +5,10 @@ body {
 }
 
 body, input, textarea, select {
-	font-family: serif;
+	# font-family: serif;
+	font-family: "Calibri";
+	# font-family: "Lexend";
+	# font-family: "Droid Sans Fallback";
 }
 
 a, div.a {
