@@ -67,6 +67,7 @@ public class GUI extends MainWindow {
 	private JTextField consoleField2;
 	private JTextField consoleField3;
 	private BarMenuItemForMainMenu volumeItem;
+	private JLabel boostAudioLabel;
 	private JLabel counterLabel;
 	private JLabel quoteLabel1;
 	private JLabel quoteLabel2;
@@ -190,9 +191,11 @@ public class GUI extends MainWindow {
 		mainPanel.setLayout(mainPanelLayout);
 		mainPanel.addMouseListener(mouseListenerToMaximize);
 
-		consoleField1 = addConsoleField(mainPanel, 0);
-		consoleField2 = addConsoleField(mainPanel, 1);
-		consoleField3 = addConsoleField(mainPanel, 2);
+		int num = 0;
+
+		consoleField1 = addConsoleField(mainPanel, num++);
+		consoleField2 = addConsoleField(mainPanel, num++);
+		consoleField3 = addConsoleField(mainPanel, num++);
 
 		if (database.getSetAudioVolumetoSilenceAtStartup()) {
 			if ("amixer".equals(this.nircmdPath)) {
@@ -205,11 +208,12 @@ public class GUI extends MainWindow {
 			}
 		}
 
+		int DEFAULT_MAX_VOLUME = 100;
 		volumeItem = new BarMenuItemForMainMenu();
 		volumeItem.setBackground(bgColorCol);
 		volumeItem.setForeground(fgColor.toColor());
 		volumeItem.setBarPosition(null, false);
-		volumeItem.setMaximum(100);
+		volumeItem.setMaximum(DEFAULT_MAX_VOLUME);
 		volumeItem.setSendUpdateOnMousePress(true);
 		volumeItem.addBarListener(new BarListener() {
 			@Override
@@ -229,10 +233,38 @@ public class GUI extends MainWindow {
 				*/
 			}
 		});
-		mainPanel.add(volumeItem, new Arrangement(3, 0, 0.0, 1.0));
+		mainPanel.add(volumeItem, new Arrangement(num++, 0, 0.0, 1.0));
 
-		counterLabel = createLabel(" 0 ");
-		mainPanel.add(counterLabel, new Arrangement(4, 0, 0.0, 1.0));
+		boostAudioLabel = createLabel("+ ");
+		mainPanel.add(boostAudioLabel, new Arrangement(num++, 0, 0.0, 1.0));
+
+		boostAudioLabel.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				clickHighlight(boostAudioLabel);
+				boostAudioLabel.setText("! ");
+
+				if (SwingUtilities.isRightMouseButton(e)) {
+					Integer barPos = volumeItem.getBarPosition();
+					if (barPos != null) {
+						if (barPos > DEFAULT_MAX_VOLUME) {
+							boolean notifyListeners = true;
+							volumeItem.setBarPosition(DEFAULT_MAX_VOLUME, notifyListeners);
+						}
+					}
+					volumeItem.setMaximum(DEFAULT_MAX_VOLUME);
+					boostAudioLabel.setText("+ ");
+				} else {
+					volumeItem.setMaximum(volumeItem.getMaximum() * 2);
+					boostAudioLabel.setText("++ ");
+				}
+
+				hideEmojiSelector();
+			}
+		});
+
+		counterLabel = createLabel("0 ");
+		mainPanel.add(counterLabel, new Arrangement(num++, 0, 0.0, 1.0));
 
 		counterLabel.addMouseListener(new MouseAdapter() {
 			@Override
@@ -242,14 +274,14 @@ public class GUI extends MainWindow {
 				if (SwingUtilities.isRightMouseButton(e)) {
 					num = 0;
 				}
-				counterLabel.setText(" " + num + " ");
+				counterLabel.setText(num + " ");
 
 				hideEmojiSelector();
 			}
 		});
 
 		quoteLabel1 = createLabel("„");
-		mainPanel.add(quoteLabel1, new Arrangement(5, 0, 0.0, 1.0));
+		mainPanel.add(quoteLabel1, new Arrangement(num++, 0, 0.0, 1.0));
 
 		quoteLabel1.addMouseListener(new MouseAdapter() {
 			@Override
@@ -263,7 +295,7 @@ public class GUI extends MainWindow {
 		});
 
 		quoteLabel2 = createLabel("“");
-		mainPanel.add(quoteLabel2, new Arrangement(6, 0, 0.0, 1.0));
+		mainPanel.add(quoteLabel2, new Arrangement(num++, 0, 0.0, 1.0));
 
 		quoteLabel2.addMouseListener(new MouseAdapter() {
 			@Override
@@ -278,7 +310,7 @@ public class GUI extends MainWindow {
 		});
 
 		quoteLabel3 = createLabel("” ");
-		mainPanel.add(quoteLabel3, new Arrangement(7, 0, 0.0, 1.0));
+		mainPanel.add(quoteLabel3, new Arrangement(num++, 0, 0.0, 1.0));
 
 		quoteLabel3.addMouseListener(new MouseAdapter() {
 			@Override
@@ -292,7 +324,7 @@ public class GUI extends MainWindow {
 		});
 
 		quoteLabel4 = createLabel("‚");
-		mainPanel.add(quoteLabel4, new Arrangement(8, 0, 0.0, 1.0));
+		mainPanel.add(quoteLabel4, new Arrangement(num++, 0, 0.0, 1.0));
 
 		quoteLabel4.addMouseListener(new MouseAdapter() {
 			@Override
@@ -306,7 +338,7 @@ public class GUI extends MainWindow {
 		});
 
 		quoteLabel5 = createLabel("‘");
-		mainPanel.add(quoteLabel5, new Arrangement(9, 0, 0.0, 1.0));
+		mainPanel.add(quoteLabel5, new Arrangement(num++, 0, 0.0, 1.0));
 
 		quoteLabel5.addMouseListener(new MouseAdapter() {
 			@Override
@@ -321,7 +353,7 @@ public class GUI extends MainWindow {
 		});
 
 		quoteLabel6 = createLabel("’ ");
-		mainPanel.add(quoteLabel6, new Arrangement(10, 0, 0.0, 1.0));
+		mainPanel.add(quoteLabel6, new Arrangement(num++, 0, 0.0, 1.0));
 
 		quoteLabel6.addMouseListener(new MouseAdapter() {
 			@Override
@@ -335,7 +367,7 @@ public class GUI extends MainWindow {
 		});
 
 		newlineLabel = createLabel("\\n ");
-		mainPanel.add(newlineLabel, new Arrangement(11, 0, 0.0, 1.0));
+		mainPanel.add(newlineLabel, new Arrangement(num++, 0, 0.0, 1.0));
 
 		newlineLabel.addMouseListener(new MouseAdapter() {
 			@Override
@@ -348,7 +380,7 @@ public class GUI extends MainWindow {
 		});
 
 		heartLabel = createLabel(EmojiSelectorGUI.PURPLE_HEART + " ");
-		mainPanel.add(heartLabel, new Arrangement(12, 0, 0.0, 1.0));
+		mainPanel.add(heartLabel, new Arrangement(num++, 0, 0.0, 1.0));
 
 		heartLabel.addMouseListener(new MouseAdapter() {
 			@Override
@@ -365,7 +397,7 @@ public class GUI extends MainWindow {
 		cpuLabel = createLabel("C: ? ");
 		cpuLabel.setOpaque(true);
 		cpuLabel.setForeground(errorColor.toColor());
-		mainPanel.add(cpuLabel, new Arrangement(13, 0, 0.0, 1.0));
+		mainPanel.add(cpuLabel, new Arrangement(num++, 0, 0.0, 1.0));
 
 		cpuLabel.addMouseListener(new MouseAdapter() {
 			@Override
@@ -380,7 +412,7 @@ public class GUI extends MainWindow {
 		ramLabel = createLabel("M: ? ");
 		ramLabel.setOpaque(true);
 		ramLabel.setForeground(errorColor.toColor());
-		mainPanel.add(ramLabel, new Arrangement(14, 0, 0.0, 1.0));
+		mainPanel.add(ramLabel, new Arrangement(num++, 0, 0.0, 1.0));
 
 		ramLabel.addMouseListener(new MouseAdapter() {
 			@Override
@@ -395,7 +427,7 @@ public class GUI extends MainWindow {
 		swapLabel = createLabel("S: ? ");
 		swapLabel.setOpaque(true);
 		swapLabel.setForeground(errorColor.toColor());
-		mainPanel.add(swapLabel, new Arrangement(15, 0, 0.0, 1.0));
+		mainPanel.add(swapLabel, new Arrangement(num++, 0, 0.0, 1.0));
 
 		swapLabel.addMouseListener(new MouseAdapter() {
 			@Override
@@ -411,7 +443,7 @@ public class GUI extends MainWindow {
 			batteryLabel = createLabel("B: UNINITIALIZED ");
 			batteryLabel.setOpaque(true);
 			batteryLabel.setForeground(errorColor.toColor());
-			mainPanel.add(batteryLabel, new Arrangement(16, 0, 0.0, 1.0));
+			mainPanel.add(batteryLabel, new Arrangement(num++, 0, 0.0, 1.0));
 
 			batteryLabel.addMouseListener(new MouseAdapter() {
 				@Override
@@ -425,7 +457,7 @@ public class GUI extends MainWindow {
 		}
 
 		clockLabel = createLabel("00:00 ");
-		mainPanel.add(clockLabel, new Arrangement(17, 0, 0.0, 1.0));
+		mainPanel.add(clockLabel, new Arrangement(num++, 0, 0.0, 1.0));
 
 		clockLabel.addMouseListener(new MouseAdapter() {
 			@Override
@@ -443,6 +475,9 @@ public class GUI extends MainWindow {
 		if (brightnessMax != null) {
 			brightnessFile = new TextFile("/sys/class/backlight/intel_backlight/brightness");
 			Integer brightnessCur = StrUtils.strToInt(brightnessFile.getContent());
+			if (brightnessCur == null) {
+				brightnessCur = brightnessMax;
+			}
 			brightnessItem = new BarMenuItemForMainMenu();
 			brightnessItem.setBackground(bgColorCol);
 			brightnessItem.setForeground(fgColor.toColor());
@@ -460,7 +495,7 @@ public class GUI extends MainWindow {
 				public void onBarDisplay(Integer position) {
 				}
 			});
-			mainPanel.add(brightnessItem, new Arrangement(18, 0, 0.0, 1.0));
+			mainPanel.add(brightnessItem, new Arrangement(num++, 0, 0.0, 1.0));
 		}
 
 
@@ -638,13 +673,23 @@ public class GUI extends MainWindow {
 			position = 0;
 		}
 
-		if ("amixer".equals(this.nircmdPath)) {
-			IoUtils.executeAsync(this.nircmdPath + " -q sset Master " + position + "%");
-		} else if ("pactl".equals(this.nircmdPath)) {
-			IoUtils.executeAsync(this.nircmdPath + " -- set-sink-volume 0 " + position + "%");
+		if ("pactl".equals(this.nircmdPath)) {
+			IoUtils.executeAsync(this.nircmdPath + " set-sink-volume @DEFAULT_SINK@ " + position + "%");
 		} else {
-			int volPerc = Math.min(65535, position * 656);
-			IoUtils.executeAsync(this.nircmdPath + " setsysvolume " + volPerc);
+			if ("amixer".equals(this.nircmdPath)) {
+				if (position > 100) {
+					IoUtils.execute(this.nircmdPath + " -q sset Master 100%");
+					IoUtils.executeAsync("pactl set-sink-volume @DEFAULT_SINK@ " + position + "%");
+				} else {
+					IoUtils.executeAsync(this.nircmdPath + " -q sset Master " + position + "%");
+				}
+			} else {
+				int volPerc = position * 655;
+				if (position <= 100) {
+					volPerc = Math.min(65535, position * 656);
+				}
+				IoUtils.executeAsync(this.nircmdPath + " setsysvolume " + volPerc);
+			}
 		}
 	}
 
@@ -1019,6 +1064,7 @@ public class GUI extends MainWindow {
 		consoleField2.setVisible(visible);
 		consoleField3.setVisible(visible);
 		volumeItem.setVisible(visible);
+		boostAudioLabel.setVisible(visible);
 		counterLabel.setVisible(visible);
 		quoteLabel1.setVisible(visible);
 		quoteLabel2.setVisible(visible);
