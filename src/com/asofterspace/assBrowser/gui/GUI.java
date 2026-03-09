@@ -394,9 +394,15 @@ public class GUI extends MainWindow {
 			}
 		});
 
-		cpuLabel = createLabel("C: ? ");
+		// set a text that is a useful default for what is usually the max size of this label
+		cpuLabel = createLabel("C: 00% ");
 		cpuLabel.setOpaque(true);
 		cpuLabel.setForeground(errorColor.toColor());
+		// CPU percentage jumps around a lot during runtime, making the whole GUI jump around a lot,
+		// so fix this one in size - and just this one (as the others change but less often)
+		Dimension dim = cpuLabel.getPreferredSize();
+		cpuLabel.setPreferredSize(new Dimension(dim.width, dim.height));
+		cpuLabel.setText("C: ? ");
 		mainPanel.add(cpuLabel, new Arrangement(num++, 0, 0.0, 1.0));
 
 		cpuLabel.addMouseListener(new MouseAdapter() {
@@ -911,18 +917,25 @@ public class GUI extends MainWindow {
 						} else {
 							int cpuSum = (cpuUs + cpuSy) / 10;
 							boolean setRegularCpuLabel = true;
+							String cpuText = "C: " + cpuSum + "% ";
 							if (cpuSum > 90) {
+								if (cpuSum > 99) {
+									cpuText = "C:" + cpuSum + "% ";
+								}
 								cpuAboveThresholdCounter++;
 								if (cpuAboveThresholdCounter > 5) {
 									// if CPU above threshold multiple times, alert as problem
-									setCpuProblemText("C: " + cpuSum + "% ");
+									setCpuProblemText(cpuText);
 									setRegularCpuLabel = false;
 								}
 							} else {
+								if (cpuSum < 10) {
+									cpuText = "C:  " + cpuSum + "% ";
+								}
 								cpuAboveThresholdCounter = 0;
 							}
 							if (setRegularCpuLabel) {
-								cpuLabel.setText("C: " + cpuSum + "% ");
+								cpuLabel.setText(cpuText);
 								cpuLabel.setForeground(fgColorCol);
 								cpuLabel.setBackground(bgColorCol);
 							}
