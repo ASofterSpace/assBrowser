@@ -9,6 +9,7 @@ import com.asofterspace.assBrowser.console.ConsoleCtrl;
 import com.asofterspace.assBrowser.console.ConsoleResult;
 import com.asofterspace.assBrowser.Database;
 import com.asofterspace.assBrowser.entry.Entry;
+import com.asofterspace.assBrowser.paths.DirectoryStringifier;
 import com.asofterspace.assBrowser.paths.FileStringifier;
 import com.asofterspace.assBrowser.paths.PathCtrl;
 import com.asofterspace.toolbox.coders.UrlDecoder;
@@ -78,6 +79,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 	private String nextVidLink = null;
 
 	private FileStringifier fileStringifier = new FileStringifier();
+	private DirectoryStringifier directoryStringifier = new DirectoryStringifier();
 
 	private static final String WARN_BASE = "warning_id_";
 	private static final String ID_MULT = "mult";
@@ -499,6 +501,43 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			return new WebServerAnswerInJson(rec);
 		}
 
+		// get all images inside of a folder
+		if (location.startsWith("/getFolderImages")) {
+			String path = arguments.get("path");
+			String localPath = PathCtrl.resolvePath(path);
+			Directory folder = new Directory(localPath);
+
+			StringBuilder imagesSB = new StringBuilder();
+			imagesSB.append("<div style='overflow-y: scroll;'>");
+			boolean recursively = false;
+			List<File> files = folder.getAllFiles(recursively);
+			files = SortUtils.sortAlphabetically(files, fileStringifier);
+			String uniqueVStr = getUniqueVStr();
+			for (File file : files) {
+				if ((file != null) && (file.getContentType().startsWith("image/"))) {
+					String localFilename = file.getLocalFilename();
+					String imgUrl = getFileAccessUrl(path, localFilename);
+					imagesSB.append("<div class='dirImgCont'>");
+					imagesSB.append("<div>");
+					imagesSB.append("<a target=\"_blank\" href=\"" + imgUrl + "\">");
+					imagesSB.append("<img src=\"" + imgUrl + uniqueVStr + "\">");
+					imagesSB.append("</a>");
+					imagesSB.append("</div>");
+					imagesSB.append("<div class='caption'>");
+					imagesSB.append(HTML.escapeHTMLstr(localFilename));
+					imagesSB.append("</div>");
+					imagesSB.append("</div>");
+				}
+			}
+			imagesSB.append("</div>");
+
+			Record rec = Record.emptyObject();
+			rec.setString("path", path);
+			rec.setString("content", imagesSB.toString());
+			return new WebServerAnswerInJson(rec);
+		}
+
+		// get the folder contents
 		if (location.startsWith("/getFolder")) {
 			String path = arguments.get("path");
 			String fileName = arguments.get("file");
@@ -677,12 +716,15 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		// LANG-SWITCHING String langStr = "<html lang=\"en\">";
 		int amountOfImages = 0;
 
+		// display file content
 		if (fileName != null) {
+
 			File genericFile = new File(folder, fileName);
 			String lowCaseFileName = fileName.toLowerCase();
+
+			// display slightly augmented text file
 			if (lowCaseFileName.endsWith(".stpu") || lowCaseFileName.endsWith(".sll") ||
-				lowCaseFileName.endsWith(".txt") || lowCaseFileName.endsWith(".ini") ||
-				lowCaseFileName.endsWith(".srt")) {
+				lowCaseFileName.endsWith(".txt") || lowCaseFileName.endsWith(".md")) {
 
 				Entry entry = new Entry(genericFile, filenameForView, database);
 				fileHtmlStr = entry.getStringContent();
@@ -811,15 +853,24 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			// only now check if the file even exists - as we allow for STPU files which do not exist,
 			// e.g. if they only have pictures but no contents
 			} else if (!genericFile.exists()) {
+
 				fileHtmlStr = "The file '" + fileName + "' does not exist!";
 
+			// display plain text file
 			} else if (lowCaseFileName.endsWith(".json") || lowCaseFileName.endsWith(".java") ||
 				lowCaseFileName.endsWith(".bat") || lowCaseFileName.endsWith(".sh") ||
-				lowCaseFileName.endsWith(".md")) {
+				lowCaseFileName.endsWith(".yml") || lowCaseFileName.endsWith(".yaml") ||
+				lowCaseFileName.endsWith(".csv") || lowCaseFileName.endsWith(".log") ||
+				lowCaseFileName.endsWith(".srt") || lowCaseFileName.endsWith(".sub") ||
+				lowCaseFileName.endsWith(".ini")) {
+
 				TextFile file = new TextFile(folder, fileName);
 				fileHtmlStr = file.getContent();
 				fileHtmlStr = prepareStrForDisplayInHtml(fileHtmlStr);
+
 			} else {
+
+				// display PDF / HTML inline
 				if (lowCaseFileName.endsWith(".pdf") || lowCaseFileName.endsWith(".htm") || lowCaseFileName.endsWith(".html")) {
 					fileHtmlStr = "<iframe src=\"file://" + PathCtrl.resolvePath(path + "/" + fileName) + "\"></iframe>";
 				} else {
@@ -847,6 +898,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 							"<img src=\"" + imgUrl + getUniqueVStr() + "\" style='max-width:100%; max-height:100%;' />" +
 							"</a>";
 					} else {
+
+						// display generic option to do something with an unrecognized file
 						fileHtmlStr = "<div style='line-height: 2.5;text-align: center;' id='fileButtonContainer'>" +
 									  "No preview for '" + fileName + "' available.<br><br>" +
 									  getFileButtonsHtml(path, fileName, "padding: 4pt 9pt;") +
@@ -916,7 +969,13 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			buttonHtml.append("</span>");
 		}
 
-		if (fileName != null) {
+		if (fileName == null) {
+
+			buttonHtml.append("<span class='button' onclick='browser.displayImagesInCurDir()'>");
+			buttonHtml.append("Display All Images in this Directory");
+			buttonHtml.append("</span>");
+
+		} else {
 
 			buttonHtml.append("<span class='button' onclick='browser.toggleTextActions()' id='text-actions-btn'>");
 			buttonHtml.append("Text Actions...");
@@ -1575,6 +1634,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					}
 				}
 			} else {
+				childFolders = SortUtils.sortAlphabetically(childFolders, directoryStringifier);
+
 				for (Directory childFolder : childFolders) {
 					addFolderToHtml(folderContent, childFolder, path);
 				}

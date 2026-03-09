@@ -116,6 +116,31 @@ window.browser = {
 		document.getElementById("uploadFileModal").style.display = "none";
 	},
 
+	displayImagesInCurDir: function() {
+		var fileContentContainer = document.getElementById("fileContentContainer");
+		if (fileContentContainer) {
+			fileContentContainer.innerHTML =
+				"<div style='margin:50pt;text-align:center;font-size:150%;';>Loading...</span>";
+
+			var request = new XMLHttpRequest();
+			request.open("GET", "getFolderImages?path=" + encodeURIComponent(window.data.path), true);
+			request.setRequestHeader("Content-Type", "application/json");
+
+			request.onreadystatechange = function() {
+				if (request.readyState == 4 && request.status == 200) {
+					var result = JSON.parse(request.response);
+					// only update if the path didn't change in the meantime
+					// (it shouldn't, currently, but maybe in the future...)
+					if (window.data.path == result.path) {
+						fileContentContainer.innerHTML = result.content;
+					}
+				}
+			};
+
+			request.send();
+		}
+	},
+
 	openScrollView: function() {
 		this.closeMoreActions();
 		this.curView = 'scroll';

@@ -460,3 +460,19 @@ span.entry_warning_button {
 span.entry_warning_button:hover {
 	background-color: rgba(0, 0, 0, 0);
 }
+
+div.dirImgCont {
+	display: inline-block;
+	width: 23%;
+	margin-right: 1%;
+}
+
+div.dirImgCont > div.caption {
+	text-align: center;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+div.dirImgCont > div > a > img {
+	max-width: 100%;
+}

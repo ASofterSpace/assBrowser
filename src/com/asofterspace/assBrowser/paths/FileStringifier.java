@@ -15,6 +15,6 @@ public class FileStringifier implements Stringifier<File> {
 
 	@Override
 	public String getString(File file) {
-		return file.getLocalFilename();
+		return file.getLocalFilename().toLowerCase();
 	}
 }
