@@ -110,7 +110,7 @@ public class GUI extends MainWindow {
 	private int swapDisplayCounter = 0;
 	private int cpuAboveThresholdCounter = 0;
 	// private long lastVolumeTime = 0;
-	private String nircmdPath;
+	private String audioPath;
 	private List<String> topCmdAndArgs;
 
 	private TextFile brightnessFile;
@@ -131,7 +131,7 @@ public class GUI extends MainWindow {
 	public GUI(Database database, ConsoleCtrl consoleCtrl) {
 		this.database = database;
 		this.consoleCtrl = consoleCtrl;
-		this.nircmdPath = database.getNircmdPath();
+		this.audioPath = database.getAudioPath();
 
 		this.topCmdAndArgs = new ArrayList<>();
 		this.topCmdAndArgs.add("top");
@@ -198,13 +198,13 @@ public class GUI extends MainWindow {
 		consoleField3 = addConsoleField(mainPanel, num++);
 
 		if (database.getSetAudioVolumetoSilenceAtStartup()) {
-			if ("amixer".equals(this.nircmdPath)) {
-				IoUtils.executeAsync(this.nircmdPath + " -q sset Master 0%");
-			} else if ("pactl".equals(this.nircmdPath)) {
-				IoUtils.executeAsync(this.nircmdPath + " -- set-sink-volume 0 0%");
+			if ("amixer".equals(this.audioPath)) {
+				IoUtils.executeAsync(this.audioPath + " -q sset Master 0%");
+			} else if ("pactl".equals(this.audioPath)) {
+				IoUtils.executeAsync(this.audioPath + " -- set-sink-volume 0 0%");
 			} else {
-				IoUtils.executeAsync(this.nircmdPath + " setsysvolume 0");
-				IoUtils.executeAsync(this.nircmdPath + " mutesysvolume 0");
+				IoUtils.executeAsync(this.audioPath + " setsysvolume 0");
+				IoUtils.executeAsync(this.audioPath + " mutesysvolume 0");
 			}
 		}
 
@@ -679,22 +679,22 @@ public class GUI extends MainWindow {
 			position = 0;
 		}
 
-		if ("pactl".equals(this.nircmdPath)) {
-			IoUtils.executeAsync(this.nircmdPath + " set-sink-volume @DEFAULT_SINK@ " + position + "%");
+		if ("pactl".equals(this.audioPath)) {
+			IoUtils.executeAsync(this.audioPath + " set-sink-volume @DEFAULT_SINK@ " + position + "%");
 		} else {
-			if ("amixer".equals(this.nircmdPath)) {
+			if ("amixer".equals(this.audioPath)) {
 				if (position > 100) {
-					IoUtils.execute(this.nircmdPath + " -q sset Master 100%");
+					IoUtils.execute(this.audioPath + " -q sset Master 100%");
 					IoUtils.executeAsync("pactl set-sink-volume @DEFAULT_SINK@ " + position + "%");
 				} else {
-					IoUtils.executeAsync(this.nircmdPath + " -q sset Master " + position + "%");
+					IoUtils.executeAsync(this.audioPath + " -q sset Master " + position + "%");
 				}
 			} else {
 				int volPerc = position * 655;
 				if (position <= 100) {
 					volPerc = Math.min(65535, position * 656);
 				}
-				IoUtils.executeAsync(this.nircmdPath + " setsysvolume " + volPerc);
+				IoUtils.executeAsync(this.audioPath + " setsysvolume " + volPerc);
 			}
 		}
 	}
@@ -741,6 +741,9 @@ public class GUI extends MainWindow {
 
 						// check cpu and ram status
 						checkCpuAndRamStatus();
+
+						// check audio status
+						checkAudioStatus();
 
 						// update every 3 seconds
 						Thread.sleep(3 * 1000);
@@ -1038,6 +1041,85 @@ public class GUI extends MainWindow {
 			swapDisplayCounter = 0;
 			swapLabel.setForeground(bgColorCol);
 			swapLabel.setBackground(errorColorCol);
+		}
+	}
+
+	private void checkAudioStatus() {
+
+		// TODO :: add audio status checking also for other audio-accessing ways? ^^'
+		if ("amixer".equals(this.audioPath)) {
+
+			try {
+				ProcessBuilder processBuilder = new ProcessBuilder(this.audioPath, "sget", "Master");
+				Process proc = processBuilder.start();
+
+				try (BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()))) {
+					String curline = reader.readLine();
+					String line1 = null;
+					String line2 = null;
+
+					while (curline != null) {
+
+						/* example output of amixer:
+						Simple mixer control 'Master',0
+						  Capabilities: pvolume pswitch pswitch-joined
+						  Playback channels: Front Left - Front Right
+						  Limits: Playback 0 - 65536
+						  Mono:
+						  Front Left: Playback 20316 [31%] [on]
+						  Front Right: Playback 20316 [31%] [on]
+						-> our plan is: we gather the first two lines we find that contain %],
+						   if we only find one line then we use the value from that, if we find two
+						   lines we use the average of both
+						*/
+
+						if (curline.contains("%]")) {
+							if (line1 == null) {
+								line1 = curline;
+							} else {
+								line2 = curline;
+								break;
+							}
+						}
+
+						curline = reader.readLine();
+					}
+
+					if (line1 == null) {
+						return;
+					}
+
+					Integer newAudioPosition = 0;
+					if (!line1.contains("[off]")) {
+						line1 = line1.substring(line1.indexOf("[") + 1);
+						line1 = line1.substring(0, line1.indexOf("%]"));
+						newAudioPosition = StrUtils.strToInt(line1);
+					}
+
+					if (line2 != null) {
+						Integer newAudioPos2 = 0;
+						if (!line2.contains("[off]")) {
+							line2 = line2.substring(line2.indexOf("[") + 1);
+							line2 = line2.substring(0, line2.indexOf("%]"));
+							newAudioPos2 = StrUtils.strToInt(line2);
+						}
+						newAudioPosition = (newAudioPosition + newAudioPos2) / 2;
+					}
+
+					if (newAudioPosition < 1) {
+						newAudioPosition = null;
+					}
+
+					boolean notifyListeners = false;
+
+					volumeItem.setBarPosition(newAudioPosition, notifyListeners);
+
+				} catch (IOException e) {
+					// System.out.println(e);
+				}
+			} catch (IOException ex) {
+				// System.out.println(ex);
+			}
 		}
 	}
 
