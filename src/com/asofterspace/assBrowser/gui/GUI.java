@@ -1112,6 +1112,18 @@ public class GUI extends MainWindow {
 
 					boolean notifyListeners = false;
 
+					if (newAudioPosition != null) {
+						while (newAudioPosition > volumeItem.getMaximum()) {
+							// sanity check - above 800% audio everything is too distorted anyway,
+							// plus the volumeItem bar would get too large, so clip it there
+							if (newAudioPosition > 800) {
+								newAudioPosition = 800;
+							}
+							volumeItem.setMaximum(volumeItem.getMaximum() * 2);
+							boostAudioLabel.setText("++ ");
+						}
+					}
+
 					volumeItem.setBarPosition(newAudioPosition, notifyListeners);
 
 				} catch (IOException e) {
