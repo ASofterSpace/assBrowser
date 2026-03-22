@@ -241,11 +241,27 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				answer = new WebServerAnswerInJson(Record.emptyObject());
 				break;
 
+			case "/createFolder":
+				path = json.getString("path");
+				localPath = PathCtrl.resolvePath(path);
+				String folderName = json.getString("folder");
+				if (folderName.endsWith(".stpu")) {
+					folderName = folderName.substring(0, folderName.length() - 5);
+				}
+				folder = new Directory(new Directory(localPath), folderName);
+				SimpleFile vstpuFile = PathCtrl.getVSTPUfile(folder);
+				content = "";
+				vstpuFile.saveContent(content);
+				rec = Record.emptyObject();
+				rec.setString("path", path);
+				answer = new WebServerAnswerInJson(rec);
+				break;
+
 			case "/saveFolder":
 				path = json.getString("path");
 				localPath = PathCtrl.resolvePath(path);
 				folder = new Directory(localPath);
-				SimpleFile vstpuFile = PathCtrl.getVSTPUfile(folder);
+				vstpuFile = PathCtrl.getVSTPUfile(folder);
 				content = json.getString("content");
 				// remove conditional break dashes
 				content = StrUtils.replaceAll(content, "­", "");
@@ -498,6 +514,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			rec.setString("file", fileName);
 			rec.setString("entry", fileHtmlStr);
 			rec.setString("encrypted", entry.isEncrypted());
+			rec.setString("exists", entry.getExists());
 			return new WebServerAnswerInJson(rec);
 		}
 
@@ -777,6 +794,13 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				*/
 
 				fileHtmlStr = prepareEntryForDisplayInHtml(fileHtmlStr, folder, fileName, exportingToPdf);
+
+				if (!entry.getExists()) {
+					if (!fileHtmlStr.startsWith("<h1></h1>")) {
+						fileHtmlStr += " <span class='button' onclick='browser.submitCreateFolder()'" +
+										"style='position: absolute; left: 45%; top: 50%;'>Create Folder Instead</span>";
+					}
+				}
 
 				final int TILE_COLUMN_AMOUNT = 4;
 				List<StringBuilder> imagesColStrBuilders = new ArrayList<>();

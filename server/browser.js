@@ -408,6 +408,33 @@ window.browser = {
 		request.send();
 	},
 
+	submitCreateFolder: function() {
+
+		var request = new XMLHttpRequest();
+		var postStr = "/createFolder";
+		request.open("POST", postStr, true);
+		request.setRequestHeader("Content-Type", "application/json");
+
+		request.onreadystatechange = function() {
+			if (request.readyState == 4 && request.status == 200) {
+				var linkStr = window.data.file;
+				if (linkStr.endsWith(".stpu")) {
+					linkStr = linkStr.substring(0, linkStr.length - 5);
+				}
+				linkStr = window.data.path + "\\" + linkStr + "\\";
+				linkStr = linkStr.split("/").join("\\");
+				linkStr = linkStr.split("\\\\").join("\\");
+				window.location = window.location.protocol + "//" + window.location.host + "/?link=" + linkStr;
+			}
+		};
+
+		var data = {
+			path: window.data.path,
+			folder: window.data.file
+		};
+
+		request.send(JSON.stringify(data));
+	},
 
 	toggleEditEntry: function() {
 		this.closeMoreActions();
@@ -479,6 +506,13 @@ window.browser = {
 								entryScrollBefore * document.getElementById("fileContentTextarea").scrollTopMax);
 						}, 100);
 					} else {
+						/*
+						if (!result.exists) {
+							result.entry += ' <span class="button" onclick="browser.submitCreateFolder()"' +
+								'style="position: absolute; left: 45%; top: 50%;">Create Folder Instead</span>';
+						}
+						*/
+
 						document.getElementById("fileContentContainer").innerHTML = result.entry;
 
 						document.getElementById("fileContentContainer").scrollTo(0,

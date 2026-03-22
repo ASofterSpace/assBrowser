@@ -21,6 +21,8 @@ public class Entry {
 
 	private boolean encrypted = false;
 
+	private boolean exists = true;
+
 
 	public Entry(File genericFile, String filenameForView, Database database) {
 
@@ -36,11 +38,13 @@ public class Entry {
 
 			content = DateUtils.convertDateTimeStampsDEtoEN(content);
 		} else {
+			exists = false;
 			if (filenameForView != null) {
-				content = filenameForView + "\n\n";
+				content = filenameForView;
 			} else {
-				content = genericFile.getLocalFilenameWithoutType() + "\n\n";
+				content = genericFile.getLocalFilenameWithoutType();
 			}
+			content += "\n\n";
 		}
 
 		if (content == null) {
@@ -54,6 +58,10 @@ public class Entry {
 
 	public boolean isEncrypted() {
 		return encrypted;
+	}
+
+	public boolean getExists() {
+		return exists;
 	}
 
 }
