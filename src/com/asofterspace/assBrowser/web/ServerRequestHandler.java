@@ -513,8 +513,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			rec.setString("path", path);
 			rec.setString("file", fileName);
 			rec.setString("entry", fileHtmlStr);
-			rec.setString("encrypted", entry.isEncrypted());
-			rec.setString("exists", entry.getExists());
+			rec.set("encrypted", entry.isEncrypted());
+			rec.set("exists", entry.getExists());
 			return new WebServerAnswerInJson(rec);
 		}
 
@@ -795,13 +795,6 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 				fileHtmlStr = prepareEntryForDisplayInHtml(fileHtmlStr, folder, fileName, exportingToPdf);
 
-				if (!entry.getExists()) {
-					if (!fileHtmlStr.startsWith("<h1></h1>")) {
-						fileHtmlStr += " <span class='button' onclick='browser.submitCreateFolder()'" +
-										"style='position: absolute; left: 45%; top: 50%;'>Create Folder Instead</span>";
-					}
-				}
-
 				final int TILE_COLUMN_AMOUNT = 4;
 				List<StringBuilder> imagesColStrBuilders = new ArrayList<>();
 				for (int i = 0; i < TILE_COLUMN_AMOUNT; i++) {
@@ -872,6 +865,18 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					overallBuilder.append("</div>");
 
 					imagesStr = overallBuilder.toString();
+
+				} else {
+
+					if (!entry.getExists()) {
+						if (!fileHtmlStr.startsWith("<h1></h1>")) {
+							fileHtmlStr += " <span class='button' onclick='browser.submitCreateFolder()'" +
+											"style='position: absolute; left: 45%; top: 50%;'>Create Folder Instead</span>";
+							// THE CODE ABOVE SHOULD BE THE SAME AS MAGIC CODE MARKER 1 IN THE JAVASCRIPT CODE
+							// (here: show a button when clicking on a non-existing entry on the left)
+						}
+					}
+
 				}
 
 			// only now check if the file even exists - as we allow for STPU files which do not exist,

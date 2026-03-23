@@ -506,12 +506,17 @@ window.browser = {
 								entryScrollBefore * document.getElementById("fileContentTextarea").scrollTopMax);
 						}, 100);
 					} else {
-						/*
+						// if the file does not exist yet...
 						if (!result.exists) {
-							result.entry += ' <span class="button" onclick="browser.submitCreateFolder()"' +
-								'style="position: absolute; left: 45%; top: 50%;">Create Folder Instead</span>';
+							// ... and no pictures are attached...
+							if (!document.getElementById("pic_1")) {
+								// ... then show a button to create a folder instead:
+								result.entry += ' <span class="button" onclick="browser.submitCreateFolder()"' +
+									'style="position: absolute; left: 45%; top: 50%;">Create Folder Instead</span>';
+								// THE CODE ABOVE SHOULD BE THE SAME AS MAGIC CODE MARKER 1 IN THE JAVA CODE
+								// (here: show a button when doing [Ctrl]+[D] in a non-existing entry)
+							}
 						}
-						*/
 
 						document.getElementById("fileContentContainer").innerHTML = result.entry;
 
