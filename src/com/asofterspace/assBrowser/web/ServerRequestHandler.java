@@ -1794,7 +1794,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				}
 
 				if ((emptyLinesSoFar > 1) && nextLineEmpty &&
-					!line.startsWith("| ") &&
+					!line.startsWith("&gt; ") &&
 					!line.contains("picture ") && !line.contains("pictures up to ") &&
 					// if there are two empty lines following, do not apply <h2>!
 					!doubleNextLineEmpty) {
@@ -1811,12 +1811,12 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		String sep = "";
 		boolean inQuote = false;
 		for (String line : contentStrs) {
-			if (line.startsWith("| ")) {
+			if (line.startsWith("&gt; ")) {
 				contentStrBui.append(sep);
 				if (!inQuote) {
 					contentStrBui.append("<div class='quote'>");
 				}
-				contentStrBui.append(line.substring(2));
+				contentStrBui.append(line.substring(5));
 				inQuote = true;
 			} else {
 				if (inQuote) {
@@ -1940,28 +1940,55 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		if (!exportingToPdf) {
 			// add footnote up/down links for numbered footnotes such as [1], [2], [3], etc.
 			int curFootNote = 1;
-			int firstPos = fileHtmlStr.indexOf("[" + curFootNote + "]");
+			int firstPos = getFootnotePos(fileHtmlStr, curFootNote, 0);
 			while (firstPos >= 0) {
-				int secondPos = fileHtmlStr.indexOf("[" + curFootNote + "]", firstPos + 1);
+				int secondPos = getFootnotePos(fileHtmlStr, curFootNote, firstPos + 1);
 				if (secondPos >= 0) {
 					// jump *to* the last one
-					fileHtmlStr = StrUtils.replaceLast(fileHtmlStr, "[" + curFootNote + "]",
+					int datacomxStyleLastPos = fileHtmlStr.lastIndexOf("[" + curFootNote + "]");
+					int markdownStyleLastPos = fileHtmlStr.lastIndexOf("[^" + curFootNote + "]");
+					String lastKindStr = "^";
+					if (datacomxStyleLastPos > markdownStyleLastPos) {
+						lastKindStr = "";
+					}
+					fileHtmlStr = StrUtils.replaceLast(fileHtmlStr, "[" + lastKindStr + curFootNote + "]",
 						"<a id='footnote-at-bottom-" + curFootNote + "' href='#footnote-in-text-" + curFootNote +
 						"' style='font-style: normal;'>" +
 						"[" + curFootNote + " &#9650;]</a>");
 					// jump *from* all others - so the first, and if it exists, the second, and third, and so on...
-					fileHtmlStr = StrUtils.replaceAll(fileHtmlStr, "[" + curFootNote + "]",
+					String repAllOthersWith =
 						"<a id='footnote-in-text-" + curFootNote + "' href='#footnote-at-bottom-" + curFootNote +
 						"' style='font-style: normal;'>" +
-						"[" + curFootNote + " &#9660;]</a>");
+						"[" + curFootNote + " &#9660;]</a>";
+					fileHtmlStr = StrUtils.replaceAll(fileHtmlStr, "[" + curFootNote + "]", repAllOthersWith);
+					fileHtmlStr = StrUtils.replaceAll(fileHtmlStr, "[^" + curFootNote + "]", repAllOthersWith);
 				}
 
 				curFootNote++;
-				firstPos = fileHtmlStr.indexOf("[" + curFootNote + "]");
+				firstPos = getFootnotePos(fileHtmlStr, curFootNote, 0);
 			}
 		}
 
 		return fileHtmlStr;
+	}
+
+	// get the next position after offset of a footnote,
+	// checking for both datacomx-style footnotes such as [1] and
+	// for markdown-style footnotes such as [^1]
+	private static int getFootnotePos(String fileHtmlStr, int curFootNote, int offset) {
+
+		int datacomxStylePos = fileHtmlStr.indexOf("[" + curFootNote + "]", offset);
+		int markdownStylePos = fileHtmlStr.indexOf("[^" + curFootNote + "]", offset);
+
+		if (datacomxStylePos < 0) {
+			return markdownStylePos;
+		}
+
+		if (markdownStylePos < 0) {
+			return datacomxStylePos;
+		}
+
+		return Math.min(datacomxStylePos, markdownStylePos);
 	}
 
 	private static String prepareEntryInlineMarkdown(String fileHtmlStr, String needle, String tagStart, String tagEnd) {

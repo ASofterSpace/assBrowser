@@ -10,6 +10,7 @@ import com.asofterspace.toolbox.coders.UrlEncoder;
 import com.asofterspace.toolbox.io.File;
 import com.asofterspace.toolbox.io.TextFile;
 import com.asofterspace.toolbox.utils.DateUtils;
+import com.asofterspace.toolbox.utils.StrUtils;
 import com.asofterspace.toolbox.web.WebAccessor;
 
 
@@ -36,8 +37,10 @@ public class Entry {
 				content = WebAccessor.get("http://localhost:" + database.getCyberSnailPort() + "/text?path=" + UrlEncoder.encode(snailPath));
 			}
 
-			content = DateUtils.convertDateTimeStampsDEtoEN(content);
+			content = doAutomaticConversions(content);
+
 		} else {
+
 			exists = false;
 			if (filenameForView != null) {
 				content = filenameForView;
@@ -62,6 +65,20 @@ public class Entry {
 
 	public boolean getExists() {
 		return exists;
+	}
+
+	private String doAutomaticConversions(String txt) {
+
+		// convert DE date-time-stamps to EN date-time-stamps
+		txt = DateUtils.convertDateTimeStampsDEtoEN(txt);
+
+		// automatically replace datacomx-style |-lead quotation with markdown-style >-lead quotation
+		if (txt.startsWith("| ")) {
+			txt = "> " + txt.substring(2);
+		}
+		txt = StrUtils.replaceAll(txt, "\n| ", "\n> ");
+
+		return txt;
 	}
 
 }
