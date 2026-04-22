@@ -1726,6 +1726,10 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 		fileHtmlStr = "<h1>" + fileHtmlStr.substring(0, firstLinefeed) + "</h1>" +
 			fileHtmlStr.substring(firstLinefeed);
 
+		// allow \n> `\n to be used instead of \n> ```\n
+		fileHtmlStr = StrUtils.replaceAll(fileHtmlStr, "&gt; `\n", "&gt; ```\n");
+		fileHtmlStr = StrUtils.replaceAll(fileHtmlStr, "&gt; ``\n", "&gt; ```\n");
+
 		// iterate over the lines and specially highlight headlines
 		String[] contentStrs = fileHtmlStr.split("<br>");
 		int emptyLinesSoFar = 0;
@@ -1816,7 +1820,16 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 				if (!inQuote) {
 					contentStrBui.append("<div class='quote'>");
 				}
-				contentStrBui.append(line.substring(5));
+				line = line.substring(5);
+				if (line.startsWith("&gt; ")) {
+					// nested: > > quotation
+					line = line.substring(5);
+					contentStrBui.append("<div class='quote'>");
+					contentStrBui.append(line);
+					contentStrBui.append("</div>");
+				} else {
+					contentStrBui.append(line);
+				}
 				inQuote = true;
 			} else {
 				if (inQuote) {

@@ -344,6 +344,9 @@ public class ConsoleCtrl {
 				"\n" +
 				"Block commands in entries:\n" +
 				"_, **, ` .. italic style, bold style, code style\n" +
+				"> or | .. quote\n" +
+				"*** or --- .. horizontal line\n" +
+				"[X] or [^X] .. footnote X\n" +
 				"%SPOILER% .. spoiler block\n" +
 				"%WORDCOUNT% .. count words in block\n" +
 				"picture X, pictures up to X .. inline pictures\n";

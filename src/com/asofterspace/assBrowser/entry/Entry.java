@@ -77,6 +77,7 @@ public class Entry {
 			txt = "> " + txt.substring(2);
 		}
 		txt = StrUtils.replaceAll(txt, "\n| ", "\n> ");
+		txt = StrUtils.replaceAllRepeatedly(txt, "> | ", "> > ");
 
 		return txt;
 	}
