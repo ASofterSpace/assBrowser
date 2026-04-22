@@ -1810,45 +1810,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			}
 		}
 
-		// blockquotes should be formatted suchly
-		StringBuilder contentStrBui = new StringBuilder();
-		String sep = "";
-		boolean inQuote = false;
-		for (String line : contentStrs) {
-			if (line.startsWith("&gt; ")) {
-				contentStrBui.append(sep);
-				if (!inQuote) {
-					contentStrBui.append("<div class='quote'>");
-				}
-				line = line.substring(5);
-				if (line.startsWith("&gt; ")) {
-					// nested: > > quotation
-					line = line.substring(5);
-					contentStrBui.append("<div class='quote'>");
-					contentStrBui.append(line);
-					contentStrBui.append("</div>");
-				} else {
-					contentStrBui.append(line);
-				}
-				inQuote = true;
-			} else {
-				if (inQuote) {
-					contentStrBui.append("</div>");
-				} else {
-					// the </div> eats one separator, so we only put if it we did not put </div>
-					contentStrBui.append(sep);
-				}
-				contentStrBui.append(line);
-				inQuote = false;
-			}
-			// newlines should be shown as such, so we use <br> instead of \n
-			sep = "<br>";
-		}
-		if (inQuote) {
-			contentStrBui.append("</div>");
-		}
-		contentStrBui.append("<br>");
-		fileHtmlStr = contentStrBui.toString();
+		fileHtmlStr = HTML.prettifyBlockQuotes(contentStrs).toString();
 
 		// replace %[...] with internal links
 		StringBuilder newFileHtml = new StringBuilder();
