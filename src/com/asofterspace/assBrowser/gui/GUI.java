@@ -110,7 +110,8 @@ public class GUI extends MainWindow {
 	private int swapDisplayCounter = 0;
 	private int cpuAboveThresholdCounter = 0;
 	// private long lastVolumeTime = 0;
-	private String audioPath;
+	private String audioPathGet;
+	private String audioPathSet;
 	private List<String> topCmdAndArgs;
 
 	private TextFile brightnessFile;
@@ -131,7 +132,8 @@ public class GUI extends MainWindow {
 	public GUI(Database database, ConsoleCtrl consoleCtrl) {
 		this.database = database;
 		this.consoleCtrl = consoleCtrl;
-		this.audioPath = database.getAudioPath();
+		this.audioPathGet = database.getAudioPathGet();
+		this.audioPathSet = database.getAudioPathSet();
 
 		this.topCmdAndArgs = new ArrayList<>();
 		this.topCmdAndArgs.add("top");
@@ -198,13 +200,13 @@ public class GUI extends MainWindow {
 		consoleField3 = addConsoleField(mainPanel, num++);
 
 		if (database.getSetAudioVolumetoSilenceAtStartup()) {
-			if ("amixer".equals(this.audioPath)) {
-				IoUtils.executeAsync(this.audioPath + " -q sset Master 0%");
-			} else if ("pactl".equals(this.audioPath)) {
-				IoUtils.executeAsync(this.audioPath + " -- set-sink-volume 0 0%");
+			if ("amixer".equals(this.audioPathSet)) {
+				IoUtils.executeAsync(this.audioPathSet + " -q sset Master 0%");
+			} else if ("pactl".equals(this.audioPathSet)) {
+				IoUtils.executeAsync(this.audioPathSet + " -- set-sink-volume 0 0%");
 			} else {
-				IoUtils.executeAsync(this.audioPath + " setsysvolume 0");
-				IoUtils.executeAsync(this.audioPath + " mutesysvolume 0");
+				IoUtils.executeAsync(this.audioPathSet + " setsysvolume 0");
+				IoUtils.executeAsync(this.audioPathSet + " mutesysvolume 0");
 			}
 		}
 
@@ -679,22 +681,22 @@ public class GUI extends MainWindow {
 			position = 0;
 		}
 
-		if ("pactl".equals(this.audioPath)) {
-			IoUtils.executeAsync(this.audioPath + " set-sink-volume @DEFAULT_SINK@ " + position + "%");
+		if ("pactl".equals(this.audioPathSet)) {
+			IoUtils.executeAsync(this.audioPathSet + " set-sink-volume @DEFAULT_SINK@ " + position + "%");
 		} else {
-			if ("amixer".equals(this.audioPath)) {
+			if ("amixer".equals(this.audioPathSet)) {
 				if (position > 100) {
-					IoUtils.execute(this.audioPath + " -q sset Master 100%");
+					IoUtils.execute(this.audioPathSet + " -q sset Master 100%");
 					IoUtils.executeAsync("pactl set-sink-volume @DEFAULT_SINK@ " + position + "%");
 				} else {
-					IoUtils.executeAsync(this.audioPath + " -q sset Master " + position + "%");
+					IoUtils.executeAsync(this.audioPathSet + " -q sset Master " + position + "%");
 				}
 			} else {
 				int volPerc = position * 655;
 				if (position <= 100) {
 					volPerc = Math.min(65535, position * 656);
 				}
-				IoUtils.executeAsync(this.audioPath + " setsysvolume " + volPerc);
+				IoUtils.executeAsync(this.audioPathSet + " setsysvolume " + volPerc);
 			}
 		}
 	}
@@ -1047,10 +1049,11 @@ public class GUI extends MainWindow {
 	private void checkAudioStatus() {
 
 		// TODO :: add audio status checking also for other audio-accessing ways? ^^'
-		if ("amixer".equals(this.audioPath)) {
+		// (however, when audioPathSet is pactl, we can still use amixer as audioPathGet and it works fine)
+		if ("amixer".equals(this.audioPathGet)) {
 
 			try {
-				ProcessBuilder processBuilder = new ProcessBuilder(this.audioPath, "sget", "Master");
+				ProcessBuilder processBuilder = new ProcessBuilder(this.audioPathGet, "sget", "Master");
 				Process proc = processBuilder.start();
 
 				try (BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()))) {

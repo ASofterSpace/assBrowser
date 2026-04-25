@@ -27,9 +27,9 @@ public class Database {
 
 	private final static String BROWSER_PATH = "browserPath";
 
-	private final static String AUDIO_PATH = "audioPath";
+	private final static String AUDIO_PATH_SET = "audioPathSet";
 
-	private final static String AUDIO_PATH_LEGACY = "nircmdPath";
+	private final static String AUDIO_PATH_GET = "audioPathGet";
 
 	private final static String BACKLIGHT_MINIMUM = "backlightMinimum";
 
@@ -67,7 +67,9 @@ public class Database {
 
 	private String browserPath;
 
-	private String audioPath;
+	private String audioPathGet;
+
+	private String audioPathSet;
 
 	private String batteryStateScriptPath;
 
@@ -117,11 +119,9 @@ public class Database {
 
 		this.browserPath = root.getString(BROWSER_PATH);
 
-		this.audioPath = root.getString(AUDIO_PATH);
-		String audioPathLegacy = root.getString(AUDIO_PATH_LEGACY);
-		if ((audioPathLegacy != null) && (!"".equals(audioPathLegacy))) {
-			this.audioPath = audioPathLegacy;
-		}
+		this.audioPathGet = root.getString(AUDIO_PATH_GET);
+
+		this.audioPathSet = root.getString(AUDIO_PATH_SET);
 
 		this.batteryStateScriptPath = root.getString(BATTERY_STATE_SCRIPT_PATH);
 
@@ -164,7 +164,9 @@ public class Database {
 
 		root.set(BROWSER_PATH, browserPath);
 
-		root.set(AUDIO_PATH, audioPath);
+		root.set(AUDIO_PATH_GET, audioPathGet);
+
+		root.set(AUDIO_PATH_SET, audioPathSet);
 
 		root.set(BATTERY_STATE_SCRIPT_PATH, batteryStateScriptPath);
 
@@ -213,8 +215,12 @@ public class Database {
 		return browserPath;
 	}
 
-	public String getAudioPath() {
-		return audioPath;
+	public String getAudioPathGet() {
+		return audioPathGet;
+	}
+
+	public String getAudioPathSet() {
+		return audioPathSet;
 	}
 
 	public String getBatteryStateScriptPath() {
