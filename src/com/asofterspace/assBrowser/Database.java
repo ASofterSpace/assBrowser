@@ -35,6 +35,8 @@ public class Database {
 
 	private final static String BATTERY_STATE_SCRIPT_PATH = "batteryStateScriptPath";
 
+	private final static String BATTERY_FLASHING_ERROR_THRESHOLD = "batteryFlashingErrorThreshold";
+
 	private final static String FFMPEG_PATH = "ffmpegPath";
 
 	private final static String FUNTUBE_CATEGORIES = "funtubeCategories";
@@ -72,6 +74,8 @@ public class Database {
 	private String audioPathSet;
 
 	private String batteryStateScriptPath;
+
+	private Integer batteryFlashingErrorThreshold;
 
 	private String ffmpegPath;
 
@@ -125,6 +129,8 @@ public class Database {
 
 		this.batteryStateScriptPath = root.getString(BATTERY_STATE_SCRIPT_PATH);
 
+		this.batteryFlashingErrorThreshold = root.getInteger(BATTERY_FLASHING_ERROR_THRESHOLD);
+
 		this.ffmpegPath = root.getString(FFMPEG_PATH);
 
 		this.funtubeCategories = root.getArray(FUNTUBE_CATEGORIES);
@@ -169,6 +175,8 @@ public class Database {
 		root.set(AUDIO_PATH_SET, audioPathSet);
 
 		root.set(BATTERY_STATE_SCRIPT_PATH, batteryStateScriptPath);
+
+		root.set(BATTERY_FLASHING_ERROR_THRESHOLD, batteryFlashingErrorThreshold);
 
 		root.set(FFMPEG_PATH, ffmpegPath);
 
@@ -293,6 +301,13 @@ public class Database {
 
 	public int getBacklightMinimum() {
 		return backlightMinimum;
+	}
+
+	public int getBatteryFlashingErrorThreshold() {
+		if (batteryFlashingErrorThreshold != null) {
+			return batteryFlashingErrorThreshold;
+		}
+		return 100;
 	}
 
 }

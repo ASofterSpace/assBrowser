@@ -117,6 +117,9 @@ public class GUI extends MainWindow {
 	private TextFile brightnessFile;
 	private Integer brightnessMax;
 
+	// above this threshold of battery percent, do not flash battery label when there are problems (default: 100)
+	private int batteryFlashingErrorThreshold = 100;
+
 	Font sharedFont = null;
 
 	private MouseAdapter mouseListenerToMaximize = new MouseAdapter() {
@@ -134,6 +137,7 @@ public class GUI extends MainWindow {
 		this.consoleCtrl = consoleCtrl;
 		this.audioPathGet = database.getAudioPathGet();
 		this.audioPathSet = database.getAudioPathSet();
+		this.batteryFlashingErrorThreshold = database.getBatteryFlashingErrorThreshold();
 
 		this.topCmdAndArgs = new ArrayList<>();
 		this.topCmdAndArgs.add("top");
@@ -203,7 +207,8 @@ public class GUI extends MainWindow {
 			if ("amixer".equals(this.audioPathSet)) {
 				IoUtils.executeAsync(this.audioPathSet + " -q sset Master 0%");
 			} else if ("pactl".equals(this.audioPathSet)) {
-				IoUtils.executeAsync(this.audioPathSet + " -- set-sink-volume 0 0%");
+				IoUtils.executeAsync(this.audioPathSet + " -- set-sink-volume @DEFAULT_SINK@ 0%");
+				IoUtils.executeAsync(this.audioPathSet + " -- set-sink-mute @DEFAULT_SINK@ 1");
 			} else {
 				IoUtils.executeAsync(this.audioPathSet + " setsysvolume 0");
 				IoUtils.executeAsync(this.audioPathSet + " mutesysvolume 0");
@@ -683,6 +688,11 @@ public class GUI extends MainWindow {
 
 		if ("pactl".equals(this.audioPathSet)) {
 			IoUtils.executeAsync(this.audioPathSet + " set-sink-volume @DEFAULT_SINK@ " + position + "%");
+			if (position > 0) {
+				IoUtils.executeAsync(this.audioPathSet + " set-sink-mute @DEFAULT_SINK@ 0");
+			} else {
+				IoUtils.executeAsync(this.audioPathSet + " set-sink-mute @DEFAULT_SINK@ 1");
+			}
 		} else {
 			if ("amixer".equals(this.audioPathSet)) {
 				if (position > 100) {
@@ -829,10 +839,10 @@ public class GUI extends MainWindow {
 						batteryLabel.setForeground(fgColorCol);
 						batteryLabel.setBackground(bgColorCol);
 					} else {
-						setBatteryProblemText("B: " + batteryCharge + "% ");
+						setBatteryProblemText("B: " + batteryCharge + "% ", batteryCharge);
 					}
 				} else {
-					setBatteryProblemText("B: ERR 3 ");
+					setBatteryProblemText("B: ERR 3 ", 0);
 				}
 
 			} else {
@@ -862,7 +872,8 @@ public class GUI extends MainWindow {
 								String batteryCharge = values[values.length-1];
 
 								if ("1".equals(powerState)) {
-									setBatteryProblemText("B: " + batteryCharge + "% ");
+									int batteryChargeAsInt = StrUtils.strToInt(batteryCharge, 0);
+									setBatteryProblemText("B: " + batteryCharge + "% ", batteryChargeAsInt);
 
 								} else {
 									batteryLabel.setText("B: ~ (" + batteryCharge + "%) ");
@@ -874,22 +885,28 @@ public class GUI extends MainWindow {
 						curline = reader.readLine();
 					}
 				} catch (IOException e) {
-					setBatteryProblemText("B: ERR 2 ");
+					setBatteryProblemText("B: ERR 2 ", 0);
 				}
 			}
 
 		} catch (IOException ex) {
-			setBatteryProblemText("B: ERR 1 ");
+			setBatteryProblemText("B: ERR 1 ", 0);
 		}
 	}
 
-	private void setBatteryProblemText(String text) {
+	private void setBatteryProblemText(String text, int batValueToCheckAgainstThreshold) {
 
 		if (batteryLabel == null) {
 			return;
 		}
 
 		batteryLabel.setText(text);
+
+		// as long as we are still above the flashing error threshold...
+		if (batValueToCheckAgainstThreshold > batteryFlashingErrorThreshold) {
+			// ... just show red text, regular background, without blinking!
+			batteryDisplayCounter = 0;
+		}
 
 		if (batteryDisplayCounter == 0) {
 			batteryDisplayCounter = 1;
@@ -1049,7 +1066,6 @@ public class GUI extends MainWindow {
 	private void checkAudioStatus() {
 
 		// TODO :: add audio status checking also for other audio-accessing ways? ^^'
-		// (however, when audioPathSet is pactl, we can still use amixer as audioPathGet and it works fine)
 		if ("amixer".equals(this.audioPathGet)) {
 
 			try {
@@ -1109,25 +1125,7 @@ public class GUI extends MainWindow {
 						newAudioPosition = (newAudioPosition + newAudioPos2) / 2;
 					}
 
-					if (newAudioPosition < 1) {
-						newAudioPosition = null;
-					}
-
-					boolean notifyListeners = false;
-
-					if (newAudioPosition != null) {
-						while (newAudioPosition > volumeItem.getMaximum()) {
-							// sanity check - above 800% audio everything is too distorted anyway,
-							// plus the volumeItem bar would get too large, so clip it there
-							if (newAudioPosition > 800) {
-								newAudioPosition = 800;
-							}
-							volumeItem.setMaximum(volumeItem.getMaximum() * 2);
-							boostAudioLabel.setText("++ ");
-						}
-					}
-
-					volumeItem.setBarPosition(newAudioPosition, notifyListeners);
+					checkAudioStatusSetBar(newAudioPosition);
 
 				} catch (IOException e) {
 					// System.out.println(e);
@@ -1135,7 +1133,106 @@ public class GUI extends MainWindow {
 			} catch (IOException ex) {
 				// System.out.println(ex);
 			}
+
+		} else if ("pactl".equals(this.audioPathGet)) {
+
+			boolean isMute = false;
+			try {
+				ProcessBuilder processBuilder = new ProcessBuilder(this.audioPathGet, "--", "get-sink-mute", "@DEFAULT_SINK@");
+				Process proc = processBuilder.start();
+
+				try (BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()))) {
+					String curline = reader.readLine();
+					while (curline != null) {
+						/* example output of pactl -- get-sink-mute 0:
+						Mute: yes
+						*/
+						if (curline.startsWith("Mute: yes")) {
+							isMute = true;
+						}
+						curline = reader.readLine();
+					}
+				} catch (IOException e) {
+					// System.out.println(e);
+				}
+			} catch (IOException ex) {
+				// System.out.println(ex);
+			}
+
+			Integer newAudioPosition = 0;
+
+			if (!isMute) {
+				try {
+					ProcessBuilder processBuilder = new ProcessBuilder(this.audioPathGet, "--", "get-sink-volume", "@DEFAULT_SINK@");
+					Process proc = processBuilder.start();
+
+					try (BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()))) {
+						String curline = reader.readLine();
+
+						while (curline != null) {
+
+							/* example output of pactl -- get-sink-volume 0:
+							Volume: font-left: 32768 /   50% / -18.06 dB,  front-right: 32768 /   50% / -18.06 dB
+									balance 0.00
+							*/
+
+							if (curline.startsWith("Volume: ")) {
+
+								int newAudioPos = 0;
+								int newAudioPosCounter = 0;
+								List<String> percentStrs = StrUtils.split(curline, "%");
+								for (int i = 0; i < percentStrs.size() - 1; i++) {
+									String cur = percentStrs.get(i);
+									Integer curInt = StrUtils.strToInt(cur.substring(cur.length() - 3));
+									if (curInt != null) {
+										newAudioPos += curInt;
+										newAudioPosCounter++;
+									}
+								}
+
+								if (newAudioPosCounter > 0) {
+									newAudioPosition = newAudioPos / newAudioPosCounter;
+								}
+
+								break;
+							}
+
+							curline = reader.readLine();
+						}
+
+					} catch (IOException e) {
+						// System.out.println(e);
+					}
+				} catch (IOException ex) {
+					// System.out.println(ex);
+				}
+			}
+
+			checkAudioStatusSetBar(newAudioPosition);
 		}
+	}
+
+	private void checkAudioStatusSetBar(Integer newAudioPosition) {
+
+		if (newAudioPosition < 1) {
+			newAudioPosition = null;
+		}
+
+		boolean notifyListeners = false;
+
+		if (newAudioPosition != null) {
+			while (newAudioPosition > volumeItem.getMaximum()) {
+				// sanity check - above 800% audio everything is too distorted anyway,
+				// plus the volumeItem bar would get too large, so clip it there
+				if (newAudioPosition > 800) {
+					newAudioPosition = 800;
+				}
+				volumeItem.setMaximum(volumeItem.getMaximum() * 2);
+				boostAudioLabel.setText("++ ");
+			}
+		}
+
+		volumeItem.setBarPosition(newAudioPosition, notifyListeners);
 	}
 
 	private void insertTextForFunctionKey(String textToInsert, JTextField decoratedEditor) {
