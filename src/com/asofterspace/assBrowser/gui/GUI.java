@@ -817,23 +817,25 @@ public class GUI extends MainWindow {
 			if (batScriptPath.startsWith("/sys/class/")) {
 				// Linux approach: read numbers directly from battery files
 
-				Integer chargeFull = null;
-				Integer chargeNow = null;
 				String acOnline = "0";
 
 				List<String> batScriptPaths = StrUtils.split(batScriptPath, " ");
 
+				/*
 				TextFile txtFile = new TextFile(batScriptPaths.get(0) + "charge_full");
 				chargeFull = StrUtils.strToInt(txtFile.getContent());
 
 				txtFile = new TextFile(batScriptPaths.get(0) + "charge_now");
 				chargeNow = StrUtils.strToInt(txtFile.getContent());
+				*/
+
+				TextFile txtFile = new TextFile(batScriptPaths.get(0) + "capacity");
+				Integer batteryCharge = StrUtils.strToInt(txtFile.getContent());
 
 				txtFile = new TextFile(batScriptPaths.get(1) + "online");
 				acOnline = txtFile.getContent();
 
-				if ((chargeNow != null) && (chargeFull != null) && (acOnline != null)) {
-					int batteryCharge = (100 * chargeNow) / chargeFull;
+				if ((batteryCharge != null) && (acOnline != null)) {
 					if (acOnline.startsWith("1")) {
 						batteryLabel.setText("B: ~ (" + batteryCharge + "%) ");
 						batteryLabel.setForeground(fgColorCol);
