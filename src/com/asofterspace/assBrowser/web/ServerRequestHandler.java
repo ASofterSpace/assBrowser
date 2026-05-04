@@ -1682,6 +1682,9 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			}
 		}
 
+		// add some empty space at the bottom
+		folderContent.append("<br><br>");
+
 		String result = folderContent.toString();
 
 		if (!quickView) {
