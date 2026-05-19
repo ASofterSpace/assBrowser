@@ -136,9 +136,6 @@ public class EmojiSelectorGUI {
 
 		addLabel("");
 		addLabel("");
-		addLabel("");
-		addLabel("");
-		addLabel("");
 		addLabel("·");
 		addLabel("•");
 		addLabel("—");
@@ -146,6 +143,9 @@ public class EmojiSelectorGUI {
 		addLabel("_");
 		addLabel("†");
 		addLabel("‡");
+		addLabel("≠");
+		addLabel("=");
+		addLabel("+");
 		addLabel("±");
 		addLabel("×");
 		addLabel("÷");
