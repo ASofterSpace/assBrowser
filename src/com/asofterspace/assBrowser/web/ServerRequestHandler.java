@@ -2183,8 +2183,8 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 		// check if any two pictures seem to be the same / duplicates, actually
 		StringBuilder duplicateStrBuilder = new StringBuilder();
-		appendWarningStart(duplicateStrBuilder, "Several pictures of this entry seem to have the same size, " +
-			"indicating they might be the same file!<br>They are:", ID_PICS);
+		appendWarningStart(duplicateStrBuilder, "Several pictures of this entry seem to be exactly the same!" +
+			"<br>They are:", ID_PICS);
 
 		boolean foundDuplicates = false;
 
@@ -2193,11 +2193,14 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			for (int j = i+1; j < pictureFiles.size(); j++) {
 				long jLen = pictureFileSizes.get(j);
 				if (iLen == jLen) {
-					foundDuplicates = true;
-					duplicateStrBuilder.append("<div class='line'>");
-					duplicateStrBuilder.append(pictureFiles.get(i).getCanonicalFilename() +
-						" and " + pictureFiles.get(j).getCanonicalFilename());
-					duplicateStrBuilder.append("</div>");
+					// same size: now check if actually the very same file!
+					if (IoUtils.filesHaveSameContent(pictureFiles.get(i), pictureFiles.get(j))) {
+						foundDuplicates = true;
+						duplicateStrBuilder.append("<div class='line'>");
+						duplicateStrBuilder.append(pictureFiles.get(i).getCanonicalFilename() +
+							" and " + pictureFiles.get(j).getCanonicalFilename());
+						duplicateStrBuilder.append("</div>");
+					}
 				}
 			}
 		}
