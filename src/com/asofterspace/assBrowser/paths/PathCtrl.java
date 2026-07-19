@@ -16,6 +16,8 @@ public class PathCtrl {
 
 	public final static String DESKTOP = "\\Desktop\\";
 	public final static String DESKTOP_FORWARD = StrUtils.replaceAll(DESKTOP, "\\", "/");
+	public final static String DESKTOP_LOW = DESKTOP.toLowerCase();
+	public final static String DESKTOP_FORWARD_LOW = DESKTOP_FORWARD.toLowerCase();
 	public final static String VSTPU_STPU = "VSTPU.stpu";
 
 	private static String desktopLocation = null;

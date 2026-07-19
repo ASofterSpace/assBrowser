@@ -96,12 +96,12 @@ public class ConsoleCtrl {
 			command = "cd ../..";
 			commandLow = command;
 		}
-		if (commandLow.startsWith(PathCtrl.DESKTOP.toLowerCase())) {
+		if (commandLow.startsWith(PathCtrl.DESKTOP_LOW) || commandLow.startsWith(PathCtrl.DESKTOP_FORWARD_LOW)) {
 			command = "cd " + command;
 			commandLow = "cd " + commandLow;
 		}
 		if (commandLow.equals("cd") || commandLow.equals("cd ~")) {
-			result.setPath(PathCtrl.DESKTOP);
+			result.setPath(PathCtrl.DESKTOP_FORWARD);
 			return result;
 		}
 		if (("cd /".equals(commandLow)) || ("cd \\".equals(commandLow))) {
@@ -117,14 +117,14 @@ public class ConsoleCtrl {
 			// if we have ~/blubb...
 			if (command.startsWith("~")) {
 				// then we have /Desktop/blubb
-				previousPath = PathCtrl.DESKTOP;
+				previousPath = PathCtrl.DESKTOP_FORWARD;
 				command = command.substring(2);
 			}
 			// if we have \Desktop\blubb...
-			if (commandLow.startsWith(StrUtils.replaceAll(PathCtrl.DESKTOP, "\\", "/").toLowerCase())) {
+			if (commandLow.startsWith(PathCtrl.DESKTOP_FORWARD_LOW)) {
 				// then we have /Desktop/blubb
-				previousPath = PathCtrl.DESKTOP;
-				command = command.substring(PathCtrl.DESKTOP.length());
+				previousPath = PathCtrl.DESKTOP_FORWARD;
+				command = command.substring(PathCtrl.DESKTOP_FORWARD.length());
 			}
 			command = StrUtils.replaceAll(command, "\\", "/");
 			command = StrUtils.replaceAll(command, "//", "/");
