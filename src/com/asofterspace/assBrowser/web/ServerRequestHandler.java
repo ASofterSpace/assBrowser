@@ -2221,140 +2221,140 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 
 			// transform just the text picture 3 into a link to the third picture
 			String replaceWith = "<a href='" + picLinkBase + pictureFileNames.get(i) + "' " +
-			"target='_blank'>" +
-			"picture " + (i+1) +
-			"</a>";
+				"target='_blank'>" +
+				"picture " + (i+1) +
+				"</a>";
 
-		// replace all not preceded by >
-		contentStr = StrUtils.replaceAllIfNotInsideTag(
-			contentStr,
-			"picture " + (i+1),
-			replaceWith
-		);
+			// replace all not preceded by >
+			contentStr = StrUtils.replaceAllIfNotInsideTag(
+				contentStr,
+				"picture " + (i+1),
+				replaceWith
+			);
 
-		// replace all preceded by exactly <br>
-		contentStr = StrUtils.replaceAll(
-			contentStr,
-			"<br>picture " + (i+1),
-			"<br>" + replaceWith
-		);
+			// replace all preceded by exactly <br>
+			contentStr = StrUtils.replaceAll(
+				contentStr,
+				"<br>picture " + (i+1),
+				"<br>" + replaceWith
+			);
 
-		contentStr = StrUtils.addAfterLinesContaining(
-			contentStr,
-			replaceWith,
-			picToHtml(picLinkBase, pictureFileNames.get(i), uniqueVStr, exportingToPdf),
-			"<br>"
-		);
+			contentStr = StrUtils.addAfterLinesContaining(
+				contentStr,
+				replaceWith,
+				picToHtml(picLinkBase, pictureFileNames.get(i), uniqueVStr, exportingToPdf),
+				"<br>"
+			);
 
-		// transform just the text pictures up to 3 into a link to the third picture,
-		// which will later be augmented by pictures 1 and 2 (if they have not been added already)
-		replaceWith = "<a href='" + picLinkBase + pictureFileNames.get(i) + "' " +
-			"target='_blank'>" +
-			"pictures up to " + (i+1) +
-			"</a>";
+			// transform just the text pictures up to 3 into a link to the third picture,
+			// which will later be augmented by pictures 1 and 2 (if they have not been added already)
+			replaceWith = "<a href='" + picLinkBase + pictureFileNames.get(i) + "' " +
+				"target='_blank'>" +
+				"pictures up to " + (i+1) +
+				"</a>";
 
-		// replace all not preceded by >
-		contentStr = StrUtils.replaceAllIfNotInsideTag(
-			contentStr,
-			"pictures up to " + (i+1),
-			replaceWith
-		);
+			// replace all not preceded by >
+			contentStr = StrUtils.replaceAllIfNotInsideTag(
+				contentStr,
+				"pictures up to " + (i+1),
+				replaceWith
+			);
 
-		// replace all preceded by exactly <br>
-		contentStr = StrUtils.replaceAll(
-			contentStr,
-			"<br>pictures up to " + (i+1),
-			"<br>" + replaceWith
-		);
+			// replace all preceded by exactly <br>
+			contentStr = StrUtils.replaceAll(
+				contentStr,
+				"<br>pictures up to " + (i+1),
+				"<br>" + replaceWith
+			);
 
-		contentStr = StrUtils.addAfterLinesContaining(
-			contentStr,
-			replaceWith,
-			"[[LOGPIC-UP-TO-" + i + "]]" +
-			picToHtml(picLinkBase, pictureFileNames.get(i), uniqueVStr, exportingToPdf),
-			"<br>"
-		);
+			contentStr = StrUtils.addAfterLinesContaining(
+				contentStr,
+				replaceWith,
+				"[[LOGPIC-UP-TO-" + i + "]]" +
+				picToHtml(picLinkBase, pictureFileNames.get(i), uniqueVStr, exportingToPdf),
+				"<br>"
+			);
 
-		if (!contentStr.equals(beforeThisRound)) {
-			picturesAdded.add(i);
-		}
-	}
-
-	// second round to add the other pictures when going "up to" a certain one
-	for (int i = pictureFileNames.size() - 1; i >= 0; i--) {
-		String token = "[[LOGPIC-UP-TO-" + i + "]]";
-		if (contentStr.contains(token)) {
-			Integer nextPic = i - 1;
-			if ((nextPic < 0) || picturesAdded.contains(nextPic)) {
-				contentStr = StrUtils.replaceAll(contentStr, token, "");
-			} else {
-				contentStr = StrUtils.replaceAll(contentStr, token,
-					"[[LOGPIC-UP-TO-" + nextPic + "]]" +
-					picToHtml(picLinkBase, pictureFileNames.get(nextPic), uniqueVStr, exportingToPdf)
-				);
-				picturesAdded.add(nextPic);
+			if (!contentStr.equals(beforeThisRound)) {
+				picturesAdded.add(i);
 			}
 		}
-	}
 
-	/* actually, skip the third round and only add pictures when necessary
-	// third round to add all remaining pictures in the very end
-	int highestPicShown = -1;
-	for (Integer picNum : picturesAdded) {
-		if (picNum > highestPicShown) {
-			highestPicShown = picNum;
+		// second round to add the other pictures when going "up to" a certain one
+		for (int i = pictureFileNames.size() - 1; i >= 0; i--) {
+			String token = "[[LOGPIC-UP-TO-" + i + "]]";
+			if (contentStr.contains(token)) {
+				Integer nextPic = i - 1;
+				if ((nextPic < 0) || picturesAdded.contains(nextPic)) {
+					contentStr = StrUtils.replaceAll(contentStr, token, "");
+				} else {
+					contentStr = StrUtils.replaceAll(contentStr, token,
+						"[[LOGPIC-UP-TO-" + nextPic + "]]" +
+						picToHtml(picLinkBase, pictureFileNames.get(nextPic), uniqueVStr, exportingToPdf)
+					);
+					picturesAdded.add(nextPic);
+				}
+			}
 		}
+
+		/* actually, skip the third round and only add pictures when necessary
+		// third round to add all remaining pictures in the very end
+		int highestPicShown = -1;
+		for (Integer picNum : picturesAdded) {
+			if (picNum > highestPicShown) {
+				highestPicShown = picNum;
+			}
+		}
+
+		for (int i = highestPicShown + 1; i < pictureFileNames.size(); i++) {
+			contentStr += picToHtml(picLinkBase, pictureFileNames.get(i), uniqueVStr, exportingToPdf);
+		}
+		*/
+
+		return contentStr;
 	}
 
-	for (int i = highestPicShown + 1; i < pictureFileNames.size(); i++) {
-		contentStr += picToHtml(picLinkBase, pictureFileNames.get(i), uniqueVStr, exportingToPdf);
+	private static void appendWarningStart(StringBuilder builder, String warningText, String identifier) {
+		builder.append("<div class='warning_outer' id='" + WARN_BASE + identifier + "'>");
+		builder.append("<div class='warning'>");
+		builder.append("<div class='line'>");
+		builder.append("<b>Warning!</b> ");
+		builder.append(warningText);
+		builder.append("</div>");
 	}
-	*/
 
-	return contentStr;
-}
+	private static void appendWarningEnd(StringBuilder builder, String identifier) {
+		builder.append("<div style='text-align: right;'>");
+		builder.append("<span class='entry_warning_button' ");
+		builder.append("onclick='document.getElementById(\"" + WARN_BASE + identifier + "\").style.display = \"none\";'>");
+		builder.append("Dismiss");
+		builder.append("</span>");
+		builder.append("</div>");
 
-private static void appendWarningStart(StringBuilder builder, String warningText, String identifier) {
-	builder.append("<div class='warning_outer' id='" + WARN_BASE + identifier + "'>");
-	builder.append("<div class='warning'>");
-	builder.append("<div class='line'>");
-	builder.append("<b>Warning!</b> ");
-	builder.append(warningText);
-	builder.append("</div>");
-}
-
-private static void appendWarningEnd(StringBuilder builder, String identifier) {
-	builder.append("<div style='text-align: right;'>");
-	builder.append("<span class='entry_warning_button' ");
-	builder.append("onclick='document.getElementById(\"" + WARN_BASE + identifier + "\").style.display = \"none\";'>");
-	builder.append("Dismiss");
-	builder.append("</span>");
-	builder.append("</div>");
-
-	builder.append("</div>");
-	builder.append("</div>");
-}
-
-private static String picToHtml(String picLinkBase, String picFileName, String uniqueVStr, boolean exportingToPdf) {
-	String aStyle = "";
-	if (exportingToPdf) {
-		aStyle = " style='text-align: center; width: 100%; display: inline-block;' ";
+		builder.append("</div>");
+		builder.append("</div>");
 	}
-	return "<a href='" + picLinkBase + picFileName + "' " +
-			aStyle +
-			"target='_blank'>" +
-			"<img src='" + picLinkBase + picFileName + uniqueVStr + "' style='padding-top: 4pt; max-width: 100%;' /></a><br>";
-}
 
-private static String prepareExternalLinks(String fileHtmlStr, String urlStart) {
-	StringBuilder newFileHtml = new StringBuilder();
-	int pos = fileHtmlStr.indexOf(urlStart);
-	int start = 0;
-	while (pos >= 0) {
-		int end = fileHtmlStr.length();
-		int end1 = fileHtmlStr.indexOf(" ", pos);
-		int end2 = fileHtmlStr.indexOf("\t", pos);
-		// just search for any opening angle, as at this point html-encoding has already been
+	private static String picToHtml(String picLinkBase, String picFileName, String uniqueVStr, boolean exportingToPdf) {
+		String aStyle = "";
+		if (exportingToPdf) {
+			aStyle = " style='text-align: center; width: 100%; display: inline-block;' ";
+		}
+		return "<a href='" + picLinkBase + picFileName + "' " +
+				aStyle +
+				"target='_blank'>" +
+				"<img src='" + picLinkBase + picFileName + uniqueVStr + "' style='padding-top: 4pt; max-width: 100%;' /></a><br>";
+	}
+
+	private static String prepareExternalLinks(String fileHtmlStr, String urlStart) {
+		StringBuilder newFileHtml = new StringBuilder();
+		int pos = fileHtmlStr.indexOf(urlStart);
+		int start = 0;
+		while (pos >= 0) {
+			int end = fileHtmlStr.length();
+			int end1 = fileHtmlStr.indexOf(" ", pos);
+			int end2 = fileHtmlStr.indexOf("\t", pos);
+			// just search for any opening angle, as at this point html-encoding has already been
 			// done, and any such is an opening or closing tag, not just a part of the link itself
 			int end3 = fileHtmlStr.indexOf("<", pos);
 			if (end1 >= start) {
