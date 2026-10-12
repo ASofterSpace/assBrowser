@@ -284,6 +284,7 @@ public class EmojiSelectorGUI {
 		addLabel("\\");
 		addLabel("/");
 		addLabel("|");
+		addLabel("\\t", "\t", GUI.fgColorCol);
 
 		colCounter = 0;
 		rowCounter++;
@@ -306,6 +307,7 @@ public class EmojiSelectorGUI {
 		addLabel("¡");
 		addLabel("?");
 		addLabel("¿");
+		addLabel("\\n", "\n", GUI.fgColorCol);
 
 		// remove title bar
 		dialogWindow.setUndecorated(true);
