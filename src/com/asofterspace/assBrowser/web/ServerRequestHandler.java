@@ -210,7 +210,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 					JSON data = new JSON();
 					data.set("path", snailPath);
 					data.set("content", content);
-					String res = WebAccessor.postJson("http://localhost:" + database.getCyberSnailPort() + "/updateText", data.toString());
+					String res = WebAccessor.postJson("http://127.0.0.1:" + database.getCyberSnailPort() + "/updateText", data.toString());
 					if (!"{\"success\": true}".equals(res)) {
 						GuiUtils.complain("Something went wrong with storing the encrypted file!\n" + res);
 					}
@@ -2370,7 +2370,7 @@ public class ServerRequestHandler extends WebServerRequestHandler {
 			String linkStr = fileHtmlStr.substring(pos, end);
 			newFileHtml.append("<a href=\"" + linkStr + "\" target='_blank'>");
 			String prettyLinkForDisplay = linkStr;
-			if (linkStr.startsWith("file://") || linkStr.startsWith("http://localhost:")) {
+			if (linkStr.startsWith("file://") || linkStr.startsWith("http://127.0.0.1:")) {
 				prettyLinkForDisplay = UrlDecoder.decode(prettyLinkForDisplay);
 			}
 			newFileHtml.append(prettyLinkForDisplay);

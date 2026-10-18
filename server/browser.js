@@ -1070,6 +1070,12 @@ window.browser = {
 				elems[i].href = window.location.href;
 			}
 		}
+		compareTo = "http://127.0.0.1:" + window.location.port + "/";
+		for (var i = 0; i < elems.length; i++) {
+			if (elems[i].href == compareTo) {
+				elems[i].href = window.location.href;
+			}
+		}
 	},
 
 	showModalBackground: function() {

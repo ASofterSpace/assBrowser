@@ -650,14 +650,14 @@ public class GUI extends MainWindow {
 				newPath = PathCtrl.ensurePathIsSafe(newPath);
 				if (!newPath.equals(previousPath)) {
 					String browserPath = database.getBrowserPath();
-					IoUtils.executeAsync(browserPath + " http://localhost:3013/?link=" + UrlEncoder.encode(newPath));
+					IoUtils.executeAsync(browserPath + " http://127.0.0.1:3013/?link=" + UrlEncoder.encode(newPath));
 					/*
 					List<String> args = StrUtils.split(browserPath, " ");
 					List<String> actualArgs = new ArrayList<>();
 					for (int i = 1; i < args.size() - 1; i++) {
 						actualArgs.add(args.get(i));
 					}
-					actualArgs.add(args.get(args.size() - 1) + " http://localhost:3013/?link=" + UrlEncoder.encode(newPath));
+					actualArgs.add(args.get(args.size() - 1) + " http://127.0.0.1:3013/?link=" + UrlEncoder.encode(newPath));
 					try {
 						IoUtils.executeAsync(args.get(0), actualArgs);
 					} catch (IOException curErr) {

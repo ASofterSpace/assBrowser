@@ -34,7 +34,7 @@ public class Entry {
 			if (content.startsWith(CYBER_SNAIL_CONST)) {
 				encrypted = true;
 				String snailPath = content.substring(CYBER_SNAIL_CONST.length());
-				content = WebAccessor.get("http://localhost:" + database.getCyberSnailPort() + "/text?path=" + UrlEncoder.encode(snailPath));
+				content = WebAccessor.get("http://127.0.0.1:" + database.getCyberSnailPort() + "/text?path=" + UrlEncoder.encode(snailPath));
 			}
 
 			content = doAutomaticConversions(content);
